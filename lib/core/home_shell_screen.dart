@@ -26,7 +26,8 @@ class HomeShellScreen extends ConsumerWidget {
     final alertsState = ref.watch(alertsNotifierProvider);
     final hasAlerts = alertsState.alerts.isNotEmpty;
 
-    // Index 4 corresponds to Profile tab
+    // Index 2 is Home tab, Index 4 is Profile tab
+    final isHomePage = navigationShell.currentIndex == 2;
     final isProfileTab = navigationShell.currentIndex == 4;
 
     return GradientBackground(
@@ -35,11 +36,13 @@ class HomeShellScreen extends ConsumerWidget {
         extendBody: true,
         backgroundColor: Colors.transparent,
         body: navigationShell,
-        bottomNavigationBar: AppBottomNav(
-          currentIndex: navigationShell.currentIndex,
-          onSelect: _onTap,
-          hasAlerts: hasAlerts,
-        ),
+        bottomNavigationBar: isHomePage
+            ? null
+            : AppBottomNav(
+                currentIndex: navigationShell.currentIndex,
+                onSelect: _onTap,
+                hasAlerts: hasAlerts,
+              ),
       ),
     );
   }
