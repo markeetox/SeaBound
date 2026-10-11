@@ -140,10 +140,10 @@ void main() {
   });
 
   group('HomeShellScreen StatefulShellRoute Integration Tests', () {
-    testWidgets('a signed-in user starts on Home and can navigate using arch fan menu',
+    testWidgets('a signed-in user on Spots screen can navigate using arch fan menu',
         (WidgetTester tester) async {
       final router = GoRouter(
-        initialLocation: '/home',
+        initialLocation: '/spots',
         routes: [
           StatefulShellRoute.indexedStack(
             builder: (context, state, navigationShell) =>
@@ -178,22 +178,22 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Home Screen'), findsOneWidget);
+      expect(find.text('Spots Screen'), findsOneWidget);
 
-      // Long press Home button to open fan
+      // Long press Home button on bottom bar to open fan
       final homeCenter = tester.getCenter(find.byType(Image));
       final TestGesture gesture = await tester.startGesture(homeCenter);
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
 
-      // Drag to Spots along arc (dx = -113.3, dy = -52.8)
-      await gesture.moveTo(Offset(homeCenter.dx - 113.3, homeCenter.dy - 52.8));
+      // Drag to Trips along arc (dx = -52.8, dy = -113.3)
+      await gesture.moveTo(Offset(homeCenter.dx - 52.8, homeCenter.dy - 113.3));
       await tester.pumpAndSettle();
 
       await gesture.up();
       await tester.pumpAndSettle();
 
-      expect(find.text('Spots Screen'), findsOneWidget);
+      expect(find.text('Trips Screen'), findsOneWidget);
     });
   });
 }

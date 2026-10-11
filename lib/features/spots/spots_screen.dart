@@ -404,7 +404,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
               userAgentPackageName: 'com.onerevamp.seabound',
               maxNativeZoom: 19,
               maxZoom: 20,
-              errorTileCallback: (_, __, ___) {},
+              errorTileCallback: (_, _, _) {},
             ),
 
             // NASA GIBS Sea Surface Temperature Layer
@@ -422,7 +422,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     maxNativeZoom: 7,
                     tileProvider: NetworkTileProvider(),
                     tileDisplay: const TileDisplay.instantaneous(opacity: 0.7),
-                    errorTileCallback: (_, __, ___) {},
+                    errorTileCallback: (_, _, _) {},
                   );
                 },
                 loading: () => const SizedBox.shrink(),
@@ -445,7 +445,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     maxNativeZoom: 7,
                     tileProvider: NetworkTileProvider(),
                     tileDisplay: const TileDisplay.instantaneous(opacity: 0.7),
-                    errorTileCallback: (_, __, ___) {},
+                    errorTileCallback: (_, _, _) {},
                   );
                 },
                 loading: () => const SizedBox.shrink(),
@@ -464,7 +464,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 maxZoom: 20,
                 tileProvider: NetworkTileProvider(),
                 tileDisplay: const TileDisplay.instantaneous(opacity: 0.7),
-                errorTileCallback: (_, __, ___) {},
+                errorTileCallback: (_, _, _) {},
               ),
               TileLayer(
                 urlTemplate: MapLayerConfig.openSeaMapTileUrl,
@@ -472,7 +472,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 maxNativeZoom: 18,
                 maxZoom: 20,
                 tileDisplay: const TileDisplay.instantaneous(opacity: 0.8),
-                errorTileCallback: (_, __, ___) {},
+                errorTileCallback: (_, _, _) {},
               ),
             ],
 
@@ -489,7 +489,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 maxZoom: 20,
                 tileProvider: NetworkTileProvider(),
                 tileDisplay: const TileDisplay.instantaneous(opacity: 0.85),
-                errorTileCallback: (_, __, ___) {},
+                errorTileCallback: (_, _, _) {},
               ),
 
             // Weather Radar Layer with Smoothed Contours & Nowcast Time Synchronization
@@ -511,7 +511,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     maxZoom: 20,
                     tileProvider: NetworkTileProvider(),
                     tileDisplay: const TileDisplay.instantaneous(opacity: 0.65),
-                    errorTileCallback: (_, __, ___) {},
+                    errorTileCallback: (_, _, _) {},
                   );
                 },
                 loading: () => TileLayer(
