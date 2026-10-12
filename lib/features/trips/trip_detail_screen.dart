@@ -8,6 +8,7 @@ import '../../core/gradient_background.dart';
 import '../profile/profile_providers.dart';
 import 'trip_model.dart';
 import 'trips_providers.dart';
+import 'trips_screen.dart';
 
 class TripDetailScreen extends ConsumerWidget {
   final String tripId;
@@ -137,11 +138,19 @@ class TripDetailScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      trip.title,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            trip.title,
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
+                        ),
+                        TripReactionButtons(trip: trip),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     Row(
