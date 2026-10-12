@@ -105,7 +105,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _populateData(userDoc, currentUser.displayName);
 
     final avatarIds = List.generate(
-      12,
+      9,
       (i) => 'avatar_${(i + 1).toString().padLeft(2, '0')}',
     );
 
