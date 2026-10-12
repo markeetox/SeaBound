@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/app_theme.dart';
 import '../../core/floating_top_bar.dart';
 import '../../core/gradient_background.dart';
+import '../auth/auth_providers.dart';
 import 'trip_model.dart';
 import 'trips_providers.dart';
 
@@ -176,13 +177,109 @@ class _TripsScreenState extends ConsumerState<TripsScreen> {
   }
 }
 
-class _TripCard extends StatelessWidget {
+class TripReactionButtons extends ConsumerWidget {
+  final Trip trip;
+
+  const TripReactionButtons({super.key, required this.trip});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authUser = ref.watch(authStateProvider).asData?.value;
+    final currentUid = authUser?.uid ?? '';
+
+    final isLiked = trip.isLikedBy(currentUid);
+    final isDisliked = trip.isDislikedBy(currentUid);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Thumbs Up
+        InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: currentUid.isEmpty
+              ? null
+              : () {
+                  ref
+                      .read(tripsRepositoryProvider)
+                      .toggleTripReaction(trip.id, currentUid, true);
+                },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isLiked ? Icons.thumb_up_alt : Icons.thumb_up_off_alt,
+                  size: 20,
+                  color: isLiked
+                      ? OceanThemeExtension.defaultTokens.cyan
+                      : Colors.white70,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${trip.likeCount}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isLiked
+                        ? OceanThemeExtension.defaultTokens.cyan
+                        : Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Thumbs Down
+        InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: currentUid.isEmpty
+              ? null
+              : () {
+                  ref
+                      .read(tripsRepositoryProvider)
+                      .toggleTripReaction(trip.id, currentUid, false);
+                },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isDisliked ? Icons.thumb_down_alt : Icons.thumb_down_off_alt,
+                  size: 20,
+                  color: isDisliked
+                      ? const Color(0xFFFF6B6B)
+                      : Colors.white70,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${trip.dislikeCount}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isDisliked
+                        ? const Color(0xFFFF6B6B)
+                        : Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TripCard extends ConsumerWidget {
   final Trip trip;
 
   const _TripCard({required this.trip});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final formattedDate = DateFormat.yMMMMd().format(trip.date);
 
     return Card(
@@ -255,6 +352,13 @@ class _TripCard extends StatelessWidget {
                   }).toList(),
                 ),
               ],
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TripReactionButtons(trip: trip),
+                ],
+              ),
             ],
           ),
         ),

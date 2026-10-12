@@ -68,6 +68,44 @@ class TripsRepository {
     });
   }
 
+  Future<void> toggleTripReaction(String tripId, String userId, bool isLike) async {
+    final docRef = _tripsRef.doc(tripId);
+    final snap = await docRef.get();
+    if (!snap.exists) return;
+
+    final trip = Trip.fromMap(snap.data()!, snap.id);
+    final currentlyLiked = trip.isLikedBy(userId);
+    final currentlyDisliked = trip.isDislikedBy(userId);
+
+    if (isLike) {
+      if (currentlyLiked) {
+        // Toggle off like
+        await docRef.update({
+          'likedBy': FieldValue.arrayRemove([userId]),
+        });
+      } else {
+        // Add like and ensure dislike is removed
+        await docRef.update({
+          'likedBy': FieldValue.arrayUnion([userId]),
+          if (currentlyDisliked) 'dislikedBy': FieldValue.arrayRemove([userId]),
+        });
+      }
+    } else {
+      if (currentlyDisliked) {
+        // Toggle off dislike
+        await docRef.update({
+          'dislikedBy': FieldValue.arrayRemove([userId]),
+        });
+      } else {
+        // Add dislike and ensure like is removed
+        await docRef.update({
+          'dislikedBy': FieldValue.arrayUnion([userId]),
+          if (currentlyLiked) 'likedBy': FieldValue.arrayRemove([userId]),
+        });
+      }
+    }
+  }
+
   Future<void> deleteTrip(String tripId) async {
     await _tripsRef.doc(tripId).delete();
   }

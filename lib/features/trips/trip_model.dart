@@ -9,6 +9,8 @@ class Trip {
   final List<String> species;
   final String notes;
   final List<String> sharedWith;
+  final List<String> likedBy;
+  final List<String> dislikedBy;
   final DateTime? createdAt;
 
   const Trip({
@@ -20,8 +22,16 @@ class Trip {
     required this.species,
     required this.notes,
     this.sharedWith = const [],
+    this.likedBy = const [],
+    this.dislikedBy = const [],
     this.createdAt,
   });
+
+  int get likeCount => likedBy.length;
+  int get dislikeCount => dislikedBy.length;
+
+  bool isLikedBy(String uid) => likedBy.contains(uid);
+  bool isDislikedBy(String uid) => dislikedBy.contains(uid);
 
   factory Trip.fromMap(Map<String, dynamic> map, String documentId) {
     DateTime parseDateTime(dynamic value) {
@@ -50,6 +60,14 @@ class Trip {
               ?.map((e) => e.toString())
               .toList() ??
           const [],
+      likedBy: (map['likedBy'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      dislikedBy: (map['dislikedBy'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
       createdAt: map['createdAt'] != null ? parseDateTime(map['createdAt']) : null,
     );
   }
@@ -63,6 +81,8 @@ class Trip {
       'species': species,
       'notes': notes,
       'sharedWith': sharedWith,
+      'likedBy': likedBy,
+      'dislikedBy': dislikedBy,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
@@ -76,6 +96,8 @@ class Trip {
     List<String>? species,
     String? notes,
     List<String>? sharedWith,
+    List<String>? likedBy,
+    List<String>? dislikedBy,
     DateTime? createdAt,
   }) {
     return Trip(
@@ -87,6 +109,8 @@ class Trip {
       species: species ?? this.species,
       notes: notes ?? this.notes,
       sharedWith: sharedWith ?? this.sharedWith,
+      likedBy: likedBy ?? this.likedBy,
+      dislikedBy: dislikedBy ?? this.dislikedBy,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -101,7 +125,10 @@ class Trip {
         other.date == date &&
         other.locationName == locationName &&
         _listEquals(other.species, species) &&
-        other.notes == notes;
+        other.notes == notes &&
+        _listEquals(other.sharedWith, sharedWith) &&
+        _listEquals(other.likedBy, likedBy) &&
+        _listEquals(other.dislikedBy, dislikedBy);
   }
 
   @override
@@ -114,6 +141,9 @@ class Trip {
       locationName,
       Object.hashAll(species),
       notes,
+      Object.hashAll(sharedWith),
+      Object.hashAll(likedBy),
+      Object.hashAll(dislikedBy),
     );
   }
 
