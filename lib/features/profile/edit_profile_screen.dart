@@ -22,9 +22,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _usernameController = TextEditingController();
 
   String _selectedAvatarId = 'avatar_01';
+  String _selectedAvatarBgColor = '#00E5FF';
   bool _isSaving = false;
   bool _isLoaded = false;
   String? _errorMessage;
+
+  static const List<String> _presetBgColors = [
+    '#00E5FF', // Cyan
+    '#2979FF', // Blue
+    '#00BFA5', // Teal
+    '#FFD600', // Gold
+    '#FF1744', // Red
+    '#D500F9', // Purple
+    '#00C853', // Green
+    '#37474F', // Charcoal
+  ];
 
   @override
   void dispose() {
@@ -39,6 +51,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final currentAvatar = userDoc?['avatarId'] as String?;
     if (currentAvatar != null && currentAvatar.isNotEmpty) {
       _selectedAvatarId = currentAvatar;
+    }
+    final currentBgColor = userDoc?['avatarBgColor'] as String?;
+    if (currentBgColor != null && currentBgColor.isNotEmpty) {
+      _selectedAvatarBgColor = currentBgColor;
     }
     _isLoaded = true;
   }
@@ -57,6 +73,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         uid: uid,
         username: _usernameController.text.trim(),
         avatarId: _selectedAvatarId,
+        avatarBgColor: _selectedAvatarBgColor,
       );
 
       if (mounted) {
@@ -163,6 +180,55 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         ),
                         const SizedBox(height: 24),
                         Text(
+                          'Choose Avatar Background Color',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: _presetBgColors.map((hexColor) {
+                            final colorValue = int.parse(hexColor.replaceFirst('#', '0xFF'));
+                            final color = Color(colorValue);
+                            final isSelected = hexColor.toUpperCase() == _selectedAvatarBgColor.toUpperCase();
+
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedAvatarBgColor = hexColor;
+                                });
+                              },
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isSelected ? Colors.white : Colors.transparent,
+                                    width: 3,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: color.withValues(alpha: 0.8),
+                                            blurRadius: 8,
+                                            spreadRadius: 2,
+                                          )
+                                        ]
+                                      : null,
+                                ),
+                                child: isSelected
+                                    ? const Icon(Icons.check, color: Colors.white, size: 22)
+                                    : null,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
                           'Choose Avatar Preset',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w800,
@@ -181,6 +247,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           itemBuilder: (context, index) {
                             final avatarId = avatarIds[index];
                             final isSelected = avatarId == _selectedAvatarId;
+                            final bgColorVal = int.parse(_selectedAvatarBgColor.replaceFirst('#', '0xFF'));
+                            final avatarBgColor = Color(bgColorVal);
 
                             return GestureDetector(
                               onTap: () {
@@ -189,8 +257,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 });
                               },
                               child: Container(
-                                padding: const EdgeInsets.all(4),
+                                padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
+                                  color: avatarBgColor.withValues(alpha: 0.35),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
