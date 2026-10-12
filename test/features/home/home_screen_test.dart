@@ -30,13 +30,13 @@ void main() {
     expect(find.textContaining('Wind: 12 kts E'), findsOneWidget);
     expect(find.textContaining('No Active Local Marine Alerts'), findsOneWidget);
 
-    // Verify 6 blank radial shortcut buttons exist
-    expect(find.byTooltip('Shortcut 1'), findsOneWidget);
-    expect(find.byTooltip('Shortcut 2'), findsOneWidget);
-    expect(find.byTooltip('Shortcut 3'), findsOneWidget);
-    expect(find.byTooltip('Shortcut 4'), findsOneWidget);
-    expect(find.byTooltip('Shortcut 5'), findsOneWidget);
-    expect(find.byTooltip('Shortcut 6'), findsOneWidget);
+    // Verify 6 side edge tabs exist (Trips, Spots, Alerts on left; Profile, Weather, Settings on right)
+    expect(find.text('Trips'), findsOneWidget);
+    expect(find.text('Spots'), findsOneWidget);
+    expect(find.text('Alerts'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
+    expect(find.text('Weather'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
 
     // Verify bottom-left red SOS button exists
     expect(find.text('SOS'), findsOneWidget);

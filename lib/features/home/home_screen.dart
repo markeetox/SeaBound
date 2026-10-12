@@ -69,135 +69,150 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
 
-          // Main Centered Radial Dashboard Content
+          // Left 3 Side Edge Tabs (from screen left edge: title on left, icon on right)
+          Positioned(
+            left: 0,
+            top: 200,
+            child: _SideEdgeTab(
+              side: SideEdge.left,
+              label: 'Trips',
+              icon: Icons.explore_outlined,
+              onTap: () => context.go('/trips'),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            top: 280,
+            child: _SideEdgeTab(
+              side: SideEdge.left,
+              label: 'Spots',
+              icon: Icons.place_outlined,
+              onTap: () => context.go('/spots'),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            top: 360,
+            child: _SideEdgeTab(
+              side: SideEdge.left,
+              label: 'Alerts',
+              icon: Icons.notifications_outlined,
+              onTap: () => context.go('/alerts'),
+            ),
+          ),
+
+          // Right 3 Side Edge Tabs (from screen right edge: icon on left, title on right)
+          Positioned(
+            right: 0,
+            top: 200,
+            child: _SideEdgeTab(
+              side: SideEdge.right,
+              label: 'Profile',
+              icon: Icons.person_outlined,
+              onTap: () => context.go('/profile'),
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: 280,
+            child: _SideEdgeTab(
+              side: SideEdge.right,
+              label: 'Weather',
+              icon: Icons.wb_sunny_outlined,
+              onTap: () => context.go('/spots'),
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: 360,
+            child: _SideEdgeTab(
+              side: SideEdge.right,
+              label: 'Settings',
+              icon: Icons.settings_outlined,
+              onTap: () => context.push('/profile/edit'),
+            ),
+          ),
+
+          // CENTER CIRCLE CONTAINER: Avatar, Name, Level (Tap to open Profile)
           Center(
-            child: SizedBox(
-              width: 360,
-              height: 360,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // 6 Radial Shortcut Buttons (3 on Left, 3 on Right)
-                  // Left 1 (Upper Left)
-                  Positioned(
-                    left: 12,
-                    top: 40,
-                    child: const _BlankRadialButton(label: 'Shortcut 1'),
+            child: GestureDetector(
+              onTap: () {
+                context.go('/profile');
+              },
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: ChromeBorderContainer(
+                  borderRadius: BorderRadius.circular(110),
+                  borderWidth: 3.5,
+                  backgroundColor: Color.alphaBlend(
+                    Colors.black.withValues(alpha: 0.40),
+                    avatarBgColor,
                   ),
-                  // Left 2 (Mid Left)
-                  Positioned(
-                    left: 0,
-                    top: 150,
-                    child: const _BlankRadialButton(label: 'Shortcut 2'),
-                  ),
-                  // Left 3 (Lower Left)
-                  Positioned(
-                    left: 12,
-                    bottom: 40,
-                    child: const _BlankRadialButton(label: 'Shortcut 3'),
-                  ),
-
-                  // Right 1 (Upper Right)
-                  Positioned(
-                    right: 12,
-                    top: 40,
-                    child: const _BlankRadialButton(label: 'Shortcut 4'),
-                  ),
-                  // Right 2 (Mid Right)
-                  Positioned(
-                    right: 0,
-                    top: 150,
-                    child: const _BlankRadialButton(label: 'Shortcut 5'),
-                  ),
-                  // Right 3 (Lower Right)
-                  Positioned(
-                    right: 12,
-                    bottom: 40,
-                    child: const _BlankRadialButton(label: 'Shortcut 6'),
-                  ),
-
-                  // CENTER CIRCLE CONTAINER: Avatar, Name, Level (Tap to open Profile)
-                  GestureDetector(
-                    onTap: () {
-                      context.go('/profile');
-                    },
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: ChromeBorderContainer(
-                        borderRadius: BorderRadius.circular(110),
-                        borderWidth: 3.5,
-                        backgroundColor: Color.alphaBlend(
-                          Colors.black.withValues(alpha: 0.40),
-                          avatarBgColor,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black54,
-                            blurRadius: 16,
-                            spreadRadius: 2,
-                            offset: Offset(0, 6),
-                          ),
-                        ],
-                        child: SizedBox(
-                          width: 200,
-                          height: 200,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // User Avatar
-                              SizedBox(
-                                width: 96,
-                                height: 96,
-                                child: avatarId != null && avatarId.isNotEmpty
-                                    ? Image.asset(
-                                        'assets/avatars/$avatarId.png',
-                                        fit: BoxFit.contain,
-                                        errorBuilder: (_, _, _) => const Icon(
-                                          Icons.person,
-                                          size: 56,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Icon(
-                                        Icons.person,
-                                        size: 56,
-                                        color: Colors.white,
-                                      ),
-                              ),
-                              const SizedBox(height: 8),
-                              // User Username
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                                child: Text(
-                                  username,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black54,
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                      offset: Offset(0, 6),
+                    ),
+                  ],
+                  child: SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // User Avatar
+                        SizedBox(
+                          width: 96,
+                          height: 96,
+                          child: avatarId != null && avatarId.isNotEmpty
+                              ? Image.asset(
+                                  'assets/avatars/$avatarId.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, _, _) => const Icon(
+                                    Icons.person,
+                                    size: 56,
                                     color: Colors.white,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                )
+                              : const Icon(
+                                  Icons.person,
+                                  size: 56,
+                                  color: Colors.white,
                                 ),
-                              ),
-                              const SizedBox(height: 2),
-                              // User Level & Title
-                              Text(
-                                '$title • Lvl $level',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800,
-                                  color: OceanThemeExtension.defaultTokens.cyan,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                        ),
+                        const SizedBox(height: 8),
+                        // User Username
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: Text(
+                            username,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 2),
+                        // User Level & Title
+                        Text(
+                          '$title • Lvl $level',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: OceanThemeExtension.defaultTokens.cyan,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -371,41 +386,80 @@ class _TopWeatherAndAlertsBanner extends ConsumerWidget {
   }
 }
 
-class _BlankRadialButton extends StatelessWidget {
-  final String label;
+enum SideEdge { left, right }
 
-  const _BlankRadialButton({required this.label});
+class _SideEdgeTab extends StatelessWidget {
+  final SideEdge side;
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _SideEdgeTab({
+    required this.side,
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isLeft = side == SideEdge.left;
+
     return ChromeBorderContainer(
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: BorderRadius.only(
+        topRight: isLeft ? const Radius.circular(20) : Radius.zero,
+        bottomRight: isLeft ? const Radius.circular(20) : Radius.zero,
+        topLeft: !isLeft ? const Radius.circular(20) : Radius.zero,
+        bottomLeft: !isLeft ? const Radius.circular(20) : Radius.zero,
+      ),
       borderWidth: 2.0,
-      backgroundColor: const Color(0xFF0B2250).withValues(alpha: 0.9),
+      backgroundColor: const Color(0xFF0B2250).withValues(alpha: 0.90),
       boxShadow: const [
         BoxShadow(
           color: Colors.black45,
-          blurRadius: 6,
-          offset: Offset(0, 3),
+          blurRadius: 8,
+          offset: Offset(0, 4),
         ),
       ],
-      child: Tooltip(
-        message: label,
+      child: Material(
+        color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(28),
-          child: SizedBox(
-            width: 56,
-            height: 56,
-            child: Center(
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: OceanThemeExtension.defaultTokens.cyan.withValues(alpha: 0.5),
-                ),
-              ),
+          onTap: onTap,
+          borderRadius: BorderRadius.only(
+            topRight: isLeft ? const Radius.circular(18) : Radius.zero,
+            bottomRight: isLeft ? const Radius.circular(18) : Radius.zero,
+            topLeft: !isLeft ? const Radius.circular(18) : Radius.zero,
+            bottomLeft: !isLeft ? const Radius.circular(18) : Radius.zero,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: isLeft
+                  ? [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(icon, color: OceanThemeExtension.defaultTokens.cyan, size: 20),
+                    ]
+                  : [
+                      Icon(icon, color: OceanThemeExtension.defaultTokens.cyan, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
             ),
           ),
         ),
