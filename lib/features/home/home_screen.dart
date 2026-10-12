@@ -144,15 +144,10 @@ class HomeScreen extends ConsumerWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // User Avatar with user-chosen background color
-                              Container(
+                              // User Avatar
+                              SizedBox(
                                 width: 96,
                                 height: 96,
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: avatarBgColor.withValues(alpha: 0.35),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
                                 child: avatarId != null && avatarId.isNotEmpty
                                     ? Image.asset(
                                         'assets/avatars/$avatarId.png',

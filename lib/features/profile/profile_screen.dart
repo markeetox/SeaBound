@@ -120,9 +120,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final avatarBgColorVal = avatarBgHex != null && avatarBgHex.startsWith('#')
         ? int.tryParse(avatarBgHex.replaceFirst('#', '0xFF'))
         : null;
-    final avatarBgColor = avatarBgColorVal != null
-        ? Color(avatarBgColorVal)
-        : OceanThemeExtension.defaultTokens.surface;
 
     int totalXp = 0;
     for (final badgeId in earnedMap.keys) {
@@ -159,15 +156,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   constraints: const BoxConstraints(maxWidth: 600),
                   child: Column(
                     children: [
-                      // Profile Info with background color
-                      Container(
+                      // Profile Info
+                      SizedBox(
                         width: 125,
                         height: 125,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: avatarBgColor.withValues(alpha: 0.35),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
                         child: avatarId != null && avatarId.isNotEmpty
                             ? Image.asset(
                                 'assets/avatars/$avatarId.png',

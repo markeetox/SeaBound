@@ -250,8 +250,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           itemBuilder: (context, index) {
                             final avatarId = avatarIds[index];
                             final isSelected = avatarId == _selectedAvatarId;
-                            final bgColorVal = int.parse(_selectedAvatarBgColor.replaceFirst('#', '0xFF'));
-                            final avatarBgColor = Color(bgColorVal);
 
                             return GestureDetector(
                               onTap: () {
@@ -260,9 +258,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 });
                               },
                               child: Container(
-                                padding: const EdgeInsets.all(6),
+                                padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: avatarBgColor.withValues(alpha: 0.35),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
