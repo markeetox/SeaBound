@@ -151,24 +151,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   constraints: const BoxConstraints(maxWidth: 600),
                   child: Column(
                     children: [
-                      // Profile Info
-                      CircleAvatar(
-                        radius: 52,
-                        backgroundColor: OceanThemeExtension.defaultTokens.surface,
+                      // Profile Info (no circle/bg, 20% larger: size 125)
+                      SizedBox(
+                        width: 125,
+                        height: 125,
                         child: avatarId != null && avatarId.isNotEmpty
                             ? Image.asset(
                                 'assets/avatars/$avatarId.png',
+                                fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) {
                                   return const Icon(
                                     Icons.person,
-                                    size: 60,
+                                    size: 72,
                                     color: Colors.white,
                                   );
                                 },
                               )
                             : const Icon(
                                 Icons.person,
-                                size: 60,
+                                size: 72,
                                 color: Colors.white,
                               ),
                       ),

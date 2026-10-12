@@ -119,24 +119,24 @@ class PublicProfileScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          CircleAvatar(
-                            radius: 52,
-                            backgroundColor:
-                                OceanThemeExtension.defaultTokens.surface,
+                          SizedBox(
+                            width: 125,
+                            height: 125,
                             child: avatarId != null && avatarId.isNotEmpty
                                 ? Image.asset(
                                     'assets/avatars/$avatarId.png',
+                                    fit: BoxFit.contain,
                                     errorBuilder: (context, error, stackTrace) {
                                       return const Icon(
                                         Icons.person,
-                                        size: 60,
+                                        size: 72,
                                         color: Colors.white,
                                       );
                                     },
                                   )
                                 : const Icon(
                                     Icons.person,
-                                    size: 60,
+                                    size: 72,
                                     color: Colors.white,
                                   ),
                           ),

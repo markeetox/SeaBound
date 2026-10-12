@@ -105,7 +105,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _populateData(userDoc, currentUser.displayName);
 
     final avatarIds = List.generate(
-      9,
+      16,
       (i) => 'avatar_${(i + 1).toString().padLeft(2, '0')}',
     );
 
@@ -189,8 +189,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 });
                               },
                               child: Container(
+                                padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
+                                  borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
                                         ? OceanThemeExtension.defaultTokens.cyan
@@ -198,19 +199,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                     width: 3,
                                   ),
                                 ),
-                                child: CircleAvatar(
-                                  backgroundColor: OceanThemeExtension.defaultTokens.surface,
-                                  child: Image.asset(
-                                    'assets/avatars/$avatarId.png',
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Text(
+                                child: Image.asset(
+                                  'assets/avatars/$avatarId.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Center(
+                                      child: Text(
                                         'A${index + 1}',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
-                                      );
-                                    },
-                                  ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             );
