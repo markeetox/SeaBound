@@ -74,7 +74,14 @@ class PublicProfileScreen extends ConsumerWidget {
     final userDocAsync = ref.watch(publicProfileDocProvider(userId));
     final earnedBadgesAsync = ref.watch(publicProfileBadgesProvider(userId));
 
+    final userDoc = userDocAsync.asData?.value;
+    final avatarBgHex = userDoc?['avatarBgColor'] as String?;
+    final avatarBgColorVal = avatarBgHex != null && avatarBgHex.startsWith('#')
+        ? int.tryParse(avatarBgHex.replaceFirst('#', '0xFF'))
+        : null;
+
     return GradientBackground.red(
+      customColor: avatarBgColorVal != null ? Color(avatarBgColorVal) : null,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Stack(

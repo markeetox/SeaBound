@@ -126,7 +126,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       (i) => 'avatar_${(i + 1).toString().padLeft(2, '0')}',
     );
 
+    final bgColorVal = int.tryParse(_selectedAvatarBgColor.replaceFirst('#', '0xFF'));
+
     return GradientBackground.red(
+      customColor: bgColorVal != null ? Color(bgColorVal) : null,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Stack(
