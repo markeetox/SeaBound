@@ -134,22 +134,23 @@ class HomeScreen extends ConsumerWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // User Avatar
-                              CircleAvatar(
-                                radius: 40,
-                                backgroundColor: OceanThemeExtension.defaultTokens.surface,
+                              // User Avatar (no circle/bg, 20% larger: size 96)
+                              SizedBox(
+                                width: 96,
+                                height: 96,
                                 child: avatarId != null && avatarId.isNotEmpty
                                     ? Image.asset(
                                         'assets/avatars/$avatarId.png',
+                                        fit: BoxFit.contain,
                                         errorBuilder: (_, _, _) => const Icon(
                                           Icons.person,
-                                          size: 46,
+                                          size: 56,
                                           color: Colors.white,
                                         ),
                                       )
                                     : const Icon(
                                         Icons.person,
-                                        size: 46,
+                                        size: 56,
                                         color: Colors.white,
                                       ),
                               ),

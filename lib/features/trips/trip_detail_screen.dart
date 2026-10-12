@@ -358,14 +358,16 @@ class _ShareTripSheetState extends ConsumerState<_ShareTripSheet> {
                             }
                           });
                         },
-                        secondary: CircleAvatar(
-                          backgroundColor: OceanThemeExtension.defaultTokens.surface,
+                        secondary: SizedBox(
+                          width: 48,
+                          height: 48,
                           child: friend.avatarId != null && friend.avatarId!.isNotEmpty
                               ? Image.asset(
                                   'assets/avatars/${friend.avatarId}.png',
-                                  errorBuilder: (_, _, _) => const Icon(Icons.person, color: Colors.white),
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, _, _) => const Icon(Icons.person, color: Colors.white, size: 28),
                                 )
-                              : const Icon(Icons.person, color: Colors.white),
+                              : const Icon(Icons.person, color: Colors.white, size: 28),
                         ),
                         title: Text(
                           friend.username,
