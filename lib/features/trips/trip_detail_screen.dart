@@ -358,31 +358,16 @@ class _ShareTripSheetState extends ConsumerState<_ShareTripSheet> {
                             }
                           });
                         },
-                        secondary: Builder(
-                          builder: (context) {
-                            final hex = friend.avatarBgColor;
-                            final val = hex != null && hex.startsWith('#')
-                                ? int.tryParse(hex.replaceFirst('#', '0xFF'))
-                                : null;
-                            final bgColor = val != null ? Color(val) : OceanThemeExtension.defaultTokens.surface;
-
-                            return Container(
-                              width: 48,
-                              height: 48,
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: bgColor.withValues(alpha: 0.35),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: friend.avatarId != null && friend.avatarId!.isNotEmpty
-                                  ? Image.asset(
-                                      'assets/avatars/${friend.avatarId}.png',
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (_, _, _) => const Icon(Icons.person, color: Colors.white, size: 28),
-                                    )
-                                  : const Icon(Icons.person, color: Colors.white, size: 28),
-                            );
-                          },
+                        secondary: SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: friend.avatarId != null && friend.avatarId!.isNotEmpty
+                              ? Image.asset(
+                                  'assets/avatars/${friend.avatarId}.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, _, _) => const Icon(Icons.person, color: Colors.white, size: 28),
+                                )
+                              : const Icon(Icons.person, color: Colors.white, size: 28),
                         ),
                         title: Text(
                           friend.username,

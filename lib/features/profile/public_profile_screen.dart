@@ -94,13 +94,6 @@ class PublicProfileScreen extends ConsumerWidget {
 
                 final username = userDoc['username'] as String? ?? 'Captain';
                 final avatarId = userDoc['avatarId'] as String?;
-                final avatarBgHex = userDoc['avatarBgColor'] as String?;
-                final avatarBgColorVal = avatarBgHex != null && avatarBgHex.startsWith('#')
-                    ? int.tryParse(avatarBgHex.replaceFirst('#', '0xFF'))
-                    : null;
-                final avatarBgColor = avatarBgColorVal != null
-                    ? Color(avatarBgColorVal)
-                    : OceanThemeExtension.defaultTokens.surface;
                 final earnedMap = earnedBadgesAsync.asData?.value ?? {};
 
                 int totalXp = 0;
@@ -133,14 +126,9 @@ class PublicProfileScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          Container(
+                          SizedBox(
                             width: 125,
                             height: 125,
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: avatarBgColor.withValues(alpha: 0.35),
-                              borderRadius: BorderRadius.circular(24),
-                            ),
                             child: avatarId != null && avatarId.isNotEmpty
                                 ? Image.asset(
                                     'assets/avatars/$avatarId.png',
