@@ -153,9 +153,18 @@ class ChromeBorderContainer extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.all(
-              Radius.circular(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(
                 (borderRadius.topLeft.x - borderWidth).clamp(0.0, double.infinity),
+              ),
+              topRight: Radius.circular(
+                (borderRadius.topRight.x - borderWidth).clamp(0.0, double.infinity),
+              ),
+              bottomLeft: Radius.circular(
+                (borderRadius.bottomLeft.x - borderWidth).clamp(0.0, double.infinity),
+              ),
+              bottomRight: Radius.circular(
+                (borderRadius.bottomRight.x - borderWidth).clamp(0.0, double.infinity),
               ),
             ),
             color: backgroundColor,
