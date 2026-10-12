@@ -72,7 +72,7 @@ class HomeScreen extends ConsumerWidget {
           // Left 3 Side Edge Tabs (from screen left edge: title on left, icon on right)
           Positioned(
             left: 0,
-            top: 200,
+            top: 150,
             child: _SideEdgeTab(
               side: SideEdge.left,
               label: 'Trips',
@@ -82,17 +82,18 @@ class HomeScreen extends ConsumerWidget {
           ),
           Positioned(
             left: 0,
-            top: 280,
+            top: 235,
             child: _SideEdgeTab(
               side: SideEdge.left,
               label: 'Spots',
               icon: Icons.place_outlined,
+              isNarrow: true,
               onTap: () => context.go('/spots'),
             ),
           ),
           Positioned(
             left: 0,
-            top: 360,
+            top: 320,
             child: _SideEdgeTab(
               side: SideEdge.left,
               label: 'Alerts',
@@ -104,7 +105,7 @@ class HomeScreen extends ConsumerWidget {
           // Right 3 Side Edge Tabs (from screen right edge: icon on left, title on right)
           Positioned(
             right: 0,
-            top: 200,
+            top: 150,
             child: _SideEdgeTab(
               side: SideEdge.right,
               label: 'Profile',
@@ -114,17 +115,18 @@ class HomeScreen extends ConsumerWidget {
           ),
           Positioned(
             right: 0,
-            top: 280,
+            top: 235,
             child: _SideEdgeTab(
               side: SideEdge.right,
               label: 'Weather',
               icon: Icons.wb_sunny_outlined,
+              isNarrow: true,
               onTap: () => context.go('/spots'),
             ),
           ),
           Positioned(
             right: 0,
-            top: 360,
+            top: 320,
             child: _SideEdgeTab(
               side: SideEdge.right,
               label: 'Settings',
@@ -392,18 +394,22 @@ class _SideEdgeTab extends StatelessWidget {
   final SideEdge side;
   final String label;
   final IconData icon;
+  final bool isNarrow;
   final VoidCallback onTap;
 
   const _SideEdgeTab({
     required this.side,
     required this.label,
     required this.icon,
+    this.isNarrow = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final isLeft = side == SideEdge.left;
+    final hPadding = isNarrow ? 8.0 : 16.0;
+    const vPadding = 18.0;
 
     return ChromeBorderContainer(
       borderRadius: BorderRadius.only(
@@ -432,7 +438,7 @@ class _SideEdgeTab extends StatelessWidget {
             bottomLeft: !isLeft ? const Radius.circular(18) : Radius.zero,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: isLeft
@@ -445,12 +451,12 @@ class _SideEdgeTab extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: isNarrow ? 4 : 8),
                       Icon(icon, color: OceanThemeExtension.defaultTokens.cyan, size: 20),
                     ]
                   : [
                       Icon(icon, color: OceanThemeExtension.defaultTokens.cyan, size: 20),
-                      const SizedBox(width: 8),
+                      SizedBox(width: isNarrow ? 4 : 8),
                       Text(
                         label,
                         style: const TextStyle(
