@@ -48,6 +48,7 @@ class ProfileRepository {
     required String uid,
     required String username,
     required String avatarId,
+    String? avatarBgColor,
   }) async {
     final validationErr = Catalog.validateUsername(username);
     if (validationErr != null) {
@@ -98,6 +99,7 @@ class ProfileRepository {
           'username': username.trim(),
           'usernameLower': newUsernameLower,
           'avatarId': avatarId,
+          'avatarBgColor': ?avatarBgColor,
           'createdAt': userSnap.exists && userSnap.data()?['createdAt'] != null
               ? userSnap.data()!['createdAt']
               : FieldValue.serverTimestamp(),

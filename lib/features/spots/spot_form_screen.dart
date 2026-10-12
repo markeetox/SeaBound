@@ -8,6 +8,7 @@ import '../../core/gradient_background.dart';
 import '../auth/auth_providers.dart';
 import '../map/location_providers.dart';
 import '../profile/badge_service.dart';
+import '../profile/profile_providers.dart';
 import 'spot_model.dart';
 import 'spots_providers.dart';
 
@@ -227,6 +228,13 @@ class _SpotFormScreenState extends ConsumerState<SpotFormScreen> {
 
   Widget _buildFormScaffold(
       BuildContext context, String userId, String? userDisplayName) {
+    final userDoc = ref.watch(userDocStreamProvider).asData?.value;
+    final userBgHex = userDoc?['avatarBgColor'] as String?;
+    final userBgVal = userBgHex != null && userBgHex.startsWith('#')
+        ? int.tryParse(userBgHex.replaceFirst('#', '0xFF'))
+        : null;
+    final pointerColor = userBgVal != null ? Color(userBgVal) : Theme.of(context).colorScheme.error;
+
     final initialMapCenter = _pinnedLocation ?? const LatLng(25.7617, -80.1918);
 
     return GradientBackground.blue(
@@ -392,7 +400,7 @@ class _SpotFormScreenState extends ConsumerState<SpotFormScreen> {
                                   child: Icon(
                                     Icons.location_on,
                                     size: 40,
-                                    color: Theme.of(context).colorScheme.error,
+                                    color: pointerColor,
                                   ),
                                 ),
                               ],

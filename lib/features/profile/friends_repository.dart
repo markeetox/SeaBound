@@ -4,11 +4,13 @@ class FriendInfo {
   final String uid;
   final String username;
   final String? avatarId;
+  final String? avatarBgColor;
 
   const FriendInfo({
     required this.uid,
     required this.username,
     this.avatarId,
+    this.avatarBgColor,
   });
 
   factory FriendInfo.fromMap(Map<String, dynamic> map, String docId) {
@@ -16,6 +18,7 @@ class FriendInfo {
       uid: docId,
       username: map['username'] as String? ?? 'Captain',
       avatarId: map['avatarId'] as String?,
+      avatarBgColor: map['avatarBgColor'] as String?,
     );
   }
 
@@ -23,6 +26,7 @@ class FriendInfo {
     return {
       'username': username,
       'avatarId': avatarId,
+      if (avatarBgColor != null) 'avatarBgColor': avatarBgColor,
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
@@ -52,8 +56,10 @@ class FriendsRepository {
     required String targetUid,
     required String targetUsername,
     String? targetAvatarId,
+    String? targetAvatarBgColor,
     required String currentUsername,
     String? currentAvatarId,
+    String? currentAvatarBgColor,
   }) async {
     final batch = _firestore.batch();
 
@@ -61,6 +67,7 @@ class FriendsRepository {
     batch.set(_friendsRef(currentUid).doc(targetUid), {
       'username': targetUsername,
       'avatarId': targetAvatarId,
+      'avatarBgColor': ?targetAvatarBgColor,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -68,6 +75,7 @@ class FriendsRepository {
     batch.set(_friendsRef(targetUid).doc(currentUid), {
       'username': currentUsername,
       'avatarId': currentAvatarId,
+      'avatarBgColor': ?currentAvatarBgColor,
       'createdAt': FieldValue.serverTimestamp(),
     });
 

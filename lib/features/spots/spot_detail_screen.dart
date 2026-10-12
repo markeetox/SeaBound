@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/gradient_background.dart';
 import '../auth/auth_providers.dart';
+import '../profile/profile_providers.dart';
 import 'spots_providers.dart';
 
 class SpotDetailScreen extends ConsumerWidget {
@@ -51,6 +52,12 @@ class SpotDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final userDoc = ref.watch(userDocStreamProvider).asData?.value;
+    final userBgHex = userDoc?['avatarBgColor'] as String?;
+    final userBgVal = userBgHex != null && userBgHex.startsWith('#')
+        ? int.tryParse(userBgHex.replaceFirst('#', '0xFF'))
+        : null;
+    final pointerColor = userBgVal != null ? Color(userBgVal) : Theme.of(context).colorScheme.primary;
     final authState = ref.watch(authStateProvider);
     final currentUser = authState.asData?.value;
     final spotDetailAsync = ref.watch(spotDetailStreamProvider(spotId));
@@ -192,7 +199,7 @@ class SpotDetailScreen extends ConsumerWidget {
                                   child: Icon(
                                     Icons.place,
                                     size: 40,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: pointerColor,
                                   ),
                                 ),
                               ],

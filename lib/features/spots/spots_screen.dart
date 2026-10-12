@@ -15,6 +15,7 @@ import '../../core/map_layer_config.dart';
 import '../../core/navigation_disclaimer.dart';
 import '../alerts/alerts_providers.dart';
 import '../map/location_providers.dart';
+import '../profile/profile_providers.dart';
 import '../map_layers/artificial_reefs_service.dart';
 import '../map_layers/gibs_date_service.dart';
 import '../map_layers/map_layers_dialog.dart';
@@ -306,6 +307,13 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
 
   @override
   Widget build(BuildContext context) {
+    final userDoc = ref.watch(userDocStreamProvider).asData?.value;
+    final userBgHex = userDoc?['avatarBgColor'] as String?;
+    final userBgVal = userBgHex != null && userBgHex.startsWith('#')
+        ? int.tryParse(userBgHex.replaceFirst('#', '0xFF'))
+        : null;
+    final userPointerColor = userBgVal != null ? Color(userBgVal) : Theme.of(context).colorScheme.primary;
+
     final activeLayers = ref.watch(activeMapLayersProvider);
     final tideStationsAsync = ref.watch(tideStationsProvider);
     final userPositionAsync = ref.watch(userPositionStreamProvider);
@@ -719,7 +727,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     height: 22.0,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade600,
+                        color: userPointerColor,
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2.5),
                         boxShadow: const [
@@ -796,7 +804,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
+                          color: userPointerColor,
                           shape: BoxShape.circle,
                           boxShadow: const [
                             BoxShadow(
