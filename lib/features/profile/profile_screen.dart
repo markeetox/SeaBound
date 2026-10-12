@@ -147,6 +147,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         0;
 
     return GradientBackground.red(
+      customColor: avatarBgColorVal != null ? Color(avatarBgColorVal) : null,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Stack(

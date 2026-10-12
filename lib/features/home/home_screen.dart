@@ -126,7 +126,10 @@ class HomeScreen extends ConsumerWidget {
                       child: ChromeBorderContainer(
                         borderRadius: BorderRadius.circular(110),
                         borderWidth: 3.5,
-                        backgroundColor: const Color(0xFF0B2250).withValues(alpha: 0.9),
+                        backgroundColor: Color.alphaBlend(
+                          Colors.black.withValues(alpha: 0.40),
+                          avatarBgColor,
+                        ),
                         boxShadow: const [
                           BoxShadow(
                             color: Colors.black54,
