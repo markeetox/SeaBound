@@ -71,30 +71,112 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
 
-          // Left 3 Side Edge Tabs (vertically centered alongside center circle)
-          Positioned(
-            left: 0,
-            top: 0,
-            bottom: 0,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _SideEdgeTab(
-                    side: SideEdge.left,
+          // CENTER AVATAR CIRCLE & RADIAL ROUND BUTTONS
+          Center(
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                // CENTER CIRCLE CONTAINER: Avatar, Name, Level (Tap to open Profile)
+                GestureDetector(
+                  onTap: () {
+                    context.go('/profile');
+                  },
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: ChromeBorderContainer(
+                      borderRadius: BorderRadius.circular(110),
+                      borderWidth: 3.5,
+                      backgroundColor: Color.alphaBlend(
+                        Colors.black.withValues(alpha: 0.40),
+                        avatarBgColor,
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black54,
+                          blurRadius: 16,
+                          spreadRadius: 2,
+                          offset: Offset(0, 6),
+                        ),
+                      ],
+                      child: SizedBox(
+                        width: 200,
+                        height: 200,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // User Avatar
+                            SizedBox(
+                              width: 96,
+                              height: 96,
+                              child: avatarId != null && avatarId.isNotEmpty
+                                  ? Image.asset(
+                                      'assets/avatars/$avatarId.png',
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, _, _) => const Icon(
+                                        Icons.person,
+                                        size: 56,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person,
+                                      size: 56,
+                                      color: Colors.white,
+                                    ),
+                            ),
+                            const SizedBox(height: 8),
+                            // User Username
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                              child: Text(
+                                username,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            // User Level & Title
+                            Text(
+                              '$title • Lvl $level',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: OceanThemeExtension.defaultTokens.cyan,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Top Left: Trips (Large - 68px)
+                Transform.translate(
+                  offset: const Offset(-130, -130),
+                  child: _RadialRoundButton(
                     label: 'Trips',
-                    description: 'my saved locations.',
                     icon: Icons.explore_outlined,
+                    size: 68,
                     onTap: () => context.go('/trips'),
                   ),
-                  const SizedBox(height: 20),
-                  _SideEdgeTab(
-                    side: SideEdge.left,
+                ),
+
+                // Middle Left: Weather (Smaller - 52px, fits next to center circle)
+                Transform.translate(
+                  offset: const Offset(-138, 0),
+                  child: _RadialRoundButton(
                     label: 'Weather',
-                    description: 'Live radar & wind map',
                     icon: Icons.wb_sunny_outlined,
-                    isNarrow: true,
+                    size: 52,
                     onTap: () {
                       ref.read(activeMapLayersProvider.notifier).setLayers({
                         MapLayerConfig.weatherRadarId,
@@ -103,139 +185,52 @@ class HomeScreen extends ConsumerWidget {
                       context.go('/spots');
                     },
                   ),
-                  const SizedBox(height: 20),
-                  _SideEdgeTab(
-                    side: SideEdge.left,
+                ),
+
+                // Bottom Left: Spots (Large - 68px)
+                Transform.translate(
+                  offset: const Offset(-130, 130),
+                  child: _RadialRoundButton(
                     label: 'Spots',
-                    description: 'Community fishing spots',
                     icon: Icons.place_outlined,
+                    size: 68,
                     onTap: () => context.go('/spots'),
                   ),
-                ],
-              ),
-            ),
-          ),
+                ),
 
-          // Right 3 Side Edge Tabs (vertically centered alongside center circle)
-          Positioned(
-            right: 0,
-            top: 0,
-            bottom: 0,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _SideEdgeTab(
-                    side: SideEdge.right,
+                // Top Right: Profile (Large - 68px)
+                Transform.translate(
+                  offset: const Offset(130, -130),
+                  child: _RadialRoundButton(
                     label: 'Profile',
-                    description: 'Captain stats & XP',
                     icon: Icons.person_outlined,
+                    size: 68,
                     onTap: () => context.go('/profile'),
                   ),
-                  const SizedBox(height: 20),
-                  _SideEdgeTab(
-                    side: SideEdge.right,
+                ),
+
+                // Middle Right: Alerts (Smaller - 52px, fits next to center circle)
+                Transform.translate(
+                  offset: const Offset(138, 0),
+                  child: _RadialRoundButton(
                     label: 'Alerts',
-                    description: 'Local marine warnings',
                     icon: Icons.notifications_outlined,
-                    isNarrow: true,
+                    size: 52,
                     onTap: () => context.go('/alerts'),
                   ),
-                  const SizedBox(height: 20),
-                  _SideEdgeTab(
-                    side: SideEdge.right,
+                ),
+
+                // Bottom Right: Settings (Large - 68px)
+                Transform.translate(
+                  offset: const Offset(130, 130),
+                  child: _RadialRoundButton(
                     label: 'Settings',
-                    description: 'Account & preferences',
                     icon: Icons.settings_outlined,
+                    size: 68,
                     onTap: () => context.push('/profile/edit'),
                   ),
-                ],
-              ),
-            ),
-          ),
-
-          // CENTER CIRCLE CONTAINER: Avatar, Name, Level (Tap to open Profile)
-          Center(
-            child: GestureDetector(
-              onTap: () {
-                context.go('/profile');
-              },
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: ChromeBorderContainer(
-                  borderRadius: BorderRadius.circular(110),
-                  borderWidth: 3.5,
-                  backgroundColor: Color.alphaBlend(
-                    Colors.black.withValues(alpha: 0.40),
-                    avatarBgColor,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black54,
-                      blurRadius: 16,
-                      spreadRadius: 2,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
-                  child: SizedBox(
-                    width: 200,
-                    height: 200,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // User Avatar
-                        SizedBox(
-                          width: 96,
-                          height: 96,
-                          child: avatarId != null && avatarId.isNotEmpty
-                              ? Image.asset(
-                                  'assets/avatars/$avatarId.png',
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, _, _) => const Icon(
-                                    Icons.person,
-                                    size: 56,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.person,
-                                  size: 56,
-                                  color: Colors.white,
-                                ),
-                        ),
-                        const SizedBox(height: 8),
-                        // User Username
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                          child: Text(
-                            username,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        // User Level & Title
-                        Text(
-                          '$title • Lvl $level',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: OceanThemeExtension.defaultTokens.cyan,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
-              ),
+              ],
             ),
           ),
 
@@ -408,102 +403,71 @@ class _TopWeatherAndAlertsBanner extends ConsumerWidget {
   }
 }
 
-enum SideEdge { left, right }
-
-class _SideEdgeTab extends StatelessWidget {
-  final SideEdge side;
+class _RadialRoundButton extends StatelessWidget {
   final String label;
-  final String? description;
   final IconData icon;
-  final bool isNarrow;
+  final double size;
   final VoidCallback onTap;
 
-  const _SideEdgeTab({
-    required this.side,
+  const _RadialRoundButton({
     required this.label,
-    this.description,
     required this.icon,
-    this.isNarrow = false,
+    this.size = 68.0,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isLeft = side == SideEdge.left;
-    final hPadding = isNarrow ? 10.0 : 14.0;
-    const vPadding = 12.0;
-
-    final textContent = Column(
-      crossAxisAlignment: isLeft ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        ChromeBorderContainer(
+          borderRadius: BorderRadius.circular(size / 2),
+          borderWidth: 2.5,
+          backgroundColor: const Color(0xFF0B2250).withValues(alpha: 0.90),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black45,
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(size / 2),
+                child: Center(
+                  child: Icon(
+                    icon,
+                    color: OceanThemeExtension.defaultTokens.cyan,
+                    size: size > 60 ? 28 : 22,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
         Text(
           label,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: FontWeight.w800,
+            shadows: [
+              Shadow(
+                color: Colors.black,
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
           ),
-        ),
-        if (description != null && description!.isNotEmpty) ...[
-          const SizedBox(height: 2),
-          Text(
-            description!,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.70),
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ],
-    );
-
-    return ChromeBorderContainer(
-      borderRadius: BorderRadius.only(
-        topRight: isLeft ? const Radius.circular(20) : Radius.zero,
-        bottomRight: isLeft ? const Radius.circular(20) : Radius.zero,
-        topLeft: !isLeft ? const Radius.circular(20) : Radius.zero,
-        bottomLeft: !isLeft ? const Radius.circular(20) : Radius.zero,
-      ),
-      borderWidth: 2.0,
-      backgroundColor: const Color(0xFF0B2250).withValues(alpha: 0.90),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black45,
-          blurRadius: 8,
-          offset: Offset(0, 4),
         ),
       ],
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.only(
-            topRight: isLeft ? const Radius.circular(18) : Radius.zero,
-            bottomRight: isLeft ? const Radius.circular(18) : Radius.zero,
-            topLeft: !isLeft ? const Radius.circular(18) : Radius.zero,
-            bottomLeft: !isLeft ? const Radius.circular(18) : Radius.zero,
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: isLeft
-                  ? [
-                      textContent,
-                      SizedBox(width: isNarrow ? 6 : 10),
-                      Icon(icon, color: OceanThemeExtension.defaultTokens.cyan, size: 20),
-                    ]
-                  : [
-                      Icon(icon, color: OceanThemeExtension.defaultTokens.cyan, size: 20),
-                      SizedBox(width: isNarrow ? 6 : 10),
-                      textContent,
-                    ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
