@@ -27,7 +27,7 @@ void main() {
 
     // Verify top weather info and alert banner
     expect(find.textContaining('78°F Sunny'), findsOneWidget);
-    expect(find.textContaining('Wind: 12 kts E'), findsOneWidget);
+    expect(find.textContaining('Wind: 14 mph E'), findsOneWidget);
     expect(find.textContaining('No Active Local Marine Alerts'), findsOneWidget);
 
     // Verify 6 side edge tabs exist (Trips, Spots, Alerts on left; Profile, Weather, Settings on right)

@@ -358,7 +358,7 @@ class _TopWeatherAndAlertsBanner extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  'Wind: 12 kts E',
+                  'Wind: 14 mph E',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 11,

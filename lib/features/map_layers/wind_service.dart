@@ -10,8 +10,8 @@ class NdbcStationObs {
   final double longitude;
   final DateTime observationTime;
   final double? windDirectionDeg;
-  final double? windSpeedKnots;
-  final double? windGustKnots;
+  final double? windSpeedMph;
+  final double? windGustMph;
   final double? waveHeightFt;
 
   const NdbcStationObs({
@@ -20,12 +20,12 @@ class NdbcStationObs {
     required this.longitude,
     required this.observationTime,
     this.windDirectionDeg,
-    this.windSpeedKnots,
-    this.windGustKnots,
+    this.windSpeedMph,
+    this.windGustMph,
     this.waveHeightFt,
   });
 
-  static double mpsToKnots(double mps) => mps * 1.94384;
+  static double mpsToMph(double mps) => mps * 2.23694;
   static double metersToFeet(double meters) => meters * 3.28084;
 
   static String degreesToCompass(double? degrees) {
@@ -158,8 +158,8 @@ class WindService {
           longitude: lon,
           observationTime: time,
           windDirectionDeg: rawWdir,
-          windSpeedKnots: rawWspd != null ? NdbcStationObs.mpsToKnots(rawWspd) : null,
-          windGustKnots: rawGst != null ? NdbcStationObs.mpsToKnots(rawGst) : null,
+          windSpeedMph: rawWspd != null ? NdbcStationObs.mpsToMph(rawWspd) : null,
+          windGustMph: rawGst != null ? NdbcStationObs.mpsToMph(rawGst) : null,
           waveHeightFt: rawWvht != null ? NdbcStationObs.metersToFeet(rawWvht) : null,
         ),
       );

@@ -335,13 +335,13 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     }
   }
 
-  Color _getWindColor(double? knots) {
-    if (knots == null) return Colors.blueGrey;
-    if (knots < 10.0) {
+  Color _getWindColor(double? mph) {
+    if (mph == null) return Colors.blueGrey;
+    if (mph < 10.0) {
       return Colors.green.shade600;
-    } else if (knots < 15.0) {
+    } else if (mph < 18.0) {
       return Colors.amber.shade700;
-    } else if (knots < 20.0) {
+    } else if (mph < 25.0) {
       return Colors.orange.shade800;
     } else {
       return Colors.red.shade700;
@@ -653,12 +653,12 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
 
                   return MarkerLayer(
                     markers: visibleStations.map((station) {
-                      final color = _getWindColor(station.windSpeedKnots);
+                      final color = _getWindColor(station.windSpeedMph);
                       final dirRad = station.windDirectionDeg != null
                           ? (station.windDirectionDeg! * (3.1415926535 / 180.0))
                           : 0.0;
-                      final speedLabel = station.windSpeedKnots != null
-                          ? '${station.windSpeedKnots!.toStringAsFixed(0)}kt'
+                      final speedLabel = station.windSpeedMph != null
+                          ? '${station.windSpeedMph!.toStringAsFixed(0)}mph'
                           : 'Buoy';
 
                       return Marker(
@@ -1259,7 +1259,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                       // Wind Speed Legend
                       if (showWindObs) ...[
                         const Text(
-                          'Wind Speed (kts)',
+                          'Wind Speed (mph)',
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 10,
@@ -1273,13 +1273,13 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                                 color: Colors.green.shade600, label: '<10'),
                             const SizedBox(width: 3),
                             _LegendBox(
-                                color: Colors.amber.shade700, label: '10-15'),
+                                color: Colors.amber.shade700, label: '10-18'),
                             const SizedBox(width: 3),
                             _LegendBox(
-                                color: Colors.orange.shade800, label: '15-20'),
+                                color: Colors.orange.shade800, label: '18-25'),
                             const SizedBox(width: 3),
                             _LegendBox(
-                                color: Colors.red.shade700, label: '>20'),
+                                color: Colors.red.shade700, label: '>25'),
                           ],
                         ),
                             ],
@@ -2145,8 +2145,8 @@ class _NdbcDetailSheet extends StatelessWidget {
                       children: [
                         _DetailMetric(
                           label: 'Wind Speed',
-                          value: station.windSpeedKnots != null
-                              ? '${station.windSpeedKnots!.toStringAsFixed(1)} kts'
+                          value: station.windSpeedMph != null
+                              ? '${station.windSpeedMph!.toStringAsFixed(1)} mph'
                               : 'N/A',
                           icon: Icons.air,
                         ),
@@ -2165,8 +2165,8 @@ class _NdbcDetailSheet extends StatelessWidget {
                       children: [
                         _DetailMetric(
                           label: 'Wind Gusts',
-                          value: station.windGustKnots != null
-                              ? '${station.windGustKnots!.toStringAsFixed(1)} kts'
+                          value: station.windGustMph != null
+                              ? '${station.windGustMph!.toStringAsFixed(1)} mph'
                               : 'N/A',
                           icon: Icons.air,
                         ),
