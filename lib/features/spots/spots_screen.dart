@@ -20,6 +20,7 @@ import '../map_layers/artificial_reefs_service.dart';
 import '../map_layers/gibs_date_service.dart';
 import '../map_layers/map_layers_dialog.dart';
 import '../map_layers/map_layers_provider.dart';
+import '../map_layers/no_fishing_zones_service.dart';
 import '../map_layers/tide_providers.dart';
 import '../map_layers/tide_service.dart';
 import '../map_layers/waves_provider.dart';
@@ -125,10 +126,15 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
   List<ArtificialReefPoint>? _reefsData;
   String? _reefsError;
 
+  Timer? _noFishingDebounceTimer;
+  List<NoFishingZone>? _noFishingZonesData;
+  String? _noFishingZonesError;
+
   @override
   void dispose() {
     _wavesDebounceTimer?.cancel();
     _reefsDebounceTimer?.cancel();
+    _noFishingDebounceTimer?.cancel();
     super.dispose();
   }
 
@@ -246,6 +252,43 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     });
   }
 
+  void _fetchNoFishingZonesForBounds(LatLngBounds bounds) {
+    _noFishingDebounceTimer?.cancel();
+    _noFishingDebounceTimer = Timer(const Duration(milliseconds: 800), () async {
+      if (!mounted) return;
+
+      final activeLayers = ref.read(activeMapLayersProvider);
+      if (!activeLayers.contains(MapLayerConfig.noFishingZonesId)) return;
+
+      setState(() {
+        _noFishingZonesError = null;
+      });
+
+      try {
+        final service = ref.read(noFishingZonesServiceProvider);
+        final zones = await service.fetchZonesInBounds(
+          minLat: bounds.south,
+          maxLat: bounds.north,
+          minLng: bounds.west,
+          maxLng: bounds.east,
+        );
+
+        if (mounted) {
+          setState(() {
+            _noFishingZonesData = zones;
+            _noFishingZonesError = null;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _noFishingZonesError = e.toString().replaceAll('Exception: ', '');
+          });
+        }
+      }
+    });
+  }
+
   Future<void> _centerOnMyLocation() async {
     setState(() {
       _isLocating = true;
@@ -332,6 +375,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     final showDepth = activeLayers.contains(MapLayerConfig.depthBathymetryId);
     final showSoundings = activeLayers.contains(MapLayerConfig.depthNumbersId);
     final showRadar = activeLayers.contains(MapLayerConfig.weatherRadarId);
+    final showNoFishingZones = activeLayers.contains(MapLayerConfig.noFishingZonesId);
     final radarDataAsync = showRadar ? ref.watch(radarFramesProvider) : null;
     final showFishSpots = activeLayers.contains('fish_spots');
     final showWindObs = activeLayers.contains(MapLayerConfig.windObsId);
@@ -351,6 +395,9 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
         }
         if (next.contains(MapLayerConfig.artificialReefsId)) {
           _fetchReefsForBounds(_currentBounds!);
+        }
+        if (next.contains(MapLayerConfig.noFishingZonesId)) {
+          _fetchNoFishingZonesForBounds(_currentBounds!);
         }
       }
     });
@@ -395,6 +442,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
               });
               if (showWaves) _fetchWavesForBounds(bounds);
               if (showArtificialReefs) _fetchReefsForBounds(bounds);
+              if (showNoFishingZones) _fetchNoFishingZonesForBounds(bounds);
             },
             onPositionChanged: (position, hasGesture) {
               setState(() {
@@ -403,6 +451,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
               });
               if (showWaves) _fetchWavesForBounds(position.visibleBounds);
               if (showArtificialReefs) _fetchReefsForBounds(position.visibleBounds);
+              if (showNoFishingZones) _fetchNoFishingZonesForBounds(position.visibleBounds);
             },
           ),
           children: [
@@ -483,6 +532,21 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 errorTileCallback: (_, _, _) {},
               ),
             ],
+
+            // No-Fishing / Protected Marine Zones Polygon Layer
+            if (showNoFishingZones && _noFishingZonesData != null)
+              PolygonLayer(
+                polygons: [
+                  for (final zone in _noFishingZonesData!)
+                    for (final ring in zone.polygonRings)
+                      Polygon(
+                        points: ring,
+                        color: const Color(0x55D1142A),
+                        borderColor: const Color(0xFFD1142A),
+                        borderStrokeWidth: 2.0,
+                      ),
+                ],
+              ),
 
             // Depth Numbers (NOAA Soundings) WMS Layer
             if (showSoundings)
@@ -1303,6 +1367,120 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                               color: Colors.white,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Active No-Fishing Zone Liability Disclaimer Banner
+                if (showNoFishingZones) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 220),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD1142A),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black38,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.do_not_disturb_on_rounded, color: Colors.white, size: 16),
+                            SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'NO-FISHING ZONES ACTIVE',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Boundaries for reference only. Fishermen are strictly responsible for verifying official FWC & NOAA rules. Seabound accepts no liability for fishing in restricted zones.',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // No-Fishing Zones Error Banner directly under Legend/Alerts
+                if (showNoFishingZones && _noFishingZonesError != null) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 220),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            "Couldn't load zone data",
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onErrorContainer,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            final bounds = _currentBounds ?? _mapController.camera.visibleBounds;
+                            _fetchNoFishingZonesForBounds(bounds);
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Retry',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onErrorContainer,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
                             ),
                           ),
                         ),
