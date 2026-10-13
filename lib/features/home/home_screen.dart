@@ -159,13 +159,13 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Top Left: Fish locations (Large - 76px, unlinked feature coming soon)
+                // Top Left: Fish locations (82px, unlinked feature coming soon)
                 Transform.translate(
-                  offset: const Offset(-105, -100),
+                  offset: const Offset(-125, -115),
                   child: _RadialRoundButton(
                     label: 'Fish locations',
                     icon: Icons.phishing,
-                    size: 76,
+                    size: 82,
                     onTap: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -177,63 +177,67 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Middle Left: Weather (Medium - 64px, closer to center circle)
+                // Middle Left: Waves (82px, map with only waves filter active)
                 Transform.translate(
-                  offset: const Offset(-118, 0),
+                  offset: const Offset(-138, 0),
                   child: _RadialRoundButton(
-                    label: 'Weather',
-                    icon: Icons.wb_sunny_outlined,
-                    size: 64,
+                    label: 'Waves',
+                    icon: Icons.tsunami,
+                    size: 82,
                     onTap: () {
                       ref.read(activeMapLayersProvider.notifier).setLayers({
-                        MapLayerConfig.weatherRadarId,
-                        MapLayerConfig.windObsId,
+                        MapLayerConfig.wavesId,
                       });
                       context.go('/spots');
                     },
                   ),
                 ),
 
-                // Bottom Left: Spots (Large - 76px)
+                // Bottom Left: Depth (82px, map with only depth filter active)
                 Transform.translate(
-                  offset: const Offset(-105, 100),
+                  offset: const Offset(-125, 115),
                   child: _RadialRoundButton(
-                    label: 'Spots',
-                    icon: Icons.place_outlined,
-                    size: 76,
-                    onTap: () => context.go('/spots'),
+                    label: 'Depth',
+                    icon: Icons.water,
+                    size: 82,
+                    onTap: () {
+                      ref.read(activeMapLayersProvider.notifier).setLayers({
+                        MapLayerConfig.depthBathymetryId,
+                      });
+                      context.go('/spots');
+                    },
                   ),
                 ),
 
-                // Top Right: Profile (Large - 76px)
+                // Top Right: Profile (82px)
                 Transform.translate(
-                  offset: const Offset(105, -100),
+                  offset: const Offset(125, -115),
                   child: _RadialRoundButton(
                     label: 'Profile',
                     icon: Icons.person_outlined,
-                    size: 76,
+                    size: 82,
                     onTap: () => context.go('/profile'),
                   ),
                 ),
 
-                // Middle Right: Alerts (Medium - 64px, closer to center circle)
+                // Middle Right: Alerts (82px)
                 Transform.translate(
-                  offset: const Offset(118, 0),
+                  offset: const Offset(138, 0),
                   child: _RadialRoundButton(
                     label: 'Alerts',
                     icon: Icons.notifications_outlined,
-                    size: 64,
+                    size: 82,
                     onTap: () => context.go('/alerts'),
                   ),
                 ),
 
-                // Bottom Right: Settings (Large - 76px)
+                // Bottom Right: Settings (82px)
                 Transform.translate(
-                  offset: const Offset(105, 100),
+                  offset: const Offset(125, 115),
                   child: _RadialRoundButton(
                     label: 'Settings',
                     icon: Icons.settings_outlined,
-                    size: 76,
+                    size: 82,
                     onTap: () => context.push('/profile/edit'),
                   ),
                 ),
@@ -419,62 +423,60 @@ class _RadialRoundButton extends StatelessWidget {
   const _RadialRoundButton({
     required this.label,
     required this.icon,
-    this.size = 68.0,
+    this.size = 82.0,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ChromeBorderContainer(
-          borderRadius: BorderRadius.circular(size / 2),
-          borderWidth: 2.5,
-          backgroundColor: const Color(0xFF0B2250).withValues(alpha: 0.90),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black45,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-          child: SizedBox(
-            width: size,
-            height: size,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap,
-                borderRadius: BorderRadius.circular(size / 2),
-                child: Center(
-                  child: Icon(
-                    icon,
-                    color: OceanThemeExtension.defaultTokens.cyan,
-                    size: size > 60 ? 28 : 22,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            shadows: [
-              Shadow(
-                color: Colors.black,
-                blurRadius: 4,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
+    return ChromeBorderContainer(
+      borderRadius: BorderRadius.circular(size / 2),
+      borderWidth: 2.5,
+      backgroundColor: const Color(0xFF0B2250).withValues(alpha: 0.90),
+      boxShadow: const [
+        BoxShadow(
+          color: Colors.black45,
+          blurRadius: 8,
+          offset: Offset(0, 4),
         ),
       ],
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(size / 2),
+            child: Padding(
+              padding: const EdgeInsets.all(6.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    color: OceanThemeExtension.defaultTokens.cyan,
+                    size: 24,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
