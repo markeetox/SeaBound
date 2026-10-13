@@ -127,6 +127,11 @@ class ActiveMapLayersNotifier extends Notifier<Set<String>> {
     _saveToPrefs();
   }
 
+  void setLayers(Set<String> layers) {
+    state = layers;
+    _saveToPrefs();
+  }
+
   void clearAll() {
     state = {};
     _saveToPrefs();

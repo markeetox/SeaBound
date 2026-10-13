@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/app_theme.dart';
 import '../../core/gradient_background.dart';
+import '../../core/map_layer_config.dart';
 import '../alerts/alerts_providers.dart';
+import '../map_layers/map_layers_provider.dart';
 import '../profile/catalog.dart';
 import '../profile/profile_providers.dart';
 
@@ -82,23 +84,32 @@ class HomeScreen extends ConsumerWidget {
                   _SideEdgeTab(
                     side: SideEdge.left,
                     label: 'Trips',
+                    description: 'my saved locations.',
                     icon: Icons.explore_outlined,
                     onTap: () => context.go('/trips'),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
+                  _SideEdgeTab(
+                    side: SideEdge.left,
+                    label: 'Weather',
+                    description: 'Live radar & wind map',
+                    icon: Icons.wb_sunny_outlined,
+                    isNarrow: true,
+                    onTap: () {
+                      ref.read(activeMapLayersProvider.notifier).setLayers({
+                        MapLayerConfig.weatherRadarId,
+                        MapLayerConfig.windObsId,
+                      });
+                      context.go('/spots');
+                    },
+                  ),
+                  const SizedBox(height: 20),
                   _SideEdgeTab(
                     side: SideEdge.left,
                     label: 'Spots',
+                    description: 'Community fishing spots',
                     icon: Icons.place_outlined,
-                    isNarrow: true,
                     onTap: () => context.go('/spots'),
-                  ),
-                  const SizedBox(height: 24),
-                  _SideEdgeTab(
-                    side: SideEdge.left,
-                    label: 'Alerts',
-                    icon: Icons.notifications_outlined,
-                    onTap: () => context.go('/alerts'),
                   ),
                 ],
               ),
@@ -118,21 +129,24 @@ class HomeScreen extends ConsumerWidget {
                   _SideEdgeTab(
                     side: SideEdge.right,
                     label: 'Profile',
+                    description: 'Captain stats & XP',
                     icon: Icons.person_outlined,
                     onTap: () => context.go('/profile'),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   _SideEdgeTab(
                     side: SideEdge.right,
-                    label: 'Weather',
-                    icon: Icons.wb_sunny_outlined,
+                    label: 'Alerts',
+                    description: 'Local marine warnings',
+                    icon: Icons.notifications_outlined,
                     isNarrow: true,
-                    onTap: () => context.go('/spots'),
+                    onTap: () => context.go('/alerts'),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   _SideEdgeTab(
                     side: SideEdge.right,
                     label: 'Settings',
+                    description: 'Account & preferences',
                     icon: Icons.settings_outlined,
                     onTap: () => context.push('/profile/edit'),
                   ),
@@ -399,6 +413,7 @@ enum SideEdge { left, right }
 class _SideEdgeTab extends StatelessWidget {
   final SideEdge side;
   final String label;
+  final String? description;
   final IconData icon;
   final bool isNarrow;
   final VoidCallback onTap;
@@ -406,6 +421,7 @@ class _SideEdgeTab extends StatelessWidget {
   const _SideEdgeTab({
     required this.side,
     required this.label,
+    this.description,
     required this.icon,
     this.isNarrow = false,
     required this.onTap,
@@ -414,8 +430,34 @@ class _SideEdgeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLeft = side == SideEdge.left;
-    final hPadding = isNarrow ? 8.0 : 16.0;
-    const vPadding = 18.0;
+    final hPadding = isNarrow ? 10.0 : 14.0;
+    const vPadding = 12.0;
+
+    final textContent = Column(
+      crossAxisAlignment: isLeft ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        if (description != null && description!.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(
+            description!,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.70),
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ],
+    );
 
     return ChromeBorderContainer(
       borderRadius: BorderRadius.only(
@@ -449,28 +491,14 @@ class _SideEdgeTab extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: isLeft
                   ? [
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      SizedBox(width: isNarrow ? 4 : 8),
+                      textContent,
+                      SizedBox(width: isNarrow ? 6 : 10),
                       Icon(icon, color: OceanThemeExtension.defaultTokens.cyan, size: 20),
                     ]
                   : [
                       Icon(icon, color: OceanThemeExtension.defaultTokens.cyan, size: 20),
-                      SizedBox(width: isNarrow ? 4 : 8),
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
+                      SizedBox(width: isNarrow ? 6 : 10),
+                      textContent,
                     ],
             ),
           ),
