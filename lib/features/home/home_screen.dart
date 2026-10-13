@@ -85,7 +85,7 @@ class HomeScreen extends ConsumerWidget {
                   child: MouseRegion(
                     cursor: SystemMouseCursors.click,
                     child: ChromeBorderContainer(
-                      borderRadius: BorderRadius.circular(110),
+                      borderRadius: BorderRadius.circular(90),
                       borderWidth: 3.5,
                       backgroundColor: Color.alphaBlend(
                         Colors.black.withValues(alpha: 0.40),
@@ -100,39 +100,39 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                       child: SizedBox(
-                        width: 200,
-                        height: 200,
+                        width: 160,
+                        height: 160,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             // User Avatar
                             SizedBox(
-                              width: 96,
-                              height: 96,
+                              width: 72,
+                              height: 72,
                               child: avatarId != null && avatarId.isNotEmpty
                                   ? Image.asset(
                                       'assets/avatars/$avatarId.png',
                                       fit: BoxFit.contain,
                                       errorBuilder: (_, _, _) => const Icon(
                                         Icons.person,
-                                        size: 56,
+                                        size: 44,
                                         color: Colors.white,
                                       ),
                                     )
                                   : const Icon(
                                       Icons.person,
-                                      size: 56,
+                                      size: 44,
                                       color: Colors.white,
                                     ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 4),
                             // User Username
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
                               child: Text(
                                 username,
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
@@ -145,7 +145,7 @@ class HomeScreen extends ConsumerWidget {
                             Text(
                               '$title • Lvl $level',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w800,
                                 color: OceanThemeExtension.defaultTokens.cyan,
                               ),
@@ -159,24 +159,31 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Top Left: Trips (Large - 68px)
+                // Top Left: Fish locations (Large - 76px, unlinked feature coming soon)
                 Transform.translate(
-                  offset: const Offset(-130, -130),
+                  offset: const Offset(-105, -100),
                   child: _RadialRoundButton(
-                    label: 'Trips',
-                    icon: Icons.explore_outlined,
-                    size: 68,
-                    onTap: () => context.go('/trips'),
+                    label: 'Fish locations',
+                    icon: Icons.phishing,
+                    size: 76,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Fish locations feature coming soon.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
                   ),
                 ),
 
-                // Middle Left: Weather (Smaller - 52px, fits next to center circle)
+                // Middle Left: Weather (Medium - 64px, closer to center circle)
                 Transform.translate(
-                  offset: const Offset(-138, 0),
+                  offset: const Offset(-118, 0),
                   child: _RadialRoundButton(
                     label: 'Weather',
                     icon: Icons.wb_sunny_outlined,
-                    size: 52,
+                    size: 64,
                     onTap: () {
                       ref.read(activeMapLayersProvider.notifier).setLayers({
                         MapLayerConfig.weatherRadarId,
@@ -187,46 +194,46 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Bottom Left: Spots (Large - 68px)
+                // Bottom Left: Spots (Large - 76px)
                 Transform.translate(
-                  offset: const Offset(-130, 130),
+                  offset: const Offset(-105, 100),
                   child: _RadialRoundButton(
                     label: 'Spots',
                     icon: Icons.place_outlined,
-                    size: 68,
+                    size: 76,
                     onTap: () => context.go('/spots'),
                   ),
                 ),
 
-                // Top Right: Profile (Large - 68px)
+                // Top Right: Profile (Large - 76px)
                 Transform.translate(
-                  offset: const Offset(130, -130),
+                  offset: const Offset(105, -100),
                   child: _RadialRoundButton(
                     label: 'Profile',
                     icon: Icons.person_outlined,
-                    size: 68,
+                    size: 76,
                     onTap: () => context.go('/profile'),
                   ),
                 ),
 
-                // Middle Right: Alerts (Smaller - 52px, fits next to center circle)
+                // Middle Right: Alerts (Medium - 64px, closer to center circle)
                 Transform.translate(
-                  offset: const Offset(138, 0),
+                  offset: const Offset(118, 0),
                   child: _RadialRoundButton(
                     label: 'Alerts',
                     icon: Icons.notifications_outlined,
-                    size: 52,
+                    size: 64,
                     onTap: () => context.go('/alerts'),
                   ),
                 ),
 
-                // Bottom Right: Settings (Large - 68px)
+                // Bottom Right: Settings (Large - 76px)
                 Transform.translate(
-                  offset: const Offset(130, 130),
+                  offset: const Offset(105, 100),
                   child: _RadialRoundButton(
                     label: 'Settings',
                     icon: Icons.settings_outlined,
-                    size: 68,
+                    size: 76,
                     onTap: () => context.push('/profile/edit'),
                   ),
                 ),
