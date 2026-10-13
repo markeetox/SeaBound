@@ -69,69 +69,75 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
 
-          // Left 3 Side Edge Tabs (from screen left edge: title on left, icon on right)
+          // Left 3 Side Edge Tabs (vertically centered alongside center circle)
           Positioned(
             left: 0,
-            top: 150,
-            child: _SideEdgeTab(
-              side: SideEdge.left,
-              label: 'Trips',
-              icon: Icons.explore_outlined,
-              onTap: () => context.go('/trips'),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            top: 235,
-            child: _SideEdgeTab(
-              side: SideEdge.left,
-              label: 'Spots',
-              icon: Icons.place_outlined,
-              isNarrow: true,
-              onTap: () => context.go('/spots'),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            top: 320,
-            child: _SideEdgeTab(
-              side: SideEdge.left,
-              label: 'Alerts',
-              icon: Icons.notifications_outlined,
-              onTap: () => context.go('/alerts'),
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _SideEdgeTab(
+                    side: SideEdge.left,
+                    label: 'Trips',
+                    icon: Icons.explore_outlined,
+                    onTap: () => context.go('/trips'),
+                  ),
+                  const SizedBox(height: 24),
+                  _SideEdgeTab(
+                    side: SideEdge.left,
+                    label: 'Spots',
+                    icon: Icons.place_outlined,
+                    isNarrow: true,
+                    onTap: () => context.go('/spots'),
+                  ),
+                  const SizedBox(height: 24),
+                  _SideEdgeTab(
+                    side: SideEdge.left,
+                    label: 'Alerts',
+                    icon: Icons.notifications_outlined,
+                    onTap: () => context.go('/alerts'),
+                  ),
+                ],
+              ),
             ),
           ),
 
-          // Right 3 Side Edge Tabs (from screen right edge: icon on left, title on right)
+          // Right 3 Side Edge Tabs (vertically centered alongside center circle)
           Positioned(
             right: 0,
-            top: 150,
-            child: _SideEdgeTab(
-              side: SideEdge.right,
-              label: 'Profile',
-              icon: Icons.person_outlined,
-              onTap: () => context.go('/profile'),
-            ),
-          ),
-          Positioned(
-            right: 0,
-            top: 235,
-            child: _SideEdgeTab(
-              side: SideEdge.right,
-              label: 'Weather',
-              icon: Icons.wb_sunny_outlined,
-              isNarrow: true,
-              onTap: () => context.go('/spots'),
-            ),
-          ),
-          Positioned(
-            right: 0,
-            top: 320,
-            child: _SideEdgeTab(
-              side: SideEdge.right,
-              label: 'Settings',
-              icon: Icons.settings_outlined,
-              onTap: () => context.push('/profile/edit'),
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _SideEdgeTab(
+                    side: SideEdge.right,
+                    label: 'Profile',
+                    icon: Icons.person_outlined,
+                    onTap: () => context.go('/profile'),
+                  ),
+                  const SizedBox(height: 24),
+                  _SideEdgeTab(
+                    side: SideEdge.right,
+                    label: 'Weather',
+                    icon: Icons.wb_sunny_outlined,
+                    isNarrow: true,
+                    onTap: () => context.go('/spots'),
+                  ),
+                  const SizedBox(height: 24),
+                  _SideEdgeTab(
+                    side: SideEdge.right,
+                    label: 'Settings',
+                    icon: Icons.settings_outlined,
+                    onTap: () => context.push('/profile/edit'),
+                  ),
+                ],
+              ),
             ),
           ),
 
