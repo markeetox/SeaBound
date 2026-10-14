@@ -9,9 +9,9 @@ void main() {
   });
 
   group('NdbcStationObs Model & Conversion Tests', () {
-    test('mpsToKnots converts meters/sec to knots correctly', () {
-      expect(NdbcStationObs.mpsToKnots(1.0), closeTo(1.94384, 0.001));
-      expect(NdbcStationObs.mpsToKnots(5.1), closeTo(9.91358, 0.01));
+    test('mpsToMph converts meters/sec to mph correctly', () {
+      expect(NdbcStationObs.mpsToMph(1.0), closeTo(2.23694, 0.001));
+      expect(NdbcStationObs.mpsToMph(5.0), closeTo(11.1847, 0.01));
     });
 
     test('degreesToCompass returns correct compass direction', () {
@@ -49,14 +49,14 @@ LONF1    24.84   -80.60  2026 10 08 21 00  MM    MM    MM   MM  MM   MM  MM 1015
       expect(buoy.latitude, equals(28.51));
       expect(buoy.longitude, equals(-80.18));
       expect(buoy.windDirectionDeg, equals(180.0));
-      expect(buoy.windSpeedKnots, closeTo(9.719, 0.01));
-      expect(buoy.windGustKnots, closeTo(13.606, 0.01));
+      expect(buoy.windSpeedMph, closeTo(11.185, 0.01));
+      expect(buoy.windGustMph, closeTo(15.659, 0.01));
       expect(buoy.waveHeightFt, closeTo(3.937, 0.01));
 
       final lonf1 = stations.firstWhere((s) => s.stationId == 'LONF1');
       expect(lonf1.windDirectionDeg, isNull);
-      expect(lonf1.windSpeedKnots, isNull);
-      expect(lonf1.windGustKnots, isNull);
+      expect(lonf1.windSpeedMph, isNull);
+      expect(lonf1.windGustMph, isNull);
     });
 
     test('falls back to proxy endpoint when direct request fails', () async {
