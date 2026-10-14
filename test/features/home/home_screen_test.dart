@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:seabound/core/map_layer_config.dart';
 import 'package:seabound/features/alerts/alerts_providers.dart';
 import 'package:seabound/features/home/home_screen.dart';
@@ -48,34 +50,58 @@ void main() {
   testWidgets('HomeScreen radial buttons for Waves and Depth activate map layers', (WidgetTester tester) async {
     Set<String>? activeLayers;
 
-    await pumpApp(
-      tester,
-      Consumer(
-        builder: (context, ref, _) {
-          activeLayers = ref.watch(activeMapLayersProvider);
-          return const HomeScreen();
-        },
-      ),
-      overrides: [
-        userDocStreamProvider.overrideWith((ref) => Stream.value({
-              'username': 'CaptainJack',
-            })),
-        userEarnedBadgesProvider.overrideWith((ref) => Stream.value({})),
-        alertsNotifierProvider.overrideWith(() => AlertsNotifier()),
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        GoRoute(
+          path: '/home',
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) {
+              activeLayers = ref.watch(activeMapLayersProvider);
+              return const HomeScreen();
+            },
+          ),
+        ),
+        GoRoute(
+          path: '/spots',
+          builder: (context, state) => const Scaffold(body: Text('Spots Screen')),
+        ),
       ],
     );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          userDocStreamProvider.overrideWith((ref) => Stream.value({
+                'username': 'CaptainJack',
+              })),
+          userEarnedBadgesProvider.overrideWith((ref) => Stream.value({})),
+          alertsNotifierProvider.overrideWith(() => AlertsNotifier()),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     // Tap Waves radial button
     await tester.tap(find.text('Waves'));
     await tester.pumpAndSettle();
 
     expect(activeLayers, contains(MapLayerConfig.wavesId));
+    expect(find.text('Spots Screen'), findsOneWidget);
+
+    // Navigate back to /home to test Depth
+    router.go('/home');
+    await tester.pumpAndSettle();
 
     // Tap Depth radial button
     await tester.tap(find.text('Depth'));
     await tester.pumpAndSettle();
 
     expect(activeLayers, contains(MapLayerConfig.depthBathymetryId));
+    expect(find.text('Spots Screen'), findsOneWidget);
   });
 
   testWidgets('HomeScreen Fish locations shows coming soon SnackBar on tap', (WidgetTester tester) async {
