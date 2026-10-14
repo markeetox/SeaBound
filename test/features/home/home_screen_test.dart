@@ -30,13 +30,13 @@ void main() {
     expect(find.textContaining('Wind: 14 mph E'), findsOneWidget);
     expect(find.textContaining('No Active Local Marine Alerts'), findsOneWidget);
 
-    // Verify 6 radial buttons exist (Fish locations, Waves, Depth on left; Profile, Alerts, Settings on right)
+    // Verify 6 radial buttons exist (Fish locations, Waves, Depth on left; Trips, Alerts, Spots on right)
     expect(find.text('Fish locations'), findsOneWidget);
     expect(find.text('Waves'), findsOneWidget);
     expect(find.text('Depth'), findsOneWidget);
-    expect(find.text('Profile'), findsOneWidget);
+    expect(find.text('Trips'), findsOneWidget);
     expect(find.text('Alerts'), findsOneWidget);
-    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Spots'), findsOneWidget);
 
     // Verify bottom-left red SOS button exists
     expect(find.text('SOS'), findsOneWidget);

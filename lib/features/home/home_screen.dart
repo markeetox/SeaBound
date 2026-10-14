@@ -209,14 +209,14 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Top Right: Profile (82px)
+                // Top Right: Trips (82px)
                 Transform.translate(
                   offset: const Offset(125, -115),
                   child: _RadialRoundButton(
-                    label: 'Profile',
-                    icon: Icons.person_outlined,
+                    label: 'Trips',
+                    icon: Icons.explore_outlined,
                     size: 82,
-                    onTap: () => context.go('/profile'),
+                    onTap: () => context.go('/trips'),
                   ),
                 ),
 
@@ -231,14 +231,14 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Bottom Right: Settings (82px)
+                // Bottom Right: Spots (82px)
                 Transform.translate(
                   offset: const Offset(125, 115),
                   child: _RadialRoundButton(
-                    label: 'Settings',
-                    icon: Icons.settings_outlined,
+                    label: 'Spots',
+                    icon: Icons.place_outlined,
                     size: 82,
-                    onTap: () => context.push('/profile/edit'),
+                    onTap: () => context.go('/spots'),
                   ),
                 ),
               ],
@@ -334,28 +334,19 @@ class _TopWeatherAndAlertsBanner extends ConsumerWidget {
       alertColor = OceanThemeExtension.defaultTokens.cyan;
     }
 
-    return ChromeBorderContainer(
-      borderRadius: BorderRadius.circular(20),
-      borderWidth: 2.0,
-      backgroundColor: const Color(0xFF03112B).withValues(alpha: 0.85),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black45,
-          blurRadius: 10,
-          offset: Offset(0, 4),
-        ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Weather Information (Stacked Top)
+        Row(
           children: [
-            // Weather Icon & Temp
             const Icon(
               Icons.wb_sunny_rounded,
               color: Color(0xFFFFD54F),
-              size: 26,
+              size: 34,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -364,52 +355,64 @@ class _TopWeatherAndAlertsBanner extends ConsumerWidget {
                   '78°F Sunny',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black87,
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                 ),
                 Text(
                   'Wind: 14 mph E',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.90),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black87,
+                        blurRadius: 6,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const Spacer(),
-            // Divider
-            Container(
-              height: 28,
-              width: 1,
-              color: Colors.white24,
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            // Local Alert Status
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Local Alert Banner (Stacked Underneath)
+        Row(
+          children: [
+            Icon(alertIcon, color: alertColor, size: 24),
+            const SizedBox(width: 8),
             Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Icon(alertIcon, color: alertColor, size: 20),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      alertText,
-                      style: TextStyle(
-                        color: alertColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+              child: Text(
+                alertText,
+                style: TextStyle(
+                  color: alertColor,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  shadows: const [
+                    Shadow(
+                      color: Colors.black87,
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 }
