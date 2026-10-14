@@ -32,7 +32,7 @@ void showBadgeUnlocks(BuildContext context, BadgeResult result) {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              BadgePin(badge: badge, isEarned: true, size: 80),
+              BadgePin(badge: badge, isEarned: true, size: 160),
               const SizedBox(height: 12),
               Text(
                 badge.name,

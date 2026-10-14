@@ -334,44 +334,76 @@ class _TopWeatherAndAlertsBanner extends ConsumerWidget {
       alertColor = OceanThemeExtension.defaultTokens.cyan;
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Weather Information (Stacked Top)
-        Row(
-          children: [
-            const Icon(
-              Icons.wb_sunny_rounded,
-              color: Color(0xFFFFD54F),
-              size: 34,
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  '78°F Sunny',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black87,
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Weather Information (Stacked Top - Twice as big)
+          Row(
+            children: [
+              const Icon(
+                Icons.wb_sunny_rounded,
+                color: Color(0xFFFFD54F),
+                size: 68,
+              ),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '78°F Sunny',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black87,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  'Wind: 14 mph E',
+                  Text(
+                    'Wind: 14 mph E',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.90),
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      shadows: const [
+                        Shadow(
+                          color: Colors.black87,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Local Alert Banner (Stacked Underneath)
+          Row(
+            children: [
+              Icon(alertIcon, color: alertColor, size: 26),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  alertText,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.90),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    color: alertColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
                     shadows: const [
                       Shadow(
                         color: Colors.black87,
@@ -380,39 +412,14 @@ class _TopWeatherAndAlertsBanner extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        // Local Alert Banner (Stacked Underneath)
-        Row(
-          children: [
-            Icon(alertIcon, color: alertColor, size: 24),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                alertText,
-                style: TextStyle(
-                  color: alertColor,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  shadows: const [
-                    Shadow(
-                      color: Colors.black87,
-                      blurRadius: 6,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
