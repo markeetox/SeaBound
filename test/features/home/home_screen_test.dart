@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:seabound/core/map_layer_config.dart';
 import 'package:seabound/features/alerts/alerts_providers.dart';
