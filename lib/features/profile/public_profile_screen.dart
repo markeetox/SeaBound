@@ -7,6 +7,7 @@ import '../../core/floating_top_bar.dart';
 import '../../core/gradient_background.dart';
 import '../auth/auth_providers.dart';
 import 'badge_pin.dart';
+import 'badge_service.dart';
 import 'catalog.dart';
 import 'profile_providers.dart';
 
@@ -219,6 +220,9 @@ class PublicProfileScreen extends ConsumerWidget {
                                       currentUsername: currentUsername,
                                       currentAvatarId: currentAvatarId,
                                     );
+                                    final badgeResult = await ref
+                                        .read(badgeServiceProvider)
+                                        .onFriendAdded(userId);
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
@@ -226,6 +230,7 @@ class PublicProfileScreen extends ConsumerWidget {
                                           behavior: SnackBarBehavior.floating,
                                         ),
                                       );
+                                      showBadgeUnlocks(context, badgeResult);
                                     }
                                   }
                                 },

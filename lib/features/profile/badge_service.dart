@@ -93,6 +93,9 @@ class BadgeService {
 
   User? get _user => _auth.currentUser;
 
+  static const markeetoxUid = 'ojMSrDiSHHZs82kwFGVADnvQGCh1';
+  static const osnola26Uid = 'XAabc7h3qLXw0xMhFwBR9dDYeuD2';
+
   Future<BadgeResult> checkAllBadges() async {
     if (_user == null) return const BadgeResult();
     final uid = _user!.uid;
@@ -111,7 +114,54 @@ class BadgeService {
     // Check profile colors_raised
     unlocked.addAll(await _checkProfileColorsRaised(uid));
 
+    // Check friend badges
+    unlocked.addAll(await _checkFriendBadges(uid));
+
     return _buildResultAndSetBadges(uid, unlocked);
+  }
+
+  Future<BadgeResult> onFriendAdded(String targetUid) async {
+    if (_user == null) return const BadgeResult();
+    final uid = _user!.uid;
+    final unlocked = <AchievementBadge>[];
+
+    if (targetUid == markeetoxUid) {
+      final b = await _awardBadge(uid, 'friend_markeetox');
+      if (b != null) unlocked.add(b);
+    } else if (targetUid == osnola26Uid) {
+      final b = await _awardBadge(uid, 'friend_osnola26');
+      if (b != null) unlocked.add(b);
+    }
+
+    return _buildResultAndSetBadges(uid, unlocked);
+  }
+
+  Future<List<AchievementBadge>> _checkFriendBadges(String uid) async {
+    final list = <AchievementBadge>[];
+
+    final markeetoxDoc = await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('friends')
+        .doc(markeetoxUid)
+        .get();
+    if (markeetoxDoc.exists) {
+      final b = await _awardBadge(uid, 'friend_markeetox');
+      if (b != null) list.add(b);
+    }
+
+    final osnolaDoc = await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('friends')
+        .doc(osnola26Uid)
+        .get();
+    if (osnolaDoc.exists) {
+      final b = await _awardBadge(uid, 'friend_osnola26');
+      if (b != null) list.add(b);
+    }
+
+    return list;
   }
 
   Future<BadgeResult> onTripLogged(String uid, int tripCount) async {
