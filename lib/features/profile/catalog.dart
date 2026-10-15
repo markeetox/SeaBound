@@ -114,6 +114,24 @@ class Catalog {
       imageAsset: 'assets/badges/founding.png',
       sortOrder: 10,
     ),
+    const AchievementBadge(
+      id: 'friend_markeetox',
+      name: 'Markeetox',
+      description: 'Add markeetox as a friend.',
+      hint: 'Friend user markeetox.',
+      xp: 500,
+      imageAsset: 'assets/badges/markeetox.png',
+      sortOrder: 11,
+    ),
+    const AchievementBadge(
+      id: 'friend_osnola26',
+      name: 'Osnola26',
+      description: 'Add osnola26 as a friend.',
+      hint: 'Friend user osnola26.',
+      xp: 500,
+      imageAsset: 'assets/badges/osnola.png',
+      sortOrder: 12,
+    ),
   ];
 
   static AchievementBadge? getBadgeById(String id) {

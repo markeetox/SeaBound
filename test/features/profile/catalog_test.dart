@@ -61,13 +61,25 @@ void main() {
   });
 
   group('Catalog Badges List Tests', () {
-    test('contains expected starter badges', () {
+    test('contains expected starter badges including friend badges', () {
       final starterIds = Catalog.starterBadges.map((b) => b.id).toList();
       expect(starterIds, contains('welcome_aboard'));
       expect(starterIds, contains('colors_raised'));
       expect(starterIds, contains('first_log'));
       expect(starterIds, contains('spot_finder'));
       expect(starterIds, contains('founding_crew'));
+      expect(starterIds, contains('friend_markeetox'));
+      expect(starterIds, contains('friend_osnola26'));
+
+      final markeetox = Catalog.getBadgeById('friend_markeetox');
+      expect(markeetox, isNotNull);
+      expect(markeetox!.xp, equals(500));
+      expect(markeetox.imageAsset, equals('assets/badges/markeetox.png'));
+
+      final osnola = Catalog.getBadgeById('friend_osnola26');
+      expect(osnola, isNotNull);
+      expect(osnola!.xp, equals(500));
+      expect(osnola.imageAsset, equals('assets/badges/osnola.png'));
     });
   });
 }
