@@ -58,7 +58,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              BadgePin(badge: badge, isEarned: isEarned, size: 120),
+              BadgePin(badge: badge, isEarned: isEarned, size: 240),
               const SizedBox(height: 12),
               Text(
                 badge.name,

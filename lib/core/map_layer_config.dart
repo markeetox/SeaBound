@@ -9,6 +9,7 @@ class MapLayerConfig {
   static const String chlorophyllId = 'chlorophyll';
   static const String artificialReefsId = 'artificial_reefs';
   static const String windObsId = 'wind_obs';
+  static const String noFishingZonesId = 'no_fishing_zones';
 
   // URLs
   static const String openStreetMapTileUrl =
@@ -67,6 +68,10 @@ class MapLayerConfig {
   }) {
     return 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/$layerIdentifier/default/$dateStr/$tileMatrixSet/{z}/{y}/{x}.png';
   }
+
+  // NOAA Marine Protected Areas (MPA) Inventory FeatureServer Query URL
+  static const String noaaMpaQueryUrl =
+      'https://services2.arcgis.com/C8EMgrs2yAFL22Oa/arcgis/rest/services/NOAA_MPA_Inventory/FeatureServer/0/query';
 
   // FWC Structure Endpoints
   static const String fwcArtificialReefsQueryUrl =

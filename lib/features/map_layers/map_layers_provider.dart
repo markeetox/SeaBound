@@ -87,6 +87,15 @@ final availableLayers = [
     defaultOn: true,
     group: 'Fish',
   ),
+
+  // Protection Group
+  const MapLayerItem(
+    id: MapLayerConfig.noFishingZonesId,
+    displayName: 'No-Fishing Zones',
+    icon: Icons.do_not_disturb_on_rounded,
+    defaultOn: false,
+    group: 'Protection',
+  ),
 ];
 
 class ActiveMapLayersNotifier extends Notifier<Set<String>> {

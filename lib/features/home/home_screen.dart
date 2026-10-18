@@ -13,6 +13,7 @@ import '../profile/profile_providers.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userDocAsync = ref.watch(userDocStreamProvider);
@@ -79,13 +80,11 @@ class HomeScreen extends ConsumerWidget {
               children: [
                 // CENTER CIRCLE CONTAINER: Avatar, Name, Level (Tap to open Profile)
                 GestureDetector(
-                  onTap: () {
-                    context.go('/profile');
-                  },
+                  onTap: () => context.go('/profile'),
                   child: MouseRegion(
                     cursor: SystemMouseCursors.click,
                     child: ChromeBorderContainer(
-                      borderRadius: BorderRadius.circular(110),
+                      borderRadius: BorderRadius.circular(90),
                       borderWidth: 3.5,
                       backgroundColor: Color.alphaBlend(
                         Colors.black.withValues(alpha: 0.40),
@@ -100,39 +99,39 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                       child: SizedBox(
-                        width: 200,
-                        height: 200,
+                        width: 160,
+                        height: 160,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             // User Avatar
                             SizedBox(
-                              width: 96,
-                              height: 96,
+                              width: 72,
+                              height: 72,
                               child: avatarId != null && avatarId.isNotEmpty
                                   ? Image.asset(
                                       'assets/avatars/$avatarId.png',
                                       fit: BoxFit.contain,
                                       errorBuilder: (_, _, _) => const Icon(
                                         Icons.person,
-                                        size: 56,
+                                        size: 44,
                                         color: Colors.white,
                                       ),
                                     )
                                   : const Icon(
                                       Icons.person,
-                                      size: 56,
+                                      size: 44,
                                       color: Colors.white,
                                     ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 4),
                             // User Username
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
                               child: Text(
                                 username,
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w900,
                                   color: Colors.white,
                                 ),
@@ -145,7 +144,7 @@ class HomeScreen extends ConsumerWidget {
                             Text(
                               '$title • Lvl $level',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w800,
                                 color: OceanThemeExtension.defaultTokens.cyan,
                               ),
@@ -159,75 +158,87 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Top Left: Trips (Large - 68px)
+                // Top Left: Fish locations (82px, greyed out coming soon feature)
                 Transform.translate(
-                  offset: const Offset(-130, -130),
+                  offset: const Offset(-125, -115),
                   child: _RadialRoundButton(
-                    label: 'Trips',
-                    icon: Icons.explore_outlined,
-                    size: 68,
-                    onTap: () => context.go('/trips'),
+                    label: 'Fish locations',
+                    icon: Icons.phishing,
+                    size: 82,
+                    isDisabled: true,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Fish locations feature coming soon.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
                   ),
                 ),
 
-                // Middle Left: Weather (Smaller - 52px, fits next to center circle)
+                // Middle Left: Waves (82px, map with only waves filter active)
                 Transform.translate(
                   offset: const Offset(-138, 0),
                   child: _RadialRoundButton(
-                    label: 'Weather',
-                    icon: Icons.wb_sunny_outlined,
-                    size: 52,
+                    label: 'Waves',
+                    icon: Icons.tsunami,
+                    size: 82,
                     onTap: () {
                       ref.read(activeMapLayersProvider.notifier).setLayers({
-                        MapLayerConfig.weatherRadarId,
-                        MapLayerConfig.windObsId,
+                        MapLayerConfig.wavesId,
                       });
                       context.go('/spots');
                     },
                   ),
                 ),
 
-                // Bottom Left: Spots (Large - 68px)
+                // Bottom Left: Depth (82px, map with only depth filter active)
                 Transform.translate(
-                  offset: const Offset(-130, 130),
+                  offset: const Offset(-125, 115),
                   child: _RadialRoundButton(
-                    label: 'Spots',
-                    icon: Icons.place_outlined,
-                    size: 68,
-                    onTap: () => context.go('/spots'),
+                    label: 'Depth',
+                    icon: Icons.water,
+                    size: 82,
+                    onTap: () {
+                      ref.read(activeMapLayersProvider.notifier).setLayers({
+                        MapLayerConfig.depthBathymetryId,
+                      });
+                      context.go('/spots');
+                    },
                   ),
                 ),
 
-                // Top Right: Profile (Large - 68px)
+                // Top Right: Trips (82px -> /trips)
                 Transform.translate(
-                  offset: const Offset(130, -130),
+                  offset: const Offset(125, -115),
                   child: _RadialRoundButton(
-                    label: 'Profile',
-                    icon: Icons.person_outlined,
-                    size: 68,
-                    onTap: () => context.go('/profile'),
+                    label: 'Trips',
+                    icon: Icons.explore_outlined,
+                    size: 82,
+                    onTap: () => context.go('/trips'),
                   ),
                 ),
 
-                // Middle Right: Alerts (Smaller - 52px, fits next to center circle)
+                // Middle Right: Alerts (82px -> /alerts)
                 Transform.translate(
                   offset: const Offset(138, 0),
                   child: _RadialRoundButton(
                     label: 'Alerts',
                     icon: Icons.notifications_outlined,
-                    size: 52,
+                    size: 82,
                     onTap: () => context.go('/alerts'),
                   ),
                 ),
 
-                // Bottom Right: Settings (Large - 68px)
+                // Bottom Right: Spots (82px -> /spots)
                 Transform.translate(
-                  offset: const Offset(130, 130),
+                  offset: const Offset(125, 115),
                   child: _RadialRoundButton(
-                    label: 'Settings',
-                    icon: Icons.settings_outlined,
-                    size: 68,
-                    onTap: () => context.push('/profile/edit'),
+                    label: 'Spots',
+                    icon: Icons.place_outlined,
+                    size: 82,
+                    onTap: () => context.go('/spots'),
                   ),
                 ),
               ],
@@ -323,81 +334,99 @@ class _TopWeatherAndAlertsBanner extends ConsumerWidget {
       alertColor = OceanThemeExtension.defaultTokens.cyan;
     }
 
-    return ChromeBorderContainer(
-      borderRadius: BorderRadius.circular(20),
-      borderWidth: 2.0,
-      backgroundColor: const Color(0xFF03112B).withValues(alpha: 0.85),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black45,
-          blurRadius: 10,
-          offset: Offset(0, 4),
-        ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            // Weather Icon & Temp
-            const Icon(
-              Icons.wb_sunny_rounded,
-              color: Color(0xFFFFD54F),
-              size: 26,
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  '78°F Sunny',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Wind: 12 kts E',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            // Divider
-            Container(
-              height: 28,
-              width: 1,
-              color: Colors.white24,
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            // Local Alert Status
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Weather Information (Stacked Top - Twice as big)
+          Row(
+            children: [
+              const Icon(
+                Icons.wb_sunny_rounded,
+                color: Color(0xFFFFD54F),
+                size: 68,
+              ),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(alertIcon, color: alertColor, size: 20),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      alertText,
-                      style: TextStyle(
-                        color: alertColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  const Text(
+                    '78°F Sunny',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black87,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    'Wind: 14 mph E',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.90),
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      shadows: const [
+                        Shadow(
+                          color: Colors.black87,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Local Alert Banner (Stacked Underneath - Tapping navigates to /alerts)
+          InkWell(
+            onTap: () => context.go('/alerts'),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                children: [
+                  Icon(alertIcon, color: alertColor, size: 26),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      alertText,
+                      style: TextStyle(
+                        color: alertColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black87,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: alertColor, size: 22),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -407,67 +436,75 @@ class _RadialRoundButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final double size;
+  final bool isDisabled;
   final VoidCallback onTap;
 
   const _RadialRoundButton({
     required this.label,
     required this.icon,
-    this.size = 68.0,
+    this.size = 82.0,
+    this.isDisabled = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ChromeBorderContainer(
-          borderRadius: BorderRadius.circular(size / 2),
-          borderWidth: 2.5,
-          backgroundColor: const Color(0xFF0B2250).withValues(alpha: 0.90),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black45,
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-          child: SizedBox(
-            width: size,
-            height: size,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap,
-                borderRadius: BorderRadius.circular(size / 2),
-                child: Center(
-                  child: Icon(
-                    icon,
-                    color: OceanThemeExtension.defaultTokens.cyan,
-                    size: size > 60 ? 28 : 22,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            shadows: [
-              Shadow(
-                color: Colors.black,
-                blurRadius: 4,
-                offset: Offset(0, 1),
-              ),
-            ],
-          ),
+    final iconColor = isDisabled
+        ? Colors.grey.shade400
+        : OceanThemeExtension.defaultTokens.cyan;
+    final bgColor = isDisabled
+        ? const Color(0xFF1E293B).withValues(alpha: 0.80)
+        : const Color(0xFF0B2250).withValues(alpha: 0.90);
+    final textColor = isDisabled ? Colors.white60 : Colors.white;
+
+    return ChromeBorderContainer(
+      borderRadius: BorderRadius.circular(size / 2),
+      borderWidth: 2.5,
+      backgroundColor: bgColor,
+      boxShadow: const [
+        BoxShadow(
+          color: Colors.black45,
+          blurRadius: 8,
+          offset: Offset(0, 4),
         ),
       ],
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(size / 2),
+            child: Padding(
+              padding: const EdgeInsets.all(6.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    color: iconColor,
+                    size: 24,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

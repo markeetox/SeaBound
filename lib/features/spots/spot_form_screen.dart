@@ -351,7 +351,7 @@ class _SpotFormScreenState extends ConsumerState<SpotFormScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.my_location, size: 16),
-                        label: const Text('Use my current location'),
+                        label: const Text('Pin current location'),
                         style: OutlinedButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                         ),
