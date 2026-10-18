@@ -338,10 +338,13 @@ class _SpotFormScreenState extends ConsumerState<SpotFormScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Location Pin *',
-                        style: Theme.of(context).textTheme.titleSmall,
+                      Expanded(
+                        child: Text(
+                          'Location Pin *',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       OutlinedButton.icon(
                         onPressed: _isLocating ? null : _useCurrentLocation,
                         icon: _isLocating
@@ -351,7 +354,7 @@ class _SpotFormScreenState extends ConsumerState<SpotFormScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.my_location, size: 16),
-                        label: const Text('Use my current location'),
+                        label: const Text('Use my location'),
                         style: OutlinedButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                         ),
