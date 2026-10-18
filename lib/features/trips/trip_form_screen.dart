@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/gradient_background.dart';
 import '../auth/auth_providers.dart';
+import '../map/location_providers.dart';
 import '../profile/badge_service.dart';
 import 'trip_model.dart';
 import 'trips_providers.dart';
@@ -31,6 +32,7 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
   final List<String> _speciesList = [];
 
   bool _isSaving = false;
+  bool _isLocating = false;
   bool _isLoaded = false;
   String? _errorMessage;
 
@@ -57,6 +59,36 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
     setState(() {
       _speciesList.remove(species);
     });
+  }
+
+  Future<void> _useCurrentLocation() async {
+    setState(() {
+      _isLocating = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final locationService = ref.read(locationServiceProvider);
+      final position = await locationService.getCurrentPosition();
+      final latStr = position.latitude.toStringAsFixed(4);
+      final lngStr = position.longitude.toStringAsFixed(4);
+
+      setState(() {
+        _locationController.text = '$latStr, $lngStr';
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLocating = false;
+        });
+      }
+    }
   }
 
   Future<void> _pickDate() async {
@@ -262,11 +294,22 @@ class _TripFormScreenState extends ConsumerState<TripFormScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _locationController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Location Name *',
                       hintText: 'e.g., Cape Marina, Dock B',
-                      prefixIcon: Icon(Icons.place_outlined),
-                      border: OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.place_outlined),
+                      suffixIcon: IconButton(
+                        icon: _isLocating
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.my_location),
+                        tooltip: 'Use my location',
+                        onPressed: _isLocating ? null : _useCurrentLocation,
+                      ),
+                      border: const OutlineInputBorder(),
                     ),
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: (value) {
