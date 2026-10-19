@@ -356,52 +356,65 @@ class _TopWeatherAndAlertsBanner extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Weather Information (Stacked Top - Twice as big)
-            Row(
-              children: [
-                const Icon(
-                  Icons.wb_sunny_rounded,
-                  color: Color(0xFFFFD54F),
-                  size: 68,
-                ),
-                const SizedBox(width: 14),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+            // Weather Information (Stacked Top - Twice as big - Tappable to navigate to Spots map with weather filters)
+            MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () {
+                  ref.read(activeMapLayersProvider.notifier).setLayers({
+                    MapLayerConfig.weatherRadarId,
+                    MapLayerConfig.windObsId,
+                  });
+                  context.go('/spots');
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Row(
                   children: [
-                    const Text(
-                      '78°F Sunny',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black87,
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                    const Icon(
+                      Icons.wb_sunny_rounded,
+                      color: Color(0xFFFFD54F),
+                      size: 68,
                     ),
-                    Text(
-                      'Wind: 14 mph E',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.90),
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        shadows: const [
-                          Shadow(
-                            color: Colors.black87,
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
+                    const SizedBox(width: 14),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          '78°F Sunny',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w900,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black87,
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Text(
+                          'Wind: 14 mph E',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.90),
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            shadows: const [
+                              Shadow(
+                                color: Colors.black87,
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
             const SizedBox(height: 12),
             // Local Alert Banner (Stacked Underneath - Tappable to navigate to Alerts)

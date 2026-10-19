@@ -104,6 +104,53 @@ void main() {
     expect(find.text('Spots Screen'), findsOneWidget);
   });
 
+  testWidgets('HomeScreen weather header activates weather map layers and navigates to spots', (WidgetTester tester) async {
+    Set<String>? activeLayers;
+
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        GoRoute(
+          path: '/home',
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) {
+              activeLayers = ref.watch(activeMapLayersProvider);
+              return const HomeScreen();
+            },
+          ),
+        ),
+        GoRoute(
+          path: '/spots',
+          builder: (context, state) => const Scaffold(body: Text('Spots Screen')),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          userDocStreamProvider.overrideWith((ref) => Stream.value({
+                'username': 'CaptainJack',
+              })),
+          userEarnedBadgesProvider.overrideWith((ref) => Stream.value({})),
+          alertsNotifierProvider.overrideWith(() => AlertsNotifier()),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Tap weather info header
+    await tester.tap(find.textContaining('78°F Sunny'));
+    await tester.pumpAndSettle();
+
+    expect(activeLayers, contains(MapLayerConfig.weatherRadarId));
+    expect(activeLayers, contains(MapLayerConfig.windObsId));
+    expect(find.text('Spots Screen'), findsOneWidget);
+  });
+
   testWidgets('HomeScreen Fish locations shows coming soon SnackBar on tap', (WidgetTester tester) async {
     await pumpApp(
       tester,
