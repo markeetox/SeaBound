@@ -199,7 +199,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  // Bottom Left: Depth (82px, map with only depth filter active)
+                  // Bottom Left: Depth (82px, map with only depth numbers filter active)
                   Positioned(
                     left: 14,
                     top: 254,
@@ -209,7 +209,7 @@ class HomeScreen extends ConsumerWidget {
                       size: 82,
                       onTap: () {
                         ref.read(activeMapLayersProvider.notifier).setLayers({
-                          MapLayerConfig.depthBathymetryId,
+                          MapLayerConfig.depthNumbersId,
                         });
                         context.go('/spots');
                       },

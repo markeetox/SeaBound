@@ -100,7 +100,7 @@ void main() {
     await tester.tap(find.text('Depth'));
     await tester.pumpAndSettle();
 
-    expect(activeLayers, contains(MapLayerConfig.depthBathymetryId));
+    expect(activeLayers, contains(MapLayerConfig.depthNumbersId));
     expect(find.text('Spots Screen'), findsOneWidget);
   });
 
