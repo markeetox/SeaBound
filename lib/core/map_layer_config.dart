@@ -26,7 +26,7 @@ class MapLayerConfig {
   static const String noaaChartDisplayWmsUrl =
       'https://gis.charttools.noaa.gov/arcgis/rest/services/MCS/NOAAChartDisplay/MapServer/exts/MaritimeChartService/WMSServer?';
 
-  static const String noaaSoundingsLayerName = '0,1,2,3';
+  static const String noaaSoundingsLayerName = '2';
 
   static const String noaaNowCoastRadarWmsUrl =
       'https://nowcoast.noaa.gov/geoserver/observations/weather_radar/ows?';
