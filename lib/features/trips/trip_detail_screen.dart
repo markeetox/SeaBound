@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/app_theme.dart';
 import '../../core/gradient_background.dart';
+import '../../core/map_layer_config.dart';
 import '../profile/profile_providers.dart';
 import 'trip_model.dart';
 import 'trips_providers.dart';
@@ -129,6 +131,12 @@ class TripDetailScreen extends ConsumerWidget {
           }
 
           final formattedDate = DateFormat.yMMMMd().format(trip.date);
+          final userDoc = ref.watch(userDocStreamProvider).asData?.value;
+          final userBgHex = userDoc?['avatarBgColor'] as String?;
+          final userBgVal = userBgHex != null && userBgHex.startsWith('#')
+              ? int.tryParse(userBgHex.replaceFirst('#', '0xFF'))
+              : null;
+          final pointerColor = userBgVal != null ? Color(userBgVal) : const Color(0xFFD1142A);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -183,6 +191,47 @@ class TripDetailScreen extends ConsumerWidget {
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        height: 220,
+                        child: FlutterMap(
+                          options: MapOptions(
+                            initialCenter: trip.locationCoordinates,
+                            initialZoom: 12.0,
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate: MapLayerConfig.openStreetMapTileUrl,
+                              userAgentPackageName: 'com.onerevamp.seabound',
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: trip.locationCoordinates,
+                                  width: 40,
+                                  height: 40,
+                                  child: Icon(
+                                    Icons.location_on,
+                                    size: 40,
+                                    color: pointerColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            RichAttributionWidget(
+                              attributions: [
+                                TextSourceAttribution(
+                                  'OpenStreetMap contributors',
+                                  onTap: () {},
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const Divider(height: 32),
                     if (trip.species.isNotEmpty) ...[

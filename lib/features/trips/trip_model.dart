@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:latlong2/latlong.dart';
 
 class Trip {
   final String id;
@@ -29,6 +30,25 @@ class Trip {
 
   int get likeCount => likedBy.length;
   int get dislikeCount => dislikedBy.length;
+
+  LatLng get locationCoordinates {
+    if (locationName.isEmpty) return const LatLng(25.7617, -80.1918);
+    final regExp = RegExp(r'(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)');
+    final match = regExp.firstMatch(locationName);
+    if (match != null) {
+      final lat = double.tryParse(match.group(1)!);
+      final lng = double.tryParse(match.group(2)!);
+      if (lat != null &&
+          lng != null &&
+          lat >= -90 &&
+          lat <= 90 &&
+          lng >= -180 &&
+          lng <= 180) {
+        return LatLng(lat, lng);
+      }
+    }
+    return const LatLng(25.7617, -80.1918);
+  }
 
   bool isLikedBy(String uid) => likedBy.contains(uid);
   bool isDislikedBy(String uid) => dislikedBy.contains(uid);

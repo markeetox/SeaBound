@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +7,9 @@ import 'package:intl/intl.dart';
 import '../../core/app_theme.dart';
 import '../../core/floating_top_bar.dart';
 import '../../core/gradient_background.dart';
+import '../../core/map_layer_config.dart';
 import '../auth/auth_providers.dart';
+import '../profile/profile_providers.dart';
 import 'trip_model.dart';
 import 'trips_providers.dart';
 
@@ -281,6 +284,12 @@ class _TripCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final formattedDate = DateFormat.yMMMMd().format(trip.date);
+    final userDoc = ref.watch(userDocStreamProvider).asData?.value;
+    final userBgHex = userDoc?['avatarBgColor'] as String?;
+    final userBgVal = userBgHex != null && userBgHex.startsWith('#')
+        ? int.tryParse(userBgHex.replaceFirst('#', '0xFF'))
+        : null;
+    final pointerColor = userBgVal != null ? Color(userBgVal) : const Color(0xFFD1142A);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
@@ -291,73 +300,122 @@ class _TripCard extends ConsumerWidget {
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      trip.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Text(
-                    formattedDate,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white70,
+              // Media Object Thumbnail: Location Map Preview Image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: IgnorePointer(
+                    child: FlutterMap(
+                      options: MapOptions(
+                        initialCenter: trip.locationCoordinates,
+                        initialZoom: 11.0,
+                        interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.none,
                         ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(
-                    Icons.place_outlined,
-                    size: 16,
-                    color: OceanThemeExtension.defaultTokens.cyan,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      trip.locationName,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate: MapLayerConfig.openStreetMapTileUrl,
+                          userAgentPackageName: 'com.onerevamp.seabound',
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: trip.locationCoordinates,
+                              width: 24,
+                              height: 24,
+                              child: Icon(
+                                Icons.location_on,
+                                size: 24,
+                                color: pointerColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-              if (trip.species.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 6.0,
-                  runSpacing: 4.0,
-                  children: trip.species.map((species) {
-                    return Chip(
-                      label: Text(
-                        species,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
-                      padding: EdgeInsets.zero,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                    );
-                  }).toList(),
                 ),
-              ],
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TripReactionButtons(trip: trip),
-                ],
+              ),
+              const SizedBox(width: 14),
+
+              // Content Column
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            trip.title,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          formattedDate,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.white70,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.place_outlined,
+                          size: 16,
+                          color: OceanThemeExtension.defaultTokens.cyan,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            trip.locationName,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (trip.species.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 6.0,
+                        runSpacing: 4.0,
+                        children: trip.species.map((species) {
+                          return Chip(
+                            label: Text(
+                              species,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                            padding: EdgeInsets.zero,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: VisualDensity.compact,
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TripReactionButtons(trip: trip),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
