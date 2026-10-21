@@ -131,15 +131,16 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
   String? _noFishingZonesError;
 
   Timer? _animationTimer;
+  int _animationFrameIndex = 0;
 
-  void _syncAnimationTimer(bool isAnimating) {
-    if (isAnimating) {
+  void _syncAnimationTimer(bool isAnimating, int totalFrames) {
+    if (isAnimating && totalFrames > 0) {
       if (_animationTimer == null || !_animationTimer!.isActive) {
-        _animationTimer = Timer.periodic(const Duration(milliseconds: 600), (_) {
+        _animationTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
           if (!mounted) return;
-          ref.read(weatherTimeProvider.notifier).stepForward();
-          final currentOffset = ref.read(weatherTimeProvider).hourOffset;
-          ref.read(selectedWaveHourOffsetProvider.notifier).setHourOffset(currentOffset);
+          setState(() {
+            _animationFrameIndex = (_animationFrameIndex + 1) % totalFrames;
+          });
         });
       }
     } else {
@@ -381,7 +382,6 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     final userPositionAsync = ref.watch(userPositionStreamProvider);
     final alertsState = ref.watch(alertsNotifierProvider);
     final weatherTime = ref.watch(weatherTimeProvider);
-    _syncAnimationTimer(weatherTime.isAnimating);
     final waveHourOffset = weatherTime.hourOffset;
 
     final sstDateAsync = ref.watch(sstDateProvider);
@@ -584,18 +584,35 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 errorTileCallback: (_, _, _) {},
               ),
 
-            // Weather Radar Layer with Smoothed Contours & Nowcast Time Synchronization
+            // Weather Radar Layer with Smoothed Contours & Animated Radar Frame Swapping
             if (showRadar && radarDataAsync != null)
               radarDataAsync.when(
                 data: (radarResp) {
-                  final tileUrl = radarResp.getTileUrlForOffset(
-                    weatherTime.hourOffset,
-                    tileSize: 512,
-                    smooth: true,
-                  );
+                  final frames = radarResp.allFrames;
+                  if (frames.isEmpty) return const SizedBox.shrink();
+
+                  _syncAnimationTimer(weatherTime.isAnimating, frames.length);
+
+                  String? tileUrl;
+                  if (weatherTime.isAnimating) {
+                    final frameIdx = _animationFrameIndex % frames.length;
+                    tileUrl = radarResp.getTileUrlForFrameIndex(
+                      frameIdx,
+                      tileSize: 512,
+                      smooth: true,
+                    );
+                  } else {
+                    tileUrl = radarResp.getTileUrlForOffset(
+                      weatherTime.hourOffset,
+                      tileSize: 512,
+                      smooth: true,
+                    );
+                  }
+
                   if (tileUrl == null) return const SizedBox.shrink();
 
                   return TileLayer(
+                    key: ValueKey(tileUrl),
                     urlTemplate: tileUrl,
                     tileDimension: 512,
                     zoomOffset: -1,
@@ -1550,7 +1567,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     margin: const EdgeInsets.only(bottom: 6),
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: weatherTime.isLive
+                      color: weatherTime.isLive && !weatherTime.isAnimating
                           ? const Color(0xFF00E5FF).withValues(alpha: 0.95)
                           : const Color(0xFFFF9100).withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(16),
@@ -1566,15 +1583,17 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          weatherTime.isLive ? Icons.sensors : Icons.schedule,
+                          weatherTime.isLive && !weatherTime.isAnimating ? Icons.sensors : Icons.schedule,
                           size: 14,
                           color: Colors.black,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          weatherTime.isLive
-                              ? 'LIVE OBS • ${DateFormat.jm().format(weatherTime.validTime)}'
-                              : 'FORECAST +${weatherTime.hourOffset}h • ${DateFormat.yMMMd().add_jm().format(weatherTime.validTime)}',
+                          weatherTime.isAnimating
+                              ? 'RADAR ANIMATING • Frame ${_animationFrameIndex + 1}'
+                              : weatherTime.isLive
+                                  ? 'LIVE OBS • ${DateFormat.jm().format(weatherTime.validTime)}'
+                                  : 'FORECAST +${weatherTime.hourOffset}h • ${DateFormat.yMMMd().add_jm().format(weatherTime.validTime)}',
                           style: const TextStyle(
                             color: Colors.black,
                             fontSize: 10,
