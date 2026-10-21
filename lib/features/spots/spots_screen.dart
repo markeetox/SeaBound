@@ -1559,96 +1559,252 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
             left: 16,
             right: 16,
             child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Timestamp & Mode Indicator Pill
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 6),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: weatherTime.isLive && !weatherTime.isAnimating
-                          ? const Color(0xFF00E5FF).withValues(alpha: 0.95)
-                          : const Color(0xFFFF9100).withValues(alpha: 0.95),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black38,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          weatherTime.isLive && !weatherTime.isAnimating ? Icons.sensors : Icons.schedule,
-                          size: 14,
-                          color: Colors.black,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          weatherTime.isAnimating
-                              ? 'RADAR ANIMATING • Frame ${_animationFrameIndex + 1}'
-                              : weatherTime.isLive
-                                  ? 'LIVE OBS • ${DateFormat.jm().format(weatherTime.validTime)}'
-                                  : 'FORECAST +${weatherTime.hourOffset}h • ${DateFormat.yMMMd().add_jm().format(weatherTime.validTime)}',
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+              child: showRadar && radarDataAsync != null
+                  ? radarDataAsync.when(
+                      data: (radarResp) {
+                        final frames = radarResp.allFrames;
+                        if (frames.isEmpty) return const SizedBox.shrink();
 
-                  // Time Step Controls
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: OceanThemeExtension.defaultTokens.surface,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.white24, width: 2),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
+                        final liveIdx = (radarResp.past.length - 1).clamp(0, frames.length - 1);
+                        final activeIdx = _animationFrameIndex.clamp(0, frames.length - 1);
+                        final activeFrame = frames[activeIdx];
+                        final liveFrame = frames[liveIdx];
+
+                        final activeTime = DateFormat.jm().format(
+                          DateTime.fromMillisecondsSinceEpoch(activeFrame.time * 1000),
+                        );
+                        final diffMinutes = ((activeFrame.time - liveFrame.time) / 60).round();
+
+                        String pillLabel;
+                        if (diffMinutes < 0) {
+                          pillLabel = 'PAST ${diffMinutes}m • $activeTime';
+                        } else if (diffMinutes == 0) {
+                          pillLabel = 'LIVE OBS • $activeTime';
+                        } else {
+                          pillLabel = 'FORECAST +${diffMinutes}m • $activeTime';
+                        }
+
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Synchronized Timestamp Indicator Pill
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: diffMinutes == 0
+                                    ? const Color(0xFF00E5FF).withValues(alpha: 0.95)
+                                    : const Color(0xFFFF9100).withValues(alpha: 0.95),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black38,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    diffMinutes == 0 ? Icons.sensors : Icons.schedule,
+                                    size: 14,
+                                    color: Colors.black,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    pillLabel,
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Interactive Timeline Slider Control Bar
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: OceanThemeExtension.defaultTokens.surface,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(color: Colors.white24, width: 2),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 6,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Play / Pause Button
+                                  IconButton(
+                                    icon: Icon(
+                                      weatherTime.isAnimating
+                                          ? Icons.pause_circle_filled
+                                          : Icons.play_circle_fill,
+                                      color: OceanThemeExtension.defaultTokens.cyan,
+                                      size: 26,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                                    tooltip: weatherTime.isAnimating ? 'Pause' : 'Play',
+                                    onPressed: () {
+                                      ref.read(weatherTimeProvider.notifier).toggleAnimation();
+                                    },
+                                  ),
+                                  const SizedBox(width: 4),
+
+                                  // Interactive Time Scrubbing Slider
+                                  SizedBox(
+                                    width: 170,
+                                    child: SliderTheme(
+                                      data: SliderThemeData(
+                                        trackHeight: 4,
+                                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                                        activeTrackColor: OceanThemeExtension.defaultTokens.cyan,
+                                        inactiveTrackColor: Colors.white24,
+                                        thumbColor: OceanThemeExtension.defaultTokens.cyan,
+                                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                                      ),
+                                      child: Slider(
+                                        value: activeIdx.toDouble(),
+                                        min: 0.0,
+                                        max: (frames.length - 1).toDouble(),
+                                        divisions: (frames.length - 1) > 0 ? (frames.length - 1) : 1,
+                                        onChanged: (val) {
+                                          if (weatherTime.isAnimating) {
+                                            ref.read(weatherTimeProvider.notifier).toggleAnimation();
+                                          }
+                                          final newIdx = val.round();
+                                          setState(() {
+                                            _animationFrameIndex = newIdx;
+                                          });
+                                          final hourOffset = ((frames[newIdx].time - liveFrame.time) / 3600).round().clamp(0, 24);
+                                          ref.read(weatherTimeProvider.notifier).setHourOffset(hourOffset);
+                                          ref.read(selectedWaveHourOffsetProvider.notifier).setHourOffset(hourOffset);
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+
+                                  // "LIVE" Quick Jump Button
+                                  InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () {
+                                      if (weatherTime.isAnimating) {
+                                        ref.read(weatherTimeProvider.notifier).toggleAnimation();
+                                      }
+                                      setState(() {
+                                        _animationFrameIndex = liveIdx;
+                                      });
+                                      ref.read(weatherTimeProvider.notifier).resetToLive();
+                                      ref.read(selectedWaveHourOffsetProvider.notifier).setHourOffset(0);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: activeIdx == liveIdx ? const Color(0xFF00E5FF) : Colors.white10,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        'LIVE',
+                                        style: TextStyle(
+                                          color: activeIdx == liveIdx ? Colors.black : Colors.white70,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (e, st) => const SizedBox.shrink(),
+                    )
+                  : Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          icon: Icon(
-                            weatherTime.isAnimating
-                                ? Icons.pause_circle_filled
-                                : Icons.play_circle_fill,
-                            color: OceanThemeExtension.defaultTokens.cyan,
-                            size: 24,
+                        // Timestamp & Mode Indicator Pill
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: weatherTime.isLive
+                                ? const Color(0xFF00E5FF).withValues(alpha: 0.95)
+                                : const Color(0xFFFF9100).withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black38,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          tooltip: weatherTime.isAnimating ? 'Pause Animation' : 'Play Animation',
-                          onPressed: () {
-                            ref.read(weatherTimeProvider.notifier).toggleAnimation();
-                          },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                weatherTime.isLive ? Icons.sensors : Icons.schedule,
+                                size: 14,
+                                color: Colors.black,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                weatherTime.isLive
+                                    ? 'LIVE OBS • ${DateFormat.jm().format(weatherTime.validTime)}'
+                                    : 'FORECAST +${weatherTime.hourOffset}h • ${DateFormat.yMMMd().add_jm().format(weatherTime.validTime)}',
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 4),
-                        _WeatherTimeButton(label: 'Now', offset: 0),
-                        _WeatherTimeButton(label: '+1h', offset: 1),
-                        _WeatherTimeButton(label: '+3h', offset: 3),
-                        _WeatherTimeButton(label: '+6h', offset: 6),
-                        _WeatherTimeButton(label: '+12h', offset: 12),
-                        _WeatherTimeButton(label: '+24h', offset: 24),
+
+                        // Time Step Controls
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: OceanThemeExtension.defaultTokens.surface,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: Colors.white24, width: 2),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _WeatherTimeButton(label: 'Now', offset: 0),
+                              _WeatherTimeButton(label: '+1h', offset: 1),
+                              _WeatherTimeButton(label: '+3h', offset: 3),
+                              _WeatherTimeButton(label: '+6h', offset: 6),
+                              _WeatherTimeButton(label: '+12h', offset: 12),
+                              _WeatherTimeButton(label: '+24h', offset: 24),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                ],
-              ),
             ),
           ),
 
