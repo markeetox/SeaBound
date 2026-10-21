@@ -130,11 +130,30 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
   List<NoFishingZone>? _noFishingZonesData;
   String? _noFishingZonesError;
 
+  Timer? _animationTimer;
+
+  void _syncAnimationTimer(bool isAnimating) {
+    if (isAnimating) {
+      if (_animationTimer == null || !_animationTimer!.isActive) {
+        _animationTimer = Timer.periodic(const Duration(milliseconds: 600), (_) {
+          if (!mounted) return;
+          ref.read(weatherTimeProvider.notifier).stepForward();
+          final currentOffset = ref.read(weatherTimeProvider).hourOffset;
+          ref.read(selectedWaveHourOffsetProvider.notifier).setHourOffset(currentOffset);
+        });
+      }
+    } else {
+      _animationTimer?.cancel();
+      _animationTimer = null;
+    }
+  }
+
   @override
   void dispose() {
     _wavesDebounceTimer?.cancel();
     _reefsDebounceTimer?.cancel();
     _noFishingDebounceTimer?.cancel();
+    _animationTimer?.cancel();
     super.dispose();
   }
 
@@ -362,6 +381,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     final userPositionAsync = ref.watch(userPositionStreamProvider);
     final alertsState = ref.watch(alertsNotifierProvider);
     final weatherTime = ref.watch(weatherTimeProvider);
+    _syncAnimationTimer(weatherTime.isAnimating);
     final waveHourOffset = weatherTime.hourOffset;
 
     final sstDateAsync = ref.watch(sstDateProvider);
@@ -1335,45 +1355,6 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                   ),
                 ],
 
-                // Map Zoom Level Warning Banner
-                if (_currentZoom > 18.0) ...[
-                  const SizedBox(height: 6),
-                  Container(
-                    constraints: const BoxConstraints(maxWidth: 220),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade900,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(
-                          Icons.zoom_out,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                        SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            'Max zoom level reached. Tile detail limited at this zoom.',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
 
                 // Active No-Fishing Zone Liability Disclaimer Banner
                 if (showNoFishingZones) ...[
@@ -1600,18 +1581,6 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                             fontWeight: FontWeight.w900,
                           ),
                         ),
-                        if (showRadar && !weatherTime.isLive) ...[
-                          const SizedBox(width: 6),
-                          const Text(
-                            '(Radar Live Only)',
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 9,
-                              fontStyle: FontStyle.italic,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -1634,6 +1603,22 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        IconButton(
+                          icon: Icon(
+                            weatherTime.isAnimating
+                                ? Icons.pause_circle_filled
+                                : Icons.play_circle_fill,
+                            color: OceanThemeExtension.defaultTokens.cyan,
+                            size: 24,
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          tooltip: weatherTime.isAnimating ? 'Pause Animation' : 'Play Animation',
+                          onPressed: () {
+                            ref.read(weatherTimeProvider.notifier).toggleAnimation();
+                          },
+                        ),
+                        const SizedBox(width: 4),
                         _WeatherTimeButton(label: 'Now', offset: 0),
                         _WeatherTimeButton(label: '+1h', offset: 1),
                         _WeatherTimeButton(label: '+3h', offset: 3),

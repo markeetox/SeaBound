@@ -27,8 +27,23 @@ class RadarDataResponse {
     required this.nowcast,
   });
 
+  List<RadarFrame> get allFrames => [...past, ...nowcast];
+
+  RadarFrame? getFrameByIndex(int index) {
+    if (allFrames.isEmpty) return null;
+    final validIndex = index.clamp(0, allFrames.length - 1);
+    return allFrames[validIndex];
+  }
+
+  String? getTileUrlForFrameIndex(int index, {int tileSize = 256, int colorScheme = 2, bool smooth = true}) {
+    final frame = getFrameByIndex(index);
+    if (frame == null) return null;
+
+    final smoothVal = smooth ? 1 : 0;
+    return '$host${frame.path}/$tileSize/{z}/{x}/{y}/$colorScheme/${smoothVal}_1.png';
+  }
+
   RadarFrame? getFrameForOffset(int hourOffset) {
-    final allFrames = [...past, ...nowcast];
     if (allFrames.isEmpty) return null;
 
     if (hourOffset == 0) {
