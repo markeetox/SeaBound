@@ -28,6 +28,31 @@ final isFriendStreamProvider = StreamProvider.family<bool, String>((ref, targetU
   return repo.streamIsFriend(currentUid: user.uid, targetUid: targetUid);
 });
 
+final incomingFriendRequestsStreamProvider =
+    StreamProvider<List<FriendRequest>>((ref) {
+  final authState = ref.watch(authStateProvider);
+  final user = authState.asData?.value;
+  if (user == null) {
+    return Stream.value([]);
+  }
+  final repo = ref.watch(friendsRepositoryProvider);
+  return repo.streamIncomingFriendRequests(user.uid);
+});
+
+final friendRequestStatusStreamProvider =
+    StreamProvider.family<FriendRequestStatus, String>((ref, targetUid) {
+  final authState = ref.watch(authStateProvider);
+  final user = authState.asData?.value;
+  if (user == null || user.uid == targetUid) {
+    return Stream.value(FriendRequestStatus.none);
+  }
+  final repo = ref.watch(friendsRepositoryProvider);
+  return repo.streamFriendRequestStatus(
+    currentUid: user.uid,
+    targetUid: targetUid,
+  );
+});
+
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository();
 });
