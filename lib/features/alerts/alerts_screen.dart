@@ -6,8 +6,10 @@ import 'package:intl/intl.dart';
 import '../../core/app_theme.dart';
 import '../../core/floating_top_bar.dart';
 import '../../core/gradient_background.dart';
+import '../auth/auth_providers.dart';
 import '../map/location_providers.dart';
 import '../profile/badge_service.dart';
+import '../profile/profile_providers.dart';
 import 'alerts_providers.dart';
 import 'weather_alert_model.dart';
 
@@ -118,6 +120,8 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
   Widget build(BuildContext context) {
     final alertsState = ref.watch(alertsNotifierProvider);
     final alertsNotifier = ref.read(alertsNotifierProvider.notifier);
+    final incomingRequestsAsync = ref.watch(incomingFriendRequestsStreamProvider);
+    final incomingRequests = incomingRequestsAsync.asData?.value ?? [];
 
     ref.listen<AsyncValue<Position>>(userPositionStreamProvider, (prev, next) {
       if (next.hasValue) {
@@ -144,6 +148,133 @@ class _AlertsScreenState extends ConsumerState<AlertsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Incoming Friend Requests Section
+                        if (incomingRequests.isNotEmpty) ...[
+                          Text(
+                            'Friend Requests (${incomingRequests.length})',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: OceanThemeExtension.defaultTokens.cyan,
+                                ),
+                          ),
+                          const SizedBox(height: 12),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: incomingRequests.length,
+                            itemBuilder: (context, index) {
+                              final req = incomingRequests[index];
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                color: OceanThemeExtension.defaultTokens.surface,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 44,
+                                        height: 44,
+                                        child: req.fromAvatarId != null && req.fromAvatarId!.isNotEmpty
+                                            ? Image.asset(
+                                                'assets/avatars/${req.fromAvatarId}.png',
+                                                fit: BoxFit.contain,
+                                                errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: Colors.white),
+                                              )
+                                            : const Icon(Icons.person, color: Colors.white),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              req.fromUsername,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const Text(
+                                              'Sent you a friend request',
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            tooltip: 'Accept',
+                                            icon: const Icon(Icons.check_circle, color: Colors.green),
+                                            onPressed: () async {
+                                              final authUser = ref.read(authStateProvider).asData?.value;
+                                              if (authUser == null) return;
+                                              final userDoc = ref.read(userDocStreamProvider).asData?.value;
+                                              final myUsername = userDoc?['username'] as String? ?? 'Captain';
+                                              final myAvatarId = userDoc?['avatarId'] as String?;
+                                              final myAvatarBg = userDoc?['avatarBgColor'] as String?;
+
+                                              final repo = ref.read(friendsRepositoryProvider);
+                                              await repo.approveFriendRequest(
+                                                currentUid: authUser.uid,
+                                                currentUsername: myUsername,
+                                                currentAvatarId: myAvatarId,
+                                                currentAvatarBgColor: myAvatarBg,
+                                                targetUid: req.fromUid,
+                                                targetUsername: req.fromUsername,
+                                                targetAvatarId: req.fromAvatarId,
+                                                targetAvatarBgColor: req.fromAvatarBgColor,
+                                              );
+                                              final badgeResult = await ref
+                                                  .read(badgeServiceProvider)
+                                                  .onFriendAdded(req.fromUid);
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('Accepted request from ${req.fromUsername}!'),
+                                                    behavior: SnackBarBehavior.floating,
+                                                  ),
+                                                );
+                                                showBadgeUnlocks(context, badgeResult);
+                                              }
+                                            },
+                                          ),
+                                          IconButton(
+                                            tooltip: 'Decline',
+                                            icon: const Icon(Icons.cancel, color: Colors.redAccent),
+                                            onPressed: () async {
+                                              final authUser = ref.read(authStateProvider).asData?.value;
+                                              if (authUser == null) return;
+                                              final repo = ref.read(friendsRepositoryProvider);
+                                              await repo.denyFriendRequest(
+                                                currentUid: authUser.uid,
+                                                targetUid: req.fromUid,
+                                              );
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text('Declined request from ${req.fromUsername}.'),
+                                                    behavior: SnackBarBehavior.floating,
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const Divider(height: 32, color: Colors.white24),
+                        ],
+
                         Text(
                           'Weather & Marine Alerts',
                           style: Theme.of(context).textTheme.headlineLarge?.copyWith(

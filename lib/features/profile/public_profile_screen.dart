@@ -9,6 +9,7 @@ import '../auth/auth_providers.dart';
 import 'badge_pin.dart';
 import 'badge_service.dart';
 import 'catalog.dart';
+import 'friends_repository.dart';
 import 'profile_providers.dart';
 
 class PublicProfileScreen extends ConsumerWidget {
@@ -181,24 +182,28 @@ class PublicProfileScreen extends ConsumerWidget {
                               final currentUserDoc = ref.watch(userDocStreamProvider).asData?.value;
                               final currentUsername = currentUserDoc?['username'] as String? ?? 'Captain';
                               final currentAvatarId = currentUserDoc?['avatarId'] as String?;
+                              final currentAvatarBgColor = currentUserDoc?['avatarBgColor'] as String?;
 
                               final isFriendAsync = ref.watch(isFriendStreamProvider(userId));
                               final isFriend = isFriendAsync.asData?.value ?? false;
 
-                              return OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: isFriend ? Colors.white70 : OceanThemeExtension.defaultTokens.cyan,
-                                  side: BorderSide(
-                                    color: isFriend ? Colors.white38 : OceanThemeExtension.defaultTokens.cyan,
-                                    width: 2,
+                              final requestStatusAsync = ref.watch(friendRequestStatusStreamProvider(userId));
+                              final requestStatus = requestStatusAsync.asData?.value ?? FriendRequestStatus.none;
+
+                              if (isFriend) {
+                                return OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.white70,
+                                    side: const BorderSide(
+                                      color: Colors.white38,
+                                      width: 2,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
                                   ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  final repo = ref.read(friendsRepositoryProvider);
-                                  if (isFriend) {
+                                  onPressed: () async {
+                                    final repo = ref.read(friendsRepositoryProvider);
                                     await repo.removeFriend(
                                       currentUid: authUser.uid,
                                       targetUid: userId,
@@ -211,35 +216,157 @@ class PublicProfileScreen extends ConsumerWidget {
                                         ),
                                       );
                                     }
-                                  } else {
-                                    await repo.addFriend(
+                                  },
+                                  icon: const Icon(Icons.person_remove_outlined),
+                                  label: const Text(
+                                    'Remove Friend',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                );
+                              }
+
+                              if (requestStatus == FriendRequestStatus.sent) {
+                                return OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.white70,
+                                    side: const BorderSide(
+                                      color: Colors.white38,
+                                      width: 2,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    final repo = ref.read(friendsRepositoryProvider);
+                                    await repo.cancelFriendRequest(
                                       currentUid: authUser.uid,
                                       targetUid: userId,
-                                      targetUsername: username,
-                                      targetAvatarId: avatarId,
-                                      currentUsername: currentUsername,
-                                      currentAvatarId: currentAvatarId,
                                     );
-                                    final badgeResult = await ref
-                                        .read(badgeServiceProvider)
-                                        .onFriendAdded(userId);
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text('Added $username as a friend!'),
+                                          content: Text('Cancelled friend request to $username.'),
                                           behavior: SnackBarBehavior.floating,
                                         ),
                                       );
-                                      showBadgeUnlocks(context, badgeResult);
                                     }
+                                  },
+                                  icon: const Icon(Icons.hourglass_top_outlined),
+                                  label: const Text(
+                                    'Request Sent (Cancel)',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                );
+                              }
+
+                              if (requestStatus == FriendRequestStatus.received) {
+                                return Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: OceanThemeExtension.defaultTokens.cyan,
+                                        foregroundColor: Colors.black,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(24),
+                                        ),
+                                      ),
+                                      onPressed: () async {
+                                        final repo = ref.read(friendsRepositoryProvider);
+                                        await repo.approveFriendRequest(
+                                          currentUid: authUser.uid,
+                                          currentUsername: currentUsername,
+                                          currentAvatarId: currentAvatarId,
+                                          currentAvatarBgColor: currentAvatarBgColor,
+                                          targetUid: userId,
+                                          targetUsername: username,
+                                          targetAvatarId: avatarId,
+                                          targetAvatarBgColor: avatarBgHex,
+                                        );
+                                        final badgeResult = await ref
+                                            .read(badgeServiceProvider)
+                                            .onFriendAdded(userId);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Accepted friend request from $username!'),
+                                              behavior: SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                          showBadgeUnlocks(context, badgeResult);
+                                        }
+                                      },
+                                      icon: const Icon(Icons.check),
+                                      label: const Text('Accept', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: Colors.white70,
+                                        side: const BorderSide(color: Colors.white38),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(24),
+                                        ),
+                                      ),
+                                      onPressed: () async {
+                                        final repo = ref.read(friendsRepositoryProvider);
+                                        await repo.denyFriendRequest(
+                                          currentUid: authUser.uid,
+                                          targetUid: userId,
+                                        );
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Declined friend request from $username.'),
+                                              behavior: SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      icon: const Icon(Icons.close),
+                                      label: const Text('Decline', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              return OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: OceanThemeExtension.defaultTokens.cyan,
+                                  side: BorderSide(
+                                    color: OceanThemeExtension.defaultTokens.cyan,
+                                    width: 2,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  final repo = ref.read(friendsRepositoryProvider);
+                                  await repo.sendFriendRequest(
+                                    currentUid: authUser.uid,
+                                    currentUsername: currentUsername,
+                                    currentAvatarId: currentAvatarId,
+                                    currentAvatarBgColor: currentAvatarBgColor,
+                                    targetUid: userId,
+                                    targetUsername: username,
+                                    targetAvatarId: avatarId,
+                                    targetAvatarBgColor: avatarBgHex,
+                                  );
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Friend request sent to $username!'),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
                                   }
                                 },
-                                icon: Icon(
-                                  isFriend ? Icons.person_remove_outlined : Icons.person_add_outlined,
-                                ),
-                                label: Text(
-                                  isFriend ? 'Remove Friend' : 'Add Friend',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                icon: const Icon(Icons.person_add_outlined),
+                                label: const Text(
+                                  'Add Friend',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                               );
                             },
