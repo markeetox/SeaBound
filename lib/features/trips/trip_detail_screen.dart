@@ -7,7 +7,11 @@ import 'package:intl/intl.dart';
 import '../../core/app_theme.dart';
 import '../../core/gradient_background.dart';
 import '../../core/map_layer_config.dart';
+import '../auth/auth_providers.dart';
+import '../profile/badge_service.dart';
 import '../profile/profile_providers.dart';
+import '../spots/spot_model.dart';
+import '../spots/spots_providers.dart';
 import 'trip_model.dart';
 import 'trips_providers.dart';
 import 'trips_screen.dart';
@@ -16,6 +20,68 @@ class TripDetailScreen extends ConsumerWidget {
   final String tripId;
 
   const TripDetailScreen({super.key, required this.tripId});
+
+  Future<void> _confirmMakeCommunitySpot(
+      BuildContext context, WidgetRef ref, Trip trip) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Share as Community Spot?'),
+          content: Text(
+            'Turning "${trip.title}" into a community spot will make its location and details public to all Seabound users on the Community Spots map.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Share Publicly'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && context.mounted) {
+      final userProfile = ref.read(userProfileProvider).asData?.value;
+      final authUser = ref.read(authStateProvider).asData?.value;
+      final authorName = (userProfile?['displayName'] as String?)?.isNotEmpty == true
+          ? userProfile!['displayName'] as String
+          : (authUser?.displayName?.isNotEmpty == true ? authUser!.displayName! : 'Captain');
+
+      final newSpot = Spot(
+        id: '',
+        userId: trip.userId,
+        authorName: authorName,
+        name: trip.title,
+        description: trip.notes.isNotEmpty ? trip.notes : trip.locationName,
+        latitude: trip.locationCoordinates.latitude,
+        longitude: trip.locationCoordinates.longitude,
+        species: List.from(trip.species),
+      );
+
+      final spotsRepo = ref.read(spotsRepositoryProvider);
+      await spotsRepo.createSpot(newSpot);
+
+      final badgeService = ref.read(badgeServiceProvider);
+      final spots = await spotsRepo.getAllSpotsOnce();
+      final userSpotsCount = spots.where((s) => s.userId == trip.userId).length;
+      final result = await badgeService.onSpotShared(trip.userId, userSpotsCount);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully shared as a public Community Spot!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        showBadgeUnlocks(context, result);
+      }
+    }
+  }
 
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, String title) async {
@@ -77,7 +143,9 @@ class TripDetailScreen extends ConsumerWidget {
               if (trip == null) return const SizedBox.shrink();
               return PopupMenuButton<String>(
                 onSelected: (value) {
-                  if (value == 'share') {
+                  if (value == 'spot') {
+                    _confirmMakeCommunitySpot(context, ref, trip);
+                  } else if (value == 'share') {
                     _showShareSheet(context, trip);
                   } else if (value == 'edit') {
                     context.push('/trips/$tripId/edit');
@@ -86,6 +154,16 @@ class TripDetailScreen extends ConsumerWidget {
                   }
                 },
                 itemBuilder: (BuildContext context) => [
+                  const PopupMenuItem(
+                    value: 'spot',
+                    child: Row(
+                      children: [
+                        Icon(Icons.add_location_alt_outlined),
+                        SizedBox(width: 8),
+                        Text('Turn into Community Spot'),
+                      ],
+                    ),
+                  ),
                   const PopupMenuItem(
                     value: 'share',
                     child: Row(
@@ -280,12 +358,24 @@ class TripDetailScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => _showShareSheet(context, trip),
-                            icon: const Icon(Icons.share),
-                            label: const Text('Share Trip'),
+                            onPressed: () => _confirmMakeCommunitySpot(context, ref, trip),
+                            icon: const Icon(Icons.add_location_alt),
+                            label: const Text('Turn into Spot'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: OceanThemeExtension.defaultTokens.cyan,
+                              foregroundColor: const Color(0xFF001018),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _showShareSheet(context, trip),
+                            icon: const Icon(Icons.share),
+                            label: const Text('Share'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () {

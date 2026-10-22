@@ -126,4 +126,18 @@ class ProfileRepository {
         .get();
     return snap.count ?? 0;
   }
+
+  Future<List<Map<String, dynamic>>> searchCaptains(String query) async {
+    final clean = query.trim().toLowerCase();
+    if (clean.isEmpty) return [];
+
+    final snap = await _firestore
+        .collection('users')
+        .where('usernameLower', isGreaterThanOrEqualTo: clean)
+        .where('usernameLower', isLessThanOrEqualTo: '$clean\uf8ff')
+        .limit(10)
+        .get();
+
+    return snap.docs.map((doc) => {'uid': doc.id, ...doc.data()}).toList();
+  }
 }

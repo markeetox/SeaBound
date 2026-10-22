@@ -22,12 +22,53 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _isSearching = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initProfileOnOpen();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+    });
+
+    try {
+      final repo = ref.read(profileRepositoryProvider);
+      final results = await repo.searchCaptains(query);
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+        });
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSearching = false;
+        });
+      }
+    }
   }
 
   Future<void> _initProfileOnOpen() async {
@@ -197,6 +238,101 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               fontWeight: FontWeight.w800,
                             ),
                       ),
+                      const SizedBox(height: 16),
+
+                      // Search Captain Input Field
+                      TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search Captains...',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _performSearch('');
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: Colors.black.withValues(alpha: 0.35),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: Colors.white30),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: Colors.white30),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: OceanThemeExtension.defaultTokens.cyan,
+                              width: 2,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        onChanged: (val) {
+                          _performSearch(val);
+                        },
+                      ),
+                      if (_isSearching) ...[
+                        const SizedBox(height: 8),
+                        const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ],
+                      if (_searchResults.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF000000),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white24, width: 1.5),
+                          ),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _searchResults.length,
+                            separatorBuilder: (_, _) => const Divider(height: 1, color: Colors.white12),
+                            itemBuilder: (context, index) {
+                              final captain = _searchResults[index];
+                              final uid = captain['uid'] as String;
+                              final cUsername = captain['username'] as String? ?? 'Captain';
+                              final cAvatarId = captain['avatarId'] as String?;
+
+                              return ListTile(
+                                leading: SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: cAvatarId != null && cAvatarId.isNotEmpty
+                                      ? Image.asset(
+                                          'assets/avatars/$cAvatarId.png',
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (_, _, _) => const Icon(Icons.person, color: Colors.white),
+                                        )
+                                      : const Icon(Icons.person, color: Colors.white),
+                                ),
+                                title: Text(
+                                  cUsername,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                trailing: const Icon(Icons.chevron_right, color: Colors.white70),
+                                onTap: () {
+                                  context.push('/profile/user/$uid');
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
 
                       // XP Progress Bar with Dark Outline
