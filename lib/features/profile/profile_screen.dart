@@ -148,10 +148,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final earnedBadgesState = ref.watch(userEarnedBadgesProvider);
     final tripsAsync = ref.watch(userTripsStreamProvider);
     final spotsAsync = ref.watch(allSpotsStreamProvider);
+    final friendsAsync = ref.watch(userFriendsStreamProvider);
 
     final currentUser = authState.asData?.value;
     final userDoc = userDocState.asData?.value;
     final earnedMap = earnedBadgesState.asData?.value ?? {};
+    final friendsList = friendsAsync.asData?.value ?? [];
 
     final username = userDoc?['username'] as String? ??
         currentUser?.displayName ??
@@ -197,50 +199,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   constraints: const BoxConstraints(maxWidth: 600),
                   child: Column(
                     children: [
-                      // Profile Info
-                      SizedBox(
-                        width: 125,
-                        height: 125,
-                        child: avatarId != null && avatarId.isNotEmpty
-                            ? Image.asset(
-                                'assets/avatars/$avatarId.png',
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.person,
-                                    size: 72,
-                                    color: Colors.white,
-                                  );
-                                },
-                              )
-                            : const Icon(
-                                Icons.person,
-                                size: 72,
-                                color: Colors.white,
-                              ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Username 36 w900
-                      Text(
-                        username,
-                        style: const TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$title • Level $level',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: OceanThemeExtension.defaultTokens.cyan,
-                              fontWeight: FontWeight.w800,
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Search Captain Input Field
+                      // Search Captain Input Field at VERY TOP
                       TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
@@ -313,7 +272,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                       ? Image.asset(
                                           'assets/avatars/$cAvatarId.png',
                                           fit: BoxFit.contain,
-                                          errorBuilder: (_, _, _) => const Icon(Icons.person, color: Colors.white),
+                                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: Colors.white),
                                         )
                                       : const Icon(Icons.person, color: Colors.white),
                                 ),
@@ -333,6 +292,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                       ],
+                      const SizedBox(height: 20),
+
+                      // Profile Avatar
+                      SizedBox(
+                        width: 125,
+                        height: 125,
+                        child: avatarId != null && avatarId.isNotEmpty
+                            ? Image.asset(
+                                'assets/avatars/$avatarId.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.person,
+                                    size: 72,
+                                    color: Colors.white,
+                                  );
+                                },
+                              )
+                            : const Icon(
+                                Icons.person,
+                                size: 72,
+                                color: Colors.white,
+                              ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Username 36 w900
+                      Text(
+                        username,
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$title • Level $level',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: OceanThemeExtension.defaultTokens.cyan,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
                       const SizedBox(height: 16),
 
                       // XP Progress Bar with Dark Outline
@@ -455,6 +457,68 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           );
                         },
                       ),
+
+                      // Friends List Section at Bottom
+                      const Divider(height: 40, color: Colors.white30),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Friends (${friendsList.length})',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (friendsList.isEmpty)
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'No friends added yet. Search for captains to connect!',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: friendsList.length,
+                          itemBuilder: (context, index) {
+                            final friend = friendsList[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              color: Colors.black.withValues(alpha: 0.35),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: const BorderSide(color: Colors.white24),
+                              ),
+                              child: ListTile(
+                                leading: SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: friend.avatarId != null && friend.avatarId!.isNotEmpty
+                                      ? Image.asset(
+                                          'assets/avatars/${friend.avatarId}.png',
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: Colors.white),
+                                        )
+                                      : const Icon(Icons.person, color: Colors.white),
+                                ),
+                                title: Text(
+                                  friend.username,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                trailing: const Icon(Icons.chevron_right, color: Colors.white70),
+                                onTap: () {
+                                  context.push('/profile/user/${friend.uid}');
+                                },
+                              ),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),
