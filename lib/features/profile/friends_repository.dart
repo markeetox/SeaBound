@@ -226,7 +226,7 @@ class FriendsRepository {
     required String targetUid,
   }) async {
     final batch = _firestore.batch();
-    batch.delete(_incomingRequestsRef(currentUid).doc(targetUid));
+    batch.delete(_incomingRequestsRef(targetUid).doc(currentUid));
     batch.delete(_sentRequestsRef(targetUid).doc(currentUid));
     await batch.commit();
   }

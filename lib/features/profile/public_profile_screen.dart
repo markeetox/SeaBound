@@ -115,19 +115,7 @@ class PublicProfileScreen extends ConsumerWidget {
                       constraints: const BoxConstraints(maxWidth: 600),
                       child: Column(
                         children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Captain Profile',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 12),
                           SizedBox(
                             width: 125,
                             height: 125,
@@ -254,7 +242,7 @@ class PublicProfileScreen extends ConsumerWidget {
                                   },
                                   icon: const Icon(Icons.hourglass_top_outlined),
                                   label: const Text(
-                                    'Request Sent (Cancel)',
+                                    'Request Pending',
                                     style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 );
@@ -376,10 +364,7 @@ class PublicProfileScreen extends ConsumerWidget {
                             alignment: Alignment.centerLeft,
                             child: Text(
                               'Earned Pins & Badges',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.w800,
                                   ),
                             ),
