@@ -300,26 +300,14 @@ class _SpotFormScreenState extends ConsumerState<SpotFormScreen> {
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _speciesTextController,
-                          decoration: const InputDecoration(
-                            hintText: 'Add a species (e.g., Tarpon, Snook)',
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                          onSubmitted: (_) => _addSpecies(),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton.filled(
-                        onPressed: _addSpecies,
-                        icon: const Icon(Icons.add),
-                        tooltip: 'Add species',
-                      ),
-                    ],
+                  TextField(
+                    controller: _speciesTextController,
+                    decoration: const InputDecoration(
+                      hintText: 'Add a species (e.g., Tarpon, Snook) and press enter',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => _addSpecies(),
                   ),
                   if (_speciesList.isNotEmpty) ...[
                     const SizedBox(height: 12),
