@@ -8,9 +8,11 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (_) {}
 
   runApp(
     const ProviderScope(
@@ -19,11 +21,25 @@ Future<void> main() async {
   );
 }
 
-class SeaboundApp extends ConsumerWidget {
+class SeaboundApp extends ConsumerStatefulWidget {
   const SeaboundApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SeaboundApp> createState() => _SeaboundAppState();
+}
+
+class _SeaboundAppState extends ConsumerState<SeaboundApp> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    try {
+      precacheImage(const AssetImage('assets/ui/home_bg.jpg'), context);
+      precacheImage(const AssetImage('assets/ui/home.png'), context);
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
