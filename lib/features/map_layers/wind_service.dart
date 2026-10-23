@@ -66,62 +66,76 @@ class WindService {
       return _ndbcCache!.stations;
     }
 
-    http.Response response;
-    final proxyUrl =
-        'https://api.allorigins.win/raw?url=${Uri.encodeComponent(MapLayerConfig.noaaNdbcLatestObsUrl)}';
+    String responseBody = '';
+    final targetUrl = MapLayerConfig.noaaNdbcLatestObsUrl;
+    final encodedTarget = Uri.encodeComponent(targetUrl);
 
     if (kIsWeb) {
       // On Flutter Web, browser CORS blocks direct requests to NOAA NDBC.
-      // Try a resilient fallback proxy chain to avoid timeouts or CORS blocks.
-      final targetUrl = MapLayerConfig.noaaNdbcLatestObsUrl;
-      final encodedTarget = Uri.encodeComponent(targetUrl);
-
-      final proxies = [
-        'https://api.allorigins.win/raw?url=$encodedTarget',
-        'https://thingproxy.freeboard.io/fetch/$targetUrl',
+      // Use a fast, resilient proxy chain to prevent CORS errors or 408 timeouts.
+      final directProxies = [
+        'https://corsproxy.io/?$encodedTarget',
+        'https://api.codetabs.com/v1/proxy?quest=$encodedTarget',
       ];
 
-      http.Response? webResponse;
-      for (final proxy in proxies) {
+      for (final proxy in directProxies) {
         try {
           final res = await _client.get(Uri.parse(proxy)).timeout(const Duration(seconds: 4));
           if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
-            webResponse = res;
+            responseBody = res.body;
             break;
           }
         } catch (_) {}
       }
 
-      if (webResponse != null) {
-        response = webResponse;
-      } else {
-        // Final fallback to direct fetch
-        response = await _client.get(Uri.parse(targetUrl));
-        if (response.statusCode != 200) {
-          throw Exception('Failed to load NOAA NDBC buoy observations (code: ${response.statusCode})');
-        }
+      if (responseBody.isEmpty) {
+        // Fallback to AllOrigins JSON wrapper proxy
+        try {
+          final jsonProxy = 'https://api.allorigins.win/get?url=$encodedTarget';
+          final res = await _client.get(Uri.parse(jsonProxy)).timeout(const Duration(seconds: 4));
+          if (res.statusCode == 200 && res.body.trim().isNotEmpty) {
+            final data = json.decode(res.body) as Map<String, dynamic>;
+            final contents = data['contents'] as String?;
+            if (contents != null && contents.trim().isNotEmpty) {
+              responseBody = contents;
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (responseBody.isEmpty) {
+        // Final attempt direct
+        try {
+          final res = await _client.get(Uri.parse(targetUrl)).timeout(const Duration(seconds: 4));
+          if (res.statusCode == 200) {
+            responseBody = res.body;
+          }
+        } catch (_) {}
       }
     } else {
       // On native mobile (iOS / Android), fetch directly first.
       try {
-        response = await _client.get(
-          Uri.parse(MapLayerConfig.noaaNdbcLatestObsUrl),
-        );
-        if (response.statusCode != 200) {
-          throw Exception('Direct status ${response.statusCode}');
+        final res = await _client.get(Uri.parse(targetUrl)).timeout(const Duration(seconds: 6));
+        if (res.statusCode == 200) {
+          responseBody = res.body;
         }
       } catch (_) {
         // Fallback to CORS proxy if direct fetch fails on native
-        response = await _client.get(Uri.parse(proxyUrl));
-        if (response.statusCode != 200) {
-          throw Exception(
-            'Failed to load NOAA NDBC buoy observations (code: ${response.statusCode})',
-          );
-        }
+        try {
+          final proxyUrl = 'https://corsproxy.io/?$encodedTarget';
+          final res = await _client.get(Uri.parse(proxyUrl)).timeout(const Duration(seconds: 6));
+          if (res.statusCode == 200) {
+            responseBody = res.body;
+          }
+        } catch (_) {}
       }
     }
 
-    final lines = const LineSplitter().convert(response.body);
+    if (responseBody.trim().isEmpty) {
+      throw Exception('Failed to load NOAA NDBC buoy observations.');
+    }
+
+    final lines = const LineSplitter().convert(responseBody);
     final stations = <NdbcStationObs>[];
 
     for (final line in lines) {

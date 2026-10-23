@@ -89,11 +89,12 @@ class NoFishingZonesService {
         'geometry': bbox,
         'geometryType': 'esriGeometryEnvelope',
         'spatialRel': 'esriSpatialRelIntersects',
+        'inSR': '4326',
+        'outSR': '4326',
         'outFields':
             'OBJECTID,SITE_ID,SITE_NAME,NAME,PROT_LEVEL,PROT_LVT,GOV_LEVEL,GOVERNANCE,URL',
         'returnGeometry': 'true',
         'f': 'json',
-        'outSR': '4326',
         'resultRecordCount': '100',
       },
     );
