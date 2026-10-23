@@ -113,15 +113,19 @@ class FriendsRepository {
     required String currentUid,
     required String targetUid,
   }) {
-    return _sentRequestsRef(currentUid).doc(targetUid).snapshots().asyncMap((sentSnap) async {
+    final sentStream = _sentRequestsRef(currentUid).doc(targetUid).snapshots();
+    final incomingStream = _incomingRequestsRef(currentUid).doc(targetUid).snapshots();
+
+    return sentStream.asyncExpand((sentSnap) {
       if (sentSnap.exists) {
-        return FriendRequestStatus.sent;
+        return Stream.value(FriendRequestStatus.sent);
       }
-      final incomingSnap = await _incomingRequestsRef(currentUid).doc(targetUid).get();
-      if (incomingSnap.exists) {
-        return FriendRequestStatus.received;
-      }
-      return FriendRequestStatus.none;
+      return incomingStream.map((incomingSnap) {
+        if (incomingSnap.exists) {
+          return FriendRequestStatus.received;
+        }
+        return FriendRequestStatus.none;
+      });
     });
   }
 
@@ -226,7 +230,7 @@ class FriendsRepository {
     required String targetUid,
   }) async {
     final batch = _firestore.batch();
-    batch.delete(_incomingRequestsRef(targetUid).doc(currentUid));
+    batch.delete(_incomingRequestsRef(currentUid).doc(targetUid));
     batch.delete(_sentRequestsRef(targetUid).doc(currentUid));
     await batch.commit();
   }
