@@ -64,8 +64,8 @@ void main() {
     // Check Layers button tooltip exists
     expect(find.byTooltip('Layers'), findsOneWidget);
 
-    // Check My Location button tooltip exists
-    expect(find.byTooltip('My Location'), findsOneWidget);
+    // Check Locate toggle button tooltip exists
+    expect(find.byKey(const ValueKey('locate_toggle_button')), findsOneWidget);
 
     // Check standalone Community Spots button text is gone from top overlay
     expect(find.text('Community Spots'), findsNothing);
@@ -120,5 +120,32 @@ void main() {
 
     // Verify error banner is cleared on success
     expect(find.text("Couldn't load reef data"), findsNothing);
+  });
+
+  testWidgets('SpotsScreen renders user avatar location pointer on map and toggles locate mode',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          allSpotsStreamProvider.overrideWith((ref) => Stream.value([])),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: const SpotsScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final locateToggleFinder = find.byKey(const ValueKey('locate_toggle_button'));
+    expect(locateToggleFinder, findsOneWidget);
+
+    // Tap locate toggle button
+    await tester.tap(locateToggleFinder);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Verify toggle tooltip updates to active tracking
+    expect(find.byTooltip('Tracking Location (On)'), findsOneWidget);
   });
 }

@@ -117,6 +117,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
   LatLngBounds? _currentBounds;
   double _currentZoom = 9.0;
   bool _isLocating = false;
+  bool _isFollowUserLocation = false;
   bool _isLegendExpanded = false;
 
   Timer? _wavesDebounceTimer;
@@ -309,6 +310,19 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     });
   }
 
+  Future<void> _toggleFollowLocation() async {
+    if (_isFollowUserLocation) {
+      setState(() {
+        _isFollowUserLocation = false;
+      });
+    } else {
+      setState(() {
+        _isFollowUserLocation = true;
+      });
+      await _centerOnMyLocation();
+    }
+  }
+
   Future<void> _centerOnMyLocation() async {
     setState(() {
       _isLocating = true;
@@ -319,7 +333,8 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
       final position = await locationService.getCurrentPosition();
       final userLatLng = LatLng(position.latitude, position.longitude);
 
-      _mapController.move(userLatLng, 13.0);
+      final targetZoom = _mapController.camera.zoom < 10.0 ? 13.0 : _mapController.camera.zoom;
+      _mapController.move(userLatLng, targetZoom);
 
       final result = await ref.read(badgeServiceProvider).onMyLocationTapped();
       if (mounted) {
@@ -371,6 +386,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
   @override
   Widget build(BuildContext context) {
     final userDoc = ref.watch(userDocStreamProvider).asData?.value;
+    final avatarId = userDoc?['avatarId'] as String?;
     final userBgHex = userDoc?['avatarBgColor'] as String?;
     final userBgVal = userBgHex != null && userBgHex.startsWith('#')
         ? int.tryParse(userBgHex.replaceFirst('#', '0xFF'))
@@ -433,6 +449,16 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
       }
     });
 
+    ref.listen<AsyncValue<Position>>(userPositionStreamProvider, (prev, next) {
+      final pos = next.asData?.value;
+      if (pos != null && _isFollowUserLocation) {
+        _mapController.move(
+          LatLng(pos.latitude, pos.longitude),
+          _mapController.camera.zoom,
+        );
+      }
+    });
+
     final Position? userPos = userPositionAsync.asData?.value;
     final LatLng? userLatLng =
         userPos != null ? LatLng(userPos.latitude, userPos.longitude) : null;
@@ -468,6 +494,9 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
               setState(() {
                 _currentBounds = position.visibleBounds;
                 _currentZoom = position.zoom;
+                if (hasGesture && _isFollowUserLocation) {
+                  _isFollowUserLocation = false;
+                }
               });
               if (showWaves) _fetchWavesForBounds(position.visibleBounds);
               if (showArtificialReefs) _fetchReefsForBounds(position.visibleBounds);
@@ -580,7 +609,18 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 maxNativeZoom: 18,
                 maxZoom: 20,
                 tileProvider: NetworkTileProvider(),
-                tileDisplay: const TileDisplay.instantaneous(opacity: 0.85),
+                tileDisplay: const TileDisplay.instantaneous(opacity: 0.9),
+                tileBuilder: (context, tileWidget, tile) {
+                  return ColorFiltered(
+                    colorFilter: const ColorFilter.matrix(<double>[
+                      1, 0, 0, 0, 0,
+                      0, 1, 0, 0, 0,
+                      0, 0, 1, 0, 0,
+                      -1.5, -1.5, -1.5, 1, 3.2,
+                    ]),
+                    child: tileWidget,
+                  );
+                },
                 errorTileCallback: (_, _, _) {},
               ),
 
@@ -824,21 +864,38 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 markers: [
                   Marker(
                     point: userLatLng,
-                    width: 22.0,
-                    height: 22.0,
+                    width: 38.0,
+                    height: 38.0,
                     child: Container(
+                      key: const ValueKey('user_avatar_location_pointer'),
+                      padding: const EdgeInsets.all(2.0),
                       decoration: BoxDecoration(
                         color: userPointerColor,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2.5),
+                        border: Border.all(color: Colors.white, width: 2.0),
                         boxShadow: const [
                           BoxShadow(
-                            color: Colors.black38,
+                            color: Colors.black45,
                             blurRadius: 4,
                             offset: Offset(0, 2),
                           ),
                         ],
                       ),
+                      child: avatarId != null && avatarId.isNotEmpty
+                          ? Image.asset(
+                              'assets/avatars/$avatarId.png',
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => const Icon(
+                                Icons.person,
+                                size: 22,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.person,
+                              size: 22,
+                              color: Colors.white,
+                            ),
                     ),
                   ),
                 ],
@@ -990,11 +1047,13 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 ),
                 const SizedBox(height: 8),
 
-                // My Location Button
+                // My Location Toggle Button
                 ChromeBorderContainer(
                   borderRadius: BorderRadius.circular(24),
                   borderWidth: 2,
-                  backgroundColor: OceanThemeExtension.defaultTokens.surface,
+                  backgroundColor: _isFollowUserLocation
+                      ? OceanThemeExtension.defaultTokens.cyan.withValues(alpha: 0.3)
+                      : OceanThemeExtension.defaultTokens.surface,
                   boxShadow: const [
                     BoxShadow(
                       color: Colors.black45,
@@ -1003,9 +1062,10 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     ),
                   ],
                   child: Tooltip(
-                    message: 'My Location',
+                    message: _isFollowUserLocation ? 'Tracking Location (On)' : 'Center Location',
                     child: InkWell(
-                      onTap: _isLocating ? null : _centerOnMyLocation,
+                      key: const ValueKey('locate_toggle_button'),
+                      onTap: _isLocating ? null : _toggleFollowLocation,
                       borderRadius: BorderRadius.circular(22),
                       child: SizedBox(
                         width: 44,
@@ -1017,7 +1077,13 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                                   height: 18,
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : const Icon(Icons.my_location, size: 22, color: Colors.white),
+                              : Icon(
+                                  _isFollowUserLocation ? Icons.my_location : Icons.location_searching,
+                                  size: 22,
+                                  color: _isFollowUserLocation
+                                      ? OceanThemeExtension.defaultTokens.cyan
+                                      : Colors.white,
+                                ),
                         ),
                       ),
                     ),
