@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,14 +23,22 @@ class ProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen>
+    with SingleTickerProviderStateMixin<ProfileScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _searchResults = [];
   bool _isSearching = false;
 
+  late final AnimationController _secretController;
+  int _avatarTapCount = 0;
+
   @override
   void initState() {
     super.initState();
+    _secretController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initProfileOnOpen();
     });
@@ -36,8 +46,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   void dispose() {
+    _secretController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onAvatarTap() {
+    _avatarTapCount++;
+    if (_avatarTapCount >= 5) {
+      _avatarTapCount = 0;
+      _secretController.forward(from: 0.0);
+    }
   }
 
   Future<void> _performSearch(String query) async {
@@ -295,26 +314,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       const SizedBox(height: 20),
 
                       // Profile Avatar
-                      SizedBox(
-                        width: 125,
-                        height: 125,
-                        child: avatarId != null && avatarId.isNotEmpty
-                            ? Image.asset(
-                                'assets/avatars/$avatarId.png',
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.person,
-                                    size: 72,
-                                    color: Colors.white,
-                                  );
-                                },
-                              )
-                            : const Icon(
-                                Icons.person,
-                                size: 72,
-                                color: Colors.white,
-                              ),
+                      GestureDetector(
+                        key: const ValueKey('profile_avatar_tap_area'),
+                        onTap: _onAvatarTap,
+                        behavior: HitTestBehavior.opaque,
+                        child: SizedBox(
+                          width: 125,
+                          height: 125,
+                          child: avatarId != null && avatarId.isNotEmpty
+                              ? Image.asset(
+                                  'assets/avatars/$avatarId.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.person,
+                                      size: 72,
+                                      color: Colors.white,
+                                    );
+                                  },
+                                )
+                              : const Icon(
+                                  Icons.person,
+                                  size: 72,
+                                  color: Colors.white,
+                                ),
+                        ),
                       ),
                       const SizedBox(height: 12),
 
@@ -521,6 +545,59 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                     ],
                   ),
+                ),
+              ),
+            ),
+
+            // Secret Easter Egg Animation Overlay
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: AnimatedBuilder(
+                  animation: _secretController,
+                  builder: (context, child) {
+                    if (!_secretController.isAnimating) return const SizedBox.shrink();
+                    final progress = _secretController.value;
+                    double slideY = 1.0;
+                    if (progress < 0.22) {
+                      final t = progress / 0.22;
+                      slideY = Curves.easeOut.transform(1.0 - t);
+                    } else if (progress <= 0.78) {
+                      slideY = 0.0;
+                    } else {
+                      final t = (progress - 0.78) / 0.22;
+                      slideY = Curves.easeIn.transform(t);
+                    }
+
+                    final shakeProgress = (progress - 0.22).clamp(0.0, 0.56) / 0.56;
+                    final shakeAngle = (progress >= 0.22 && progress <= 0.78)
+                        ? math.sin(shakeProgress * math.pi * 8) * 0.10
+                        : 0.0;
+                    final shakeOffsetX = (progress >= 0.22 && progress <= 0.78)
+                        ? math.sin(shakeProgress * math.pi * 8) * 15.0
+                        : 0.0;
+
+                    final screenHeight = MediaQuery.of(context).size.height;
+                    final imageHeight = (screenHeight * 0.55).clamp(280.0, 500.0);
+
+                    return Transform.translate(
+                      offset: Offset(shakeOffsetX, slideY * imageHeight),
+                      child: Transform.rotate(
+                        angle: shakeAngle,
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Image.asset(
+                            'assets/ui/easter_egg.png',
+                            key: const ValueKey('secret_easter_egg_image'),
+                            height: imageHeight,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

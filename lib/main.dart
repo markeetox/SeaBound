@@ -35,6 +35,7 @@ class _SeaboundAppState extends ConsumerState<SeaboundApp> {
     try {
       precacheImage(const AssetImage('assets/ui/home_bg.jpg'), context);
       precacheImage(const AssetImage('assets/ui/home.png'), context);
+      precacheImage(const AssetImage('assets/ui/easter_egg.png'), context);
     } catch (_) {}
   }
 
