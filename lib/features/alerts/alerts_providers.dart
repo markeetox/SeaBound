@@ -44,11 +44,12 @@ class AlertsNotifier extends Notifier<AlertsState> {
   Timer? _periodicTimer;
   AppLifecycleListener? _lifecycleListener;
   LatLng? _lastQueryPoint;
+  DateTime? _lastFetchTime;
 
   @override
   AlertsState build() {
     _periodicTimer = Timer.periodic(const Duration(minutes: 5), (_) {
-      refreshAlerts();
+      refreshAlerts(force: true);
     });
 
     _lifecycleListener = AppLifecycleListener(
@@ -62,12 +63,17 @@ class AlertsNotifier extends Notifier<AlertsState> {
       _lifecycleListener?.dispose();
     });
 
-    Future.microtask(() => refreshAlerts());
+    Future.microtask(() => refreshAlerts(force: true));
 
     return const AlertsState();
   }
 
-  Future<void> refreshAlerts() async {
+  Future<void> refreshAlerts({bool force = false}) async {
+    final now = DateTime.now();
+    if (!force && _lastFetchTime != null && now.difference(_lastFetchTime!).inSeconds < 60) {
+      return;
+    }
+
     LatLng queryPoint = const LatLng(25.7617, -80.1918);
 
     try {
@@ -108,15 +114,31 @@ class AlertsNotifier extends Notifier<AlertsState> {
     }
   }
 
+  List<WeatherAlert> _filterActiveAlerts(List<WeatherAlert> incoming) {
+    final now = DateTime.now();
+    return incoming.where((alert) {
+      if (alert.expires == null) return true;
+      return alert.expires!.isAfter(now);
+    }).toList();
+  }
+
   Future<void> fetchAlertsForPoint(double lat, double lon) async {
     state = state.copyWith(isLoading: true);
+    _lastFetchTime = DateTime.now();
 
     final repository = ref.read(alertsRepositoryProvider);
 
     try {
-      final alerts = await repository.fetchActiveAlerts(lat, lon);
+      final fetched = await repository.fetchActiveAlerts(lat, lon);
+      final activeAlerts = _filterActiveAlerts(fetched);
+
+      final validExisting = _filterActiveAlerts(state.alerts);
+      final combinedAlerts = activeAlerts.isNotEmpty
+          ? activeAlerts
+          : (validExisting.isNotEmpty ? validExisting : const <WeatherAlert>[]);
+
       state = AlertsState(
-        alerts: alerts,
+        alerts: combinedAlerts,
         lastChecked: DateTime.now(),
         isLoading: false,
         errorMessage: null,
@@ -124,18 +146,23 @@ class AlertsNotifier extends Notifier<AlertsState> {
       );
     } catch (e) {
       if (e is OutOfCoverageException) {
+        final validExisting = _filterActiveAlerts(state.alerts);
         state = AlertsState(
-          alerts: const [],
-          lastChecked: DateTime.now(),
+          alerts: validExisting,
+          lastChecked: state.lastChecked ?? DateTime.now(),
           isLoading: false,
           errorMessage: null,
-          isOutOfCoverage: true,
+          isOutOfCoverage: validExisting.isEmpty,
         );
       } else {
-        // Honest error state: do NOT wipe alerts or say "no alerts"
-        state = state.copyWith(
+        final validExisting = _filterActiveAlerts(state.alerts);
+        state = AlertsState(
+          alerts: validExisting,
+          lastChecked: state.lastChecked,
           isLoading: false,
-          errorMessage: "Couldn't check alerts. Do not assume the area is clear.",
+          errorMessage: validExisting.isEmpty
+              ? "Couldn't check alerts. Do not assume the area is clear."
+              : null,
           isOutOfCoverage: false,
         );
       }

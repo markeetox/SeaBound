@@ -57,21 +57,25 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 0 20px;
+      text-align: center;
     }
     .splash-logo {
       width: 110px;
       height: 110px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       filter: drop-shadow(0px 8px 20px rgba(0, 0, 0, 0.6));
-      animation: pulse 2s infinite ease-in-out;
     }
-    .splash-title {
-      color: #ffffff;
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: 3px;
+    .splash-subtitle {
+      color: #00E5FF;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
       margin: 0 0 20px 0;
-      text-shadow: 0px 4px 12px rgba(0, 0, 0, 0.8);
+      text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.9);
+      min-height: 24px;
+      transition: opacity 0.3s ease-in-out;
+      opacity: 1;
     }
     .spinner {
       width: 32px;
@@ -84,22 +88,46 @@
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.04); }
-    }
   </style>
 </head>
 <body>
   <div id="splash">
     <div class="splash-content">
       <img class="splash-logo" src="assets/assets/ui/home.png" onerror="this.src='icons/Icon-192.png'" alt="Seabound" />
-      <h1 class="splash-title">SEABOUND</h1>
+      <div id="splash-subtitle" class="splash-subtitle">Raising anchor...</div>
       <div class="spinner"></div>
     </div>
   </div>
 
   <script>
+    (function() {
+      var phrases = [
+        "Raising anchor...",
+        "Prepping the cooler...",
+        "Getting ice...",
+        "Rigging the lines...",
+        "Checking tide charts...",
+        "Scanning buoy data...",
+        "Baiting hooks...",
+        "Charting the course...",
+        "Setting the compass...",
+        "Checking weather radar..."
+      ];
+      var currentIndex = Math.floor(Math.random() * phrases.length);
+      var subEl = document.getElementById('splash-subtitle');
+      if (subEl) {
+        subEl.textContent = phrases[currentIndex];
+        setInterval(function() {
+          currentIndex = (currentIndex + 1) % phrases.length;
+          subEl.style.opacity = '0';
+          setTimeout(function() {
+            subEl.textContent = phrases[currentIndex];
+            subEl.style.opacity = '1';
+          }, 300);
+        }, 2200);
+      }
+    })();
+
     window.addEventListener('flutter-first-frame', function () {
       var splash = document.getElementById('splash');
       if (splash) {
