@@ -14,8 +14,10 @@ import '../../core/gradient_background.dart';
 import '../../core/map_layer_config.dart';
 import '../../core/navigation_disclaimer.dart';
 import '../alerts/alerts_providers.dart';
+import '../auth/auth_providers.dart';
 import '../map/location_providers.dart';
 import '../profile/profile_providers.dart';
+import 'trip_recorder_provider.dart';
 import '../map_layers/artificial_reefs_service.dart';
 import '../map_layers/gibs_date_service.dart';
 import '../map_layers/map_layers_dialog.dart';
@@ -157,6 +159,211 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     _noFishingDebounceTimer?.cancel();
     _animationTimer?.cancel();
     super.dispose();
+  }
+
+  void _showAddOptionSheet() {
+    final tripState = ref.read(tripRecorderProvider);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: OceanThemeExtension.defaultTokens.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Add to Map',
+                  style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: OceanThemeExtension.defaultTokens.cyan,
+                    foregroundColor: Colors.black,
+                  ),
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    context.push('/spots/add');
+                  },
+                  icon: const Icon(Icons.pin_drop, size: 24),
+                  label: const Text(
+                    'Secret Spot',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: tripState.isRecording
+                        ? Colors.amber.shade700
+                        : const Color(0xFFD1142A),
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () async {
+                    Navigator.of(sheetContext).pop();
+                    if (tripState.isRecording) {
+                      _showSaveTripDialog();
+                    } else {
+                      ref.read(tripRecorderProvider.notifier).startRecording();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Trip recording started! Moving will trace your path.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                  icon: Icon(
+                    tripState.isRecording ? Icons.stop_circle : Icons.directions_boat,
+                    size: 24,
+                  ),
+                  label: Text(
+                    tripState.isRecording ? 'End Recorded Trip' : 'Start Trip Recording',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSaveTripDialog() {
+    final tripState = ref.read(tripRecorderProvider);
+    final points = tripState.latLngPoints;
+
+    final nameController = TextEditingController(text: 'My Boat Trip');
+    final descController = TextEditingController();
+    final speciesController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: OceanThemeExtension.defaultTokens.surface,
+          title: const Text(
+            'Save Recorded Trip',
+            style: TextStyle(fontWeight: FontWeight.w900),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Recorded ${points.length} GPS points along your path.',
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Trip Name',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: speciesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Species (comma separated)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                ref.read(tripRecorderProvider.notifier).reset();
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Discard', style: TextStyle(color: Colors.redAccent)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final authUser = ref.read(authStateProvider).asData?.value;
+                final userDoc = ref.read(userDocStreamProvider).asData?.value;
+                final authorName = (userDoc?['username'] as String?) ??
+                    authUser?.displayName ??
+                    'Captain';
+
+                final startPoint = points.isNotEmpty
+                    ? points.first
+                    : (ref.read(userPositionStreamProvider).asData?.value != null
+                        ? LatLng(
+                            ref.read(userPositionStreamProvider).asData!.value.latitude,
+                            ref.read(userPositionStreamProvider).asData!.value.longitude,
+                          )
+                        : const LatLng(25.7617, -80.1918));
+
+                final speciesList = speciesController.text
+                    .split(',')
+                    .map((s) => s.trim())
+                    .where((s) => s.isNotEmpty)
+                    .toList();
+
+                final trailMaps = points
+                    .map((p) => {'lat': p.latitude, 'lng': p.longitude})
+                    .toList();
+
+                final spot = Spot(
+                  id: '',
+                  userId: authUser?.uid ?? '',
+                  authorName: authorName,
+                  name: nameController.text.trim().isEmpty
+                      ? 'My Boat Trip'
+                      : nameController.text.trim(),
+                  description: descController.text.trim(),
+                  latitude: startPoint.latitude,
+                  longitude: startPoint.longitude,
+                  species: speciesList,
+                  isTrip: true,
+                  trailPoints: trailMaps,
+                );
+
+                await ref.read(spotsRepositoryProvider).createSpot(spot);
+                ref.read(tripRecorderProvider.notifier).stopRecording();
+
+                if (mounted) {
+                  Navigator.of(dialogContext).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Recorded Trip saved to Spots!'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Save Trip'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _openLayersDialog() {
@@ -458,6 +665,8 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
         );
       }
     });
+
+    final tripRecorderState = ref.watch(tripRecorderProvider);
 
     final Position? userPos = userPositionAsync.asData?.value;
     final LatLng? userLatLng =
@@ -937,7 +1146,28 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 error: (error, stackTrace) => const SizedBox.shrink(),
               ),
 
-            // Community Spot Markers Layer
+            // Polyline Layer for Live Recorded Trip Trail and Saved Trip Spots
+            PolylineLayer(
+              polylines: [
+                // Live recording polyline trail
+                if (tripRecorderState.isRecording && tripRecorderState.latLngPoints.isNotEmpty)
+                  Polyline(
+                    points: tripRecorderState.latLngPoints,
+                    color: Colors.black,
+                    strokeWidth: 4.0,
+                  ),
+
+                // Saved trip polylines
+                for (final spot in widget.spots.where((s) => s.isTrip && s.latLngTrailPoints.isNotEmpty))
+                  Polyline(
+                    points: spot.latLngTrailPoints,
+                    color: Colors.black,
+                    strokeWidth: 4.0,
+                  ),
+              ],
+            ),
+
+            // Community Spot & Recorded Trip Markers Layer
             if (showFishSpots)
               MarkerLayer(
                 markers: widget.spots.map((spot) {
@@ -951,7 +1181,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: userPointerColor,
+                          color: spot.isTrip ? Colors.black : userPointerColor,
                           shape: BoxShape.circle,
                           boxShadow: const [
                             BoxShadow(
@@ -961,10 +1191,10 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.place,
+                        child: Icon(
+                          spot.isTrip ? Icons.directions_boat : Icons.place,
                           color: Colors.white,
-                          size: 26,
+                          size: 24,
                         ),
                       ),
                     ),
@@ -1080,11 +1310,13 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 ),
                 const SizedBox(height: 8),
 
-                // Add Pointer / Add Opinion Button
+                // Add Pointer / Add Option Button
                 ChromeBorderContainer(
                   borderRadius: BorderRadius.circular(24),
                   borderWidth: 2,
-                  backgroundColor: const Color(0xFFD1142A),
+                  backgroundColor: tripRecorderState.isRecording
+                      ? Colors.amber.shade700
+                      : const Color(0xFFD1142A),
                   boxShadow: const [
                     BoxShadow(
                       color: Colors.black45,
@@ -1093,17 +1325,19 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     ),
                   ],
                   child: Tooltip(
-                    message: 'Add Opinion',
+                    message: tripRecorderState.isRecording ? 'Recording Trip...' : 'Add Spot / Trip',
                     child: InkWell(
-                      onTap: () {
-                        context.push('/spots/add');
-                      },
+                      onTap: _showAddOptionSheet,
                       borderRadius: BorderRadius.circular(22),
-                      child: const SizedBox(
+                      child: SizedBox(
                         width: 44,
                         height: 44,
                         child: Center(
-                          child: Icon(Icons.add_location_alt, size: 22, color: Colors.white),
+                          child: Icon(
+                            tripRecorderState.isRecording ? Icons.directions_boat : Icons.add_location_alt,
+                            size: 22,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
