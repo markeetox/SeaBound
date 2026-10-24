@@ -17,6 +17,8 @@ import '../alerts/alerts_providers.dart';
 import '../auth/auth_providers.dart';
 import '../map/location_providers.dart';
 import '../profile/profile_providers.dart';
+import '../trips/trip_model.dart';
+import '../trips/trips_providers.dart';
 import 'trip_recorder_provider.dart';
 import '../map_layers/artificial_reefs_service.dart';
 import '../map_layers/gibs_date_service.dart';
@@ -306,10 +308,6 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
             ElevatedButton(
               onPressed: () async {
                 final authUser = ref.read(authStateProvider).asData?.value;
-                final userDoc = ref.read(userDocStreamProvider).asData?.value;
-                final authorName = (userDoc?['username'] as String?) ??
-                    authUser?.displayName ??
-                    'Captain';
 
                 final startPoint = points.isNotEmpty
                     ? points.first
@@ -330,29 +328,31 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     .map((p) => {'lat': p.latitude, 'lng': p.longitude})
                     .toList();
 
-                final spot = Spot(
+                final trip = Trip(
                   id: '',
                   userId: authUser?.uid ?? '',
-                  authorName: authorName,
-                  name: nameController.text.trim().isEmpty
+                  title: nameController.text.trim().isEmpty
                       ? 'My Boat Trip'
                       : nameController.text.trim(),
-                  description: descController.text.trim(),
-                  latitude: startPoint.latitude,
-                  longitude: startPoint.longitude,
+                  date: DateTime.now(),
+                  locationName: '${startPoint.latitude.toStringAsFixed(4)}, ${startPoint.longitude.toStringAsFixed(4)}',
                   species: speciesList,
-                  isTrip: true,
+                  notes: descController.text.trim(),
                   trailPoints: trailMaps,
                 );
 
-                await ref.read(spotsRepositoryProvider).createSpot(spot);
+                final repo = ref.read(tripsRepositoryProvider);
+                final messenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(dialogContext);
+
+                await repo.createTrip(trip);
                 ref.read(tripRecorderProvider.notifier).stopRecording();
 
                 if (mounted) {
-                  Navigator.of(dialogContext).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  navigator.pop();
+                  messenger.showSnackBar(
                     const SnackBar(
-                      content: Text('Recorded Trip saved to Spots!'),
+                      content: Text('Recorded Trip saved to Fishing Trips!'),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -1146,28 +1146,19 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 error: (error, stackTrace) => const SizedBox.shrink(),
               ),
 
-            // Polyline Layer for Live Recorded Trip Trail and Saved Trip Spots
-            PolylineLayer(
-              polylines: [
-                // Live recording polyline trail
-                if (tripRecorderState.isRecording && tripRecorderState.latLngPoints.isNotEmpty)
+            // Polyline Layer for Live Recorded Trip Trail
+            if (tripRecorderState.isRecording && tripRecorderState.latLngPoints.isNotEmpty)
+              PolylineLayer(
+                polylines: [
                   Polyline(
                     points: tripRecorderState.latLngPoints,
                     color: Colors.black,
                     strokeWidth: 4.0,
                   ),
+                ],
+              ),
 
-                // Saved trip polylines
-                for (final spot in widget.spots.where((s) => s.isTrip && s.latLngTrailPoints.isNotEmpty))
-                  Polyline(
-                    points: spot.latLngTrailPoints,
-                    color: Colors.black,
-                    strokeWidth: 4.0,
-                  ),
-              ],
-            ),
-
-            // Community Spot & Recorded Trip Markers Layer
+            // Community Spot Markers Layer
             if (showFishSpots)
               MarkerLayer(
                 markers: widget.spots.map((spot) {
@@ -1181,7 +1172,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: spot.isTrip ? Colors.black : userPointerColor,
+                          color: userPointerColor,
                           shape: BoxShape.circle,
                           boxShadow: const [
                             BoxShadow(
@@ -1191,10 +1182,10 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                             ),
                           ],
                         ),
-                        child: Icon(
-                          spot.isTrip ? Icons.directions_boat : Icons.place,
+                        child: const Icon(
+                          Icons.place,
                           color: Colors.white,
-                          size: 24,
+                          size: 26,
                         ),
                       ),
                     ),

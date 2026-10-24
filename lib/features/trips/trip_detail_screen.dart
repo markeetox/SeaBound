@@ -285,6 +285,16 @@ class TripDetailScreen extends ConsumerWidget {
                               urlTemplate: MapLayerConfig.openStreetMapTileUrl,
                               userAgentPackageName: 'com.onerevamp.seabound',
                             ),
+                            if (trip.latLngTrailPoints.isNotEmpty)
+                              PolylineLayer(
+                                polylines: [
+                                  Polyline(
+                                    points: trip.latLngTrailPoints,
+                                    color: Colors.black,
+                                    strokeWidth: 4.0,
+                                  ),
+                                ],
+                              ),
                             MarkerLayer(
                               markers: [
                                 Marker(
