@@ -370,6 +370,32 @@ class _TripCard extends ConsumerWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: trip.trailPoints.isNotEmpty
+                            ? Colors.amber.shade900.withValues(alpha: 0.6)
+                            : OceanThemeExtension.defaultTokens.cyan.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: trip.trailPoints.isNotEmpty
+                              ? Colors.amber.shade600
+                              : OceanThemeExtension.defaultTokens.cyan,
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        trip.trailPoints.isNotEmpty ? 'Trip' : 'Spot',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: trip.trailPoints.isNotEmpty
+                              ? Colors.amber.shade200
+                              : OceanThemeExtension.defaultTokens.cyan,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Row(
                       children: [

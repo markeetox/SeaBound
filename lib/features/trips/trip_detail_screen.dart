@@ -154,16 +154,17 @@ class TripDetailScreen extends ConsumerWidget {
                   }
                 },
                 itemBuilder: (BuildContext context) => [
-                  const PopupMenuItem(
-                    value: 'spot',
-                    child: Row(
-                      children: [
-                        Icon(Icons.add_location_alt_outlined),
-                        SizedBox(width: 8),
-                        Text('Turn into Community Spot'),
-                      ],
+                  if (trip.trailPoints.isEmpty)
+                    const PopupMenuItem(
+                      value: 'spot',
+                      child: Row(
+                        children: [
+                          Icon(Icons.public),
+                          SizedBox(width: 8),
+                          Text('Make it Public'),
+                        ],
+                      ),
                     ),
-                  ),
                   const PopupMenuItem(
                     value: 'share',
                     child: Row(
@@ -228,11 +229,42 @@ class TripDetailScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Text(
-                            trip.title,
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                trip.title,
+                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: trip.trailPoints.isNotEmpty
+                                      ? Colors.amber.shade900.withValues(alpha: 0.6)
+                                      : OceanThemeExtension.defaultTokens.cyan.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: trip.trailPoints.isNotEmpty
+                                        ? Colors.amber.shade600
+                                        : OceanThemeExtension.defaultTokens.cyan,
+                                    width: 1,
+                                  ),
                                 ),
+                                child: Text(
+                                  trip.trailPoints.isNotEmpty ? 'Trip' : 'Spot',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                    color: trip.trailPoints.isNotEmpty
+                                        ? Colors.amber.shade200
+                                        : OceanThemeExtension.defaultTokens.cyan,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         TripReactionButtons(trip: trip),
@@ -366,18 +398,20 @@ class TripDetailScreen extends ConsumerWidget {
                     ],
                     Row(
                       children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _confirmMakeCommunitySpot(context, ref, trip),
-                            icon: const Icon(Icons.add_location_alt),
-                            label: const Text('Turn into Spot'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: OceanThemeExtension.defaultTokens.cyan,
-                              foregroundColor: const Color(0xFF001018),
+                        if (trip.trailPoints.isEmpty) ...[
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () => _confirmMakeCommunitySpot(context, ref, trip),
+                              icon: const Icon(Icons.public),
+                              label: const Text('Make it Public'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: OceanThemeExtension.defaultTokens.cyan,
+                                foregroundColor: const Color(0xFF001018),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
+                          const SizedBox(width: 8),
+                        ],
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () => _showShareSheet(context, trip),
