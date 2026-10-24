@@ -187,14 +187,19 @@ class LupitaData {
 }
 
 class LupitaService {
-  static const String dataUrl =
+  static const String jsDelivrUrl =
+      'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/fish.json';
+  static const String rawGithubUrl =
       'https://raw.githubusercontent.com/markeetox/lupita/data/fish.json';
+  static const String apiV1IndexUrl =
+      'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/index.json';
 
   Future<LupitaData> fetchLupitaData() async {
     final urls = [
-      dataUrl,
-      'https://corsproxy.io/?${Uri.encodeComponent(dataUrl)}',
-      'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(dataUrl)}',
+      jsDelivrUrl,
+      'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubUrl)}',
+      'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubUrl)}',
+      rawGithubUrl,
     ];
 
     Object? lastError;
@@ -204,13 +209,8 @@ class LupitaService {
         final response = await http
             .get(
               Uri.parse(url),
-              headers: const {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0',
-              },
             )
-            .timeout(const Duration(seconds: 12));
+            .timeout(const Duration(seconds: 10));
 
         if (response.statusCode == 200) {
           final decoded = json.decode(response.body) as Map<String, dynamic>;
@@ -219,6 +219,70 @@ class LupitaService {
       } catch (e) {
         lastError = e;
       }
+    }
+
+    // Fallback: try API v1 index endpoint
+    try {
+      final v1Response = await http
+          .get(Uri.parse(apiV1IndexUrl))
+          .timeout(const Duration(seconds: 10));
+
+      if (v1Response.statusCode == 200) {
+        final v1Decoded = json.decode(v1Response.body) as Map<String, dynamic>;
+        final rawSpecies = v1Decoded['species'] as List<dynamic>?;
+        final speciesList = <LupitaSpecies>[];
+
+        if (rawSpecies != null) {
+          for (final item in rawSpecies.whereType<Map<String, dynamic>>()) {
+            final speciesId = item['id'] as String? ?? '';
+            final detailPath = item['details'] as String?;
+
+            List<LupitaSpot> spotsList = [];
+            if (detailPath != null && detailPath.isNotEmpty) {
+              try {
+                final specDetailUrl =
+                    'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/$detailPath';
+                final specResp = await http
+                    .get(Uri.parse(specDetailUrl))
+                    .timeout(const Duration(seconds: 6));
+                if (specResp.statusCode == 200) {
+                  final specData = json.decode(specResp.body) as Map<String, dynamic>;
+                  final rawSpots = specData['spots'] as List<dynamic>?;
+                  if (rawSpots != null) {
+                    spotsList = rawSpots
+                        .whereType<Map<String, dynamic>>()
+                        .map((s) => LupitaSpot.fromJson(s, speciesId))
+                        .toList();
+                  }
+                }
+              } catch (_) {}
+            }
+
+            speciesList.add(
+              LupitaSpecies(
+                id: speciesId,
+                name: item['name'] as String? ?? speciesId,
+                sci: item['scientific_name'] as String? ?? '',
+                colorHex: item['color'] as String? ?? '#00E5FF',
+                specs: const [],
+                status: item['status'] as String? ?? 'ok',
+                message: item['message'] as String? ?? '',
+                spotCount: (item['area_count'] as num?)?.toInt() ?? spotsList.length,
+                spots: spotsList,
+              ),
+            );
+          }
+        }
+
+        return LupitaData(
+          version: v1Decoded['api_version'] as int? ?? 1,
+          generatedUtc: v1Decoded['generated_utc'] as String? ?? '',
+          disclaimer: v1Decoded['disclaimer'] as String? ?? '',
+          species: speciesList,
+        );
+      }
+    } catch (e) {
+      lastError = e;
     }
 
     throw Exception('Failed to load Lupita fish data: $lastError');
