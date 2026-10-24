@@ -12,6 +12,7 @@ class Trip {
   final List<String> sharedWith;
   final List<String> likedBy;
   final List<String> dislikedBy;
+  final List<Map<String, double>> trailPoints;
   final DateTime? createdAt;
 
   const Trip({
@@ -25,8 +26,15 @@ class Trip {
     this.sharedWith = const [],
     this.likedBy = const [],
     this.dislikedBy = const [],
+    this.trailPoints = const [],
     this.createdAt,
   });
+
+  List<LatLng> get latLngTrailPoints {
+    return trailPoints
+        .map((p) => LatLng(p['lat'] ?? 0.0, p['lng'] ?? 0.0))
+        .toList();
+  }
 
   int get likeCount => likedBy.length;
   int get dislikeCount => dislikedBy.length;
@@ -88,6 +96,19 @@ class Trip {
               ?.map((e) => e.toString())
               .toList() ??
           const [],
+      trailPoints: (map['trailPoints'] as List<dynamic>?)
+              ?.map((e) {
+                if (e is Map) {
+                  return {
+                    'lat': (e['lat'] as num?)?.toDouble() ?? 0.0,
+                    'lng': (e['lng'] as num?)?.toDouble() ?? 0.0,
+                  };
+                }
+                return <String, double>{};
+              })
+              .where((m) => m.isNotEmpty)
+              .toList() ??
+          const [],
       createdAt: map['createdAt'] != null ? parseDateTime(map['createdAt']) : null,
     );
   }
@@ -103,6 +124,7 @@ class Trip {
       'sharedWith': sharedWith,
       'likedBy': likedBy,
       'dislikedBy': dislikedBy,
+      'trailPoints': trailPoints,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
@@ -118,6 +140,7 @@ class Trip {
     List<String>? sharedWith,
     List<String>? likedBy,
     List<String>? dislikedBy,
+    List<Map<String, double>>? trailPoints,
     DateTime? createdAt,
   }) {
     return Trip(
@@ -131,6 +154,7 @@ class Trip {
       sharedWith: sharedWith ?? this.sharedWith,
       likedBy: likedBy ?? this.likedBy,
       dislikedBy: dislikedBy ?? this.dislikedBy,
+      trailPoints: trailPoints ?? this.trailPoints,
       createdAt: createdAt ?? this.createdAt,
     );
   }
