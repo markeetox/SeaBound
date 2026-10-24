@@ -70,8 +70,8 @@ void main() {
     // Check standalone Community Spots button text is gone from top overlay
     expect(find.text('Community Spots'), findsNothing);
 
-    // Check Icon-only FAB exists with Add Opinion tooltip
-    expect(find.byTooltip('Add Opinion'), findsOneWidget);
+    // Check Icon-only FAB exists with Add Spot / Trip tooltip
+    expect(find.byTooltip('Add Spot / Trip'), findsOneWidget);
   });
 
   testWidgets('SpotsScreen displays error banner with Retry button when artificial reefs fails to load',
@@ -147,5 +147,32 @@ void main() {
 
     // Verify toggle tooltip updates to active tracking
     expect(find.byTooltip('Tracking Location (On)'), findsOneWidget);
+  });
+
+  testWidgets('Tapping Add button opens option sheet with Secret Spot and Trip options',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          allSpotsStreamProvider.overrideWith((ref) => Stream.value([])),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: const SpotsScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final addButtonFinder = find.byTooltip('Add Spot / Trip');
+    expect(addButtonFinder, findsOneWidget);
+
+    await tester.tap(addButtonFinder);
+    await tester.pumpAndSettle();
+
+    // Verify bottom sheet title and options
+    expect(find.text('Add to Map'), findsOneWidget);
+    expect(find.text('Secret Spot'), findsOneWidget);
+    expect(find.text('Start Trip Recording'), findsOneWidget);
   });
 }

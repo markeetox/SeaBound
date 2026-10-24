@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:latlong2/latlong.dart';
 
 class Spot {
   final String id;
@@ -9,6 +10,8 @@ class Spot {
   final double latitude;
   final double longitude;
   final List<String> species;
+  final bool isTrip;
+  final List<Map<String, double>> trailPoints;
   final DateTime? createdAt;
 
   const Spot({
@@ -20,8 +23,16 @@ class Spot {
     required this.latitude,
     required this.longitude,
     required this.species,
+    this.isTrip = false,
+    this.trailPoints = const [],
     this.createdAt,
   });
+
+  List<LatLng> get latLngTrailPoints {
+    return trailPoints
+        .map((p) => LatLng(p['lat'] ?? 0.0, p['lng'] ?? 0.0))
+        .toList();
+  }
 
   factory Spot.fromMap(Map<String, dynamic> map, String documentId) {
     DateTime parseDateTime(dynamic value) {
@@ -35,6 +46,18 @@ class Spot {
       return DateTime.now();
     }
 
+    final trailRaw = map['trailPoints'] as List<dynamic>?;
+    final parsedTrail = trailRaw != null
+        ? trailRaw.map((item) {
+            if (item is Map) {
+              final lat = (item['lat'] as num?)?.toDouble() ?? 0.0;
+              final lng = (item['lng'] as num?)?.toDouble() ?? 0.0;
+              return {'lat': lat, 'lng': lng};
+            }
+            return <String, double>{};
+          }).where((m) => m.isNotEmpty).toList()
+        : const <Map<String, double>>[];
+
     return Spot(
       id: documentId,
       userId: map['userId'] as String? ?? '',
@@ -47,6 +70,8 @@ class Spot {
               ?.map((e) => e.toString())
               .toList() ??
           const [],
+      isTrip: map['isTrip'] as bool? ?? false,
+      trailPoints: parsedTrail,
       createdAt: map['createdAt'] != null ? parseDateTime(map['createdAt']) : null,
     );
   }
@@ -60,6 +85,8 @@ class Spot {
       'latitude': latitude,
       'longitude': longitude,
       'species': species,
+      'isTrip': isTrip,
+      'trailPoints': trailPoints,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
@@ -73,6 +100,8 @@ class Spot {
     double? latitude,
     double? longitude,
     List<String>? species,
+    bool? isTrip,
+    List<Map<String, double>>? trailPoints,
     DateTime? createdAt,
   }) {
     return Spot(
@@ -84,6 +113,8 @@ class Spot {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       species: species ?? this.species,
+      isTrip: isTrip ?? this.isTrip,
+      trailPoints: trailPoints ?? this.trailPoints,
       createdAt: createdAt ?? this.createdAt,
     );
   }
