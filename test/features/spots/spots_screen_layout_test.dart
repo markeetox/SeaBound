@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seabound/core/app_theme.dart';
 import 'package:seabound/core/map_layer_config.dart';
 import 'package:seabound/features/map_layers/artificial_reefs_service.dart';
+import 'package:seabound/features/map_layers/lupita_service.dart';
 import 'package:seabound/features/map_layers/map_layers_provider.dart';
 import 'package:seabound/features/spots/spots_providers.dart';
 import 'package:seabound/features/spots/spots_screen.dart';
@@ -174,5 +175,63 @@ void main() {
     expect(find.text('Add to Map'), findsOneWidget);
     expect(find.text('Secret Spot'), findsOneWidget);
     expect(find.text('Start Trip Recording'), findsOneWidget);
+  });
+
+  testWidgets('SpotsScreen renders Lupita top species dropdown when Lupita layer is active',
+      (WidgetTester tester) async {
+    final sampleLupitaData = LupitaData(
+      version: 1,
+      generatedUtc: '2026-10-24T20:00:00Z',
+      disclaimer: 'Test',
+      species: [
+        const LupitaSpecies(
+          id: 'cobia',
+          name: 'Cobia',
+          sci: 'Rachycentron canadum',
+          colorHex: '#c084fc',
+          specs: [],
+          status: 'ok',
+          message: '',
+          spotCount: 1,
+          spots: [
+            LupitaSpot(
+              id: 'spot-1',
+              speciesId: 'cobia',
+              title: 'Cobia Spot 1',
+              score: 0.88,
+              confidence: 'High',
+              dataCoverage: 1.0,
+              latitude: 25.76,
+              longitude: -80.19,
+              reasons: [],
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          allSpotsStreamProvider.overrideWith((ref) => Stream.value([])),
+          activeMapLayersProvider.overrideWith(
+            () => MockActiveMapLayersNotifier({MapLayerConfig.lupitaFishId}),
+          ),
+          lupitaDataProvider.overrideWith((ref) async => sampleLupitaData),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: const SpotsScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Check Lupita dropdown exists
+    expect(find.byKey(const ValueKey('lupita_species_dropdown')), findsOneWidget);
+    expect(find.text('Lupita: All Species'), findsOneWidget);
+
+    // Verify score badge for Lupita spot marker
+    expect(find.text('88%'), findsOneWidget);
   });
 }
