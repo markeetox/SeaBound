@@ -609,18 +609,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 maxNativeZoom: 18,
                 maxZoom: 20,
                 tileProvider: NetworkTileProvider(),
-                tileDisplay: const TileDisplay.instantaneous(opacity: 0.9),
-                tileBuilder: (context, tileWidget, tile) {
-                  return ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(<double>[
-                      1, 0, 0, 0, 0,
-                      0, 1, 0, 0, 0,
-                      0, 0, 1, 0, 0,
-                      -1.5, -1.5, -1.5, 1, 3.2,
-                    ]),
-                    child: tileWidget,
-                  );
-                },
+                tileDisplay: const TileDisplay.instantaneous(opacity: 0.85),
                 errorTileCallback: (_, _, _) {},
               ),
 
