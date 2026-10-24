@@ -10,6 +10,7 @@ class MapLayerConfig {
   static const String artificialReefsId = 'artificial_reefs';
   static const String windObsId = 'wind_obs';
   static const String noFishingZonesId = 'no_fishing_zones';
+  static const String lupitaFishId = 'lupita';
 
   // URLs
   static const String openStreetMapTileUrl =

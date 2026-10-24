@@ -87,6 +87,13 @@ final availableLayers = [
     defaultOn: true,
     group: 'Fish',
   ),
+  const MapLayerItem(
+    id: MapLayerConfig.lupitaFishId,
+    displayName: 'Lupita Fish Finder',
+    icon: Icons.set_meal,
+    defaultOn: false,
+    group: 'Fish',
+  ),
 
   // Protection Group
   const MapLayerItem(
