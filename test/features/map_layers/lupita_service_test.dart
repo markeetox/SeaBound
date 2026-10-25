@@ -33,6 +33,14 @@ void main() {
             'data_coverage': 0.9,
             'coords': [-80.1, 25.62],
             'sea': {'summary': 'Calm 1-2ft waves'},
+            'timing': {
+              'window': {
+                'start_utc': '2026-10-24T20:00:00Z',
+                'end_utc': '2026-10-24T23:00:00Z',
+                'score': 0.92
+              },
+              'why': ['Incoming tide peak', 'Major solunar period']
+            },
             'reasons': [
               ['static', 'Depth is 12m nearshore structure'],
               ['modeled', 'Water temperature 28.8C']
@@ -53,6 +61,7 @@ void main() {
       expect(cobia.specs.length, equals(2));
       expect(cobia.specs.first.label, equals('Diet'));
       expect(cobia.specs.first.value, equals('Crabs, fish and squid'));
+      expect(cobia.imageUrl, equals('https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/img/cobia.png'));
 
       expect(cobia.spots.length, equals(1));
       final spot = cobia.spots.first;
@@ -66,6 +75,11 @@ void main() {
       expect(spot.reasons.length, equals(2));
       expect(spot.reasons.first.category, equals('static'));
       expect(spot.reasons.first.text, equals('Depth is 12m nearshore structure'));
+
+      expect(spot.biteWindow, isNotNull);
+      expect(spot.biteWindow!.score, equals(0.92));
+      expect(spot.biteWindow!.startTime, equals(DateTime.parse('2026-10-24T20:00:00Z')));
+      expect(spot.biteWindow!.why, contains('Incoming tide peak'));
     });
   });
 }
