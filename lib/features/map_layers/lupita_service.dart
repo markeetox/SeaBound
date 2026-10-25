@@ -122,7 +122,7 @@ class LupitaSpecies {
     required this.spots,
   });
 
-  factory LupitaSpecies.fromJson(Map<String, dynamic> json) {
+  factory LupitaSpecies.fromJson(Map<String, dynamic> json, {List<LupitaSpot> allSpots = const []}) {
     final speciesId = json['id'] as String? ?? '';
     final rawSpecs = json['specs'] as List<dynamic>?;
     final specsList = rawSpecs != null
@@ -133,13 +133,22 @@ class LupitaSpecies {
             .toList()
         : <LupitaSpec>[];
 
-    final rawSpots = json['spots'] as List<dynamic>?;
-    final spotsList = rawSpots != null
-        ? rawSpots
-            .whereType<Map<String, dynamic>>()
-            .map((s) => LupitaSpot.fromJson(s, speciesId))
-            .toList()
-        : <LupitaSpot>[];
+    // Read spot count if stored as num, or count matching spots
+    final rawSpotsCount = json['spots'] is num
+        ? (json['spots'] as num).toInt()
+        : (json['spots_count'] as num?)?.toInt();
+
+    // Direct spots array inside species element (if any) or filter from allSpots
+    List<LupitaSpot> matchingSpots = [];
+    if (json['spots'] is List) {
+      final rawSpots = json['spots'] as List<dynamic>;
+      matchingSpots = rawSpots
+          .whereType<Map<String, dynamic>>()
+          .map((s) => LupitaSpot.fromJson(s, speciesId))
+          .toList();
+    } else {
+      matchingSpots = allSpots.where((s) => s.speciesId == speciesId).toList();
+    }
 
     return LupitaSpecies(
       id: speciesId,
@@ -149,8 +158,8 @@ class LupitaSpecies {
       specs: specsList,
       status: json['status'] as String? ?? 'ok',
       message: json['message'] as String? ?? '',
-      spotCount: (json['spots_count'] as num?)?.toInt() ?? spotsList.length,
-      spots: spotsList,
+      spotCount: rawSpotsCount ?? matchingSpots.length,
+      spots: matchingSpots,
     );
   }
 }
@@ -160,28 +169,46 @@ class LupitaData {
   final String generatedUtc;
   final String disclaimer;
   final List<LupitaSpecies> species;
+  final List<LupitaSpot> allSpots;
 
   const LupitaData({
     required this.version,
     required this.generatedUtc,
     required this.disclaimer,
     required this.species,
+    this.allSpots = const [],
   });
 
   factory LupitaData.fromJson(Map<String, dynamic> json) {
+    // Parse top-level spots list
+    final rawTopSpots = json['spots'] as List<dynamic>?;
+    final topSpotsList = rawTopSpots != null
+        ? rawTopSpots
+            .whereType<Map<String, dynamic>>()
+            .map((s) => LupitaSpot.fromJson(s, ''))
+            .toList()
+        : <LupitaSpot>[];
+
+    // Parse species list
     final rawSpecies = json['species'] as List<dynamic>?;
     final speciesList = rawSpecies != null
         ? rawSpecies
             .whereType<Map<String, dynamic>>()
-            .map((s) => LupitaSpecies.fromJson(s))
+            .map((s) => LupitaSpecies.fromJson(s, allSpots: topSpotsList))
             .toList()
         : <LupitaSpecies>[];
+
+    // If topSpotsList was empty, gather spots from species
+    final finalAllSpots = topSpotsList.isNotEmpty
+        ? topSpotsList
+        : speciesList.expand((s) => s.spots).toList();
 
     return LupitaData(
       version: json['version'] as int? ?? 1,
       generatedUtc: json['generated_utc'] as String? ?? '',
       disclaimer: json['disclaimer'] as String? ?? '',
       species: speciesList,
+      allSpots: finalAllSpots,
     );
   }
 }
@@ -319,25 +346,11 @@ final selectedLupitaSpeciesSpotsProvider = Provider<List<LupitaSpot>>((ref) {
   return dataAsync.maybeWhen(
     data: (lupitaData) {
       if (selectedId == null || selectedId.isEmpty) {
-        return lupitaData.species.expand((s) => s.spots).toList();
+        return lupitaData.allSpots;
       }
-      final species = lupitaData.species.firstWhere(
-        (s) => s.id == selectedId,
-        orElse: () => lupitaData.species.isNotEmpty
-            ? lupitaData.species.first
-            : const LupitaSpecies(
-                id: '',
-                name: '',
-                sci: '',
-                colorHex: '#00E5FF',
-                specs: [],
-                status: 'ok',
-                message: '',
-                spotCount: 0,
-                spots: [],
-              ),
-      );
-      return species.spots;
+      return lupitaData.allSpots
+          .where((spot) => spot.speciesId == selectedId)
+          .toList();
     },
     orElse: () => const [],
   );
