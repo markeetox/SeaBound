@@ -179,10 +179,23 @@ void main() {
 
   testWidgets('SpotsScreen renders Lupita top species dropdown when Lupita layer is active',
       (WidgetTester tester) async {
+    const spot1 = LupitaSpot(
+      id: 'spot-1',
+      speciesId: 'cobia',
+      title: 'Cobia Spot 1',
+      score: 0.88,
+      confidence: 'High',
+      dataCoverage: 1.0,
+      latitude: 25.76,
+      longitude: -80.19,
+      reasons: [],
+    );
+
     final sampleLupitaData = LupitaData(
       version: 1,
       generatedUtc: '2026-10-24T20:00:00Z',
       disclaimer: 'Test',
+      allSpots: [spot1],
       species: [
         const LupitaSpecies(
           id: 'cobia',
@@ -193,19 +206,7 @@ void main() {
           status: 'ok',
           message: '',
           spotCount: 1,
-          spots: [
-            LupitaSpot(
-              id: 'spot-1',
-              speciesId: 'cobia',
-              title: 'Cobia Spot 1',
-              score: 0.88,
-              confidence: 'High',
-              dataCoverage: 1.0,
-              latitude: 25.76,
-              longitude: -80.19,
-              reasons: [],
-            ),
-          ],
+          spots: [spot1],
         ),
       ],
     );

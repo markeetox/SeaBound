@@ -16,26 +16,26 @@ void main() {
             'color': '#c084fc',
             'status': 'ok',
             'message': '',
-            'spots_count': 2,
+            'spots': 20,
             'specs': [
               ['Diet', 'Crabs, fish and squid'],
               ['Adult depth', '30-70 ft']
-            ],
-            'spots': [
-              {
-                'id': 'cobia-1',
-                'species': 'cobia',
-                'title': 'Ultra Freeze Wreck',
-                'score': 0.85,
-                'confidence': 'High',
-                'data_coverage': 0.9,
-                'coords': [-80.1, 25.62],
-                'sea': {'summary': 'Calm 1-2ft waves'},
-                'reasons': [
-                  ['static', 'Depth is 12m nearshore structure'],
-                  ['modeled', 'Water temperature 28.8C']
-                ]
-              }
+            ]
+          }
+        ],
+        'spots': [
+          {
+            'id': 'cobia-1',
+            'species': 'cobia',
+            'title': 'Ultra Freeze Wreck',
+            'score': 0.85,
+            'confidence': 'High',
+            'data_coverage': 0.9,
+            'coords': [-80.1, 25.62],
+            'sea': {'summary': 'Calm 1-2ft waves'},
+            'reasons': [
+              ['static', 'Depth is 12m nearshore structure'],
+              ['modeled', 'Water temperature 28.8C']
             ]
           }
         ]
