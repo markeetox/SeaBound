@@ -162,7 +162,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  // Top Left: Fish locations (82px, greyed out coming soon feature)
+                  // Top Left: Fish locations (82px, opens map with only Lupita filter active)
                   Positioned(
                     left: 14,
                     top: 24,
@@ -170,14 +170,11 @@ class HomeScreen extends ConsumerWidget {
                       label: 'Fish locations',
                       icon: Icons.phishing,
                       size: 82,
-                      isComingSoon: true,
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Fish locations feature coming soon.'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
+                        ref.read(activeMapLayersProvider.notifier).setLayers({
+                          MapLayerConfig.lupitaFishId,
+                        });
+                        context.go('/spots');
                       },
                     ),
                   ),
@@ -466,38 +463,30 @@ class _RadialRoundButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final double size;
-  final bool isComingSoon;
   final VoidCallback onTap;
 
   const _RadialRoundButton({
     required this.label,
     required this.icon,
     this.size = 82.0,
-    this.isComingSoon = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = isComingSoon
-        ? Colors.white38
-        : OceanThemeExtension.defaultTokens.cyan;
-    final textColor = isComingSoon
-        ? Colors.white38
-        : Colors.white;
-    final bgColor = isComingSoon
-        ? const Color(0xFF0B2250).withValues(alpha: 0.50)
-        : const Color(0xFF0B2250).withValues(alpha: 0.90);
+    final iconColor = OceanThemeExtension.defaultTokens.cyan;
+    final textColor = Colors.white;
+    final bgColor = const Color(0xFF0B2250).withValues(alpha: 0.90);
 
     return ChromeBorderContainer(
       borderRadius: BorderRadius.circular(size / 2),
       borderWidth: 2.5,
       backgroundColor: bgColor,
-      boxShadow: [
+      boxShadow: const [
         BoxShadow(
-          color: isComingSoon ? Colors.black26 : Colors.black45,
+          color: Colors.black45,
           blurRadius: 8,
-          offset: const Offset(0, 4),
+          offset: Offset(0, 4),
         ),
       ],
       child: SizedBox(
