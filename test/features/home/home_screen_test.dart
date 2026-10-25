@@ -151,22 +151,48 @@ void main() {
     expect(find.text('Spots Screen'), findsOneWidget);
   });
 
-  testWidgets('HomeScreen Fish locations shows coming soon SnackBar on tap', (WidgetTester tester) async {
-    await pumpApp(
-      tester,
-      const HomeScreen(),
-      overrides: [
-        userDocStreamProvider.overrideWith((ref) => Stream.value({
-              'username': 'CaptainJack',
-            })),
-        userEarnedBadgesProvider.overrideWith((ref) => Stream.value({})),
-        alertsNotifierProvider.overrideWith(() => AlertsNotifier()),
+  testWidgets('HomeScreen Fish locations activates Lupita layer and navigates to spots', (WidgetTester tester) async {
+    Set<String>? activeLayers;
+
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        GoRoute(
+          path: '/home',
+          builder: (context, state) => Consumer(
+            builder: (context, ref, _) {
+              activeLayers = ref.watch(activeMapLayersProvider);
+              return const HomeScreen();
+            },
+          ),
+        ),
+        GoRoute(
+          path: '/spots',
+          builder: (context, state) => const Scaffold(body: Text('Spots Screen')),
+        ),
       ],
     );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          userDocStreamProvider.overrideWith((ref) => Stream.value({
+                'username': 'CaptainJack',
+              })),
+          userEarnedBadgesProvider.overrideWith((ref) => Stream.value({})),
+          alertsNotifierProvider.overrideWith(() => AlertsNotifier()),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Fish locations'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Fish locations feature coming soon.'), findsOneWidget);
+    expect(activeLayers, contains(MapLayerConfig.lupitaFishId));
+    expect(find.text('Spots Screen'), findsOneWidget);
   });
 }

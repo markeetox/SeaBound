@@ -162,26 +162,17 @@ class _LupitaDetailSheet extends StatelessWidget {
               ],
             ),
 
-            // High-Resolution Large Fish Image Display
+            // Frameless High-Resolution Large Fish Image Display
             const SizedBox(height: 12),
-            Container(
-              height: 140,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F1B2D),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white24, width: 1.5),
-              ),
-              child: Center(
-                child: Image.network(
-                  imageUrl,
-                  height: 120,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.set_meal,
-                    size: 64,
-                    color: Color(0xFF00E5FF),
-                  ),
+            Center(
+              child: Image.network(
+                imageUrl,
+                height: 180,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.set_meal,
+                  size: 80,
+                  color: Color(0xFF00E5FF),
                 ),
               ),
             ),
@@ -1548,7 +1539,9 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
         // TOP CENTER DROPDOWN BAR FOR LUPITA SPECIES FILTER
         if (showLupita && lupitaDataAsync != null)
           Positioned(
-            top: 12,
+            top: (hasAnyLegend || mostSevereAlert != null || showNoFishingZones)
+                ? (shouldShowLegendContent ? 180 : 110)
+                : 12,
             left: 16,
             right: 80,
             child: SafeArea(
