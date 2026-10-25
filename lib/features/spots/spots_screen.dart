@@ -115,9 +115,19 @@ class _LupitaDetailSheet extends StatelessWidget {
     final lngStr = spot.longitude.toStringAsFixed(4);
     final coordStr = '$latStr, $lngStr';
     final scorePct = (spot.score * 100).round();
+    final imageUrl =
+        'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/img/${spot.speciesId}.png';
+
+    final bite = spot.biteWindow;
+    String? biteTimeStr;
+    if (bite != null && bite.startTime != null && bite.endTime != null) {
+      final startFmt = DateFormat.jm().format(bite.startTime!.toLocal());
+      final endFmt = DateFormat.jm().format(bite.endTime!.toLocal());
+      biteTimeStr = '$startFmt – $endFmt';
+    }
 
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -151,7 +161,114 @@ class _LupitaDetailSheet extends StatelessWidget {
                 ),
               ],
             ),
+
+            // High-Resolution Large Fish Image Display
+            const SizedBox(height: 12),
+            Container(
+              height: 140,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F1B2D),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white24, width: 1.5),
+              ),
+              child: Center(
+                child: Image.network(
+                  imageUrl,
+                  height: 120,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.set_meal,
+                    size: 64,
+                    color: Color(0xFF00E5FF),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
+
+            // Prominent Best Bite Window Card
+            if (bite != null) ...[
+              Card(
+                color: const Color(0xFF1E293B),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: Color(0xFF38BDF8), width: 1.5),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.stars_rounded, color: Color(0xFF38BDF8), size: 22),
+                          const SizedBox(width: 8),
+                          Text(
+                            'BEST BITE WINDOW',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF38BDF8),
+                                  letterSpacing: 1.1,
+                                ),
+                          ),
+                          const Spacer(),
+                          if (bite.score > 0)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF34D399).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${(bite.score * 100).round()}% MATCH',
+                                style: const TextStyle(
+                                  color: Color(0xFF34D399),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (biteTimeStr != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          biteTimeStr,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                      if (bite.why.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        ...bite.why.map((reasonText) => Padding(
+                              padding: const EdgeInsets.only(top: 4.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.check_circle_outline,
+                                      size: 14, color: Color(0xFF38BDF8)),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      reasonText,
+                                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -1490,7 +1607,17 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                               value: s.id,
                               child: Row(
                                 children: [
-                                  Icon(Icons.set_meal, color: OceanThemeExtension.defaultTokens.cyan, size: 18),
+                                  Image.network(
+                                    s.imageUrl,
+                                    width: 28,
+                                    height: 20,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, __, ___) => Icon(
+                                      Icons.set_meal,
+                                      color: OceanThemeExtension.defaultTokens.cyan,
+                                      size: 18,
+                                    ),
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     '${s.name} (${s.spotCount} spots)',

@@ -42,6 +42,45 @@ class LupitaReason {
   }
 }
 
+class LupitaBiteWindow {
+  final DateTime? startTime;
+  final DateTime? endTime;
+  final double score;
+  final List<String> why;
+
+  const LupitaBiteWindow({
+    this.startTime,
+    this.endTime,
+    required this.score,
+    required this.why,
+  });
+
+  factory LupitaBiteWindow.fromJson(Map<String, dynamic> json) {
+    final windowObj = json['window'] as Map<String, dynamic>?;
+    DateTime? start;
+    DateTime? end;
+    double scoreVal = 0.0;
+
+    if (windowObj != null) {
+      final startStr = (windowObj['start'] as String?) ?? (windowObj['start_utc'] as String?);
+      final endStr = (windowObj['end'] as String?) ?? (windowObj['end_utc'] as String?);
+      if (startStr != null) start = DateTime.tryParse(startStr);
+      if (endStr != null) end = DateTime.tryParse(endStr);
+      scoreVal = (windowObj['score'] as num?)?.toDouble() ?? 0.0;
+    }
+
+    final rawWhy = json['why'] as List<dynamic>?;
+    final whyList = rawWhy?.map((e) => e.toString()).toList() ?? <String>[];
+
+    return LupitaBiteWindow(
+      startTime: start,
+      endTime: end,
+      score: scoreVal,
+      why: whyList,
+    );
+  }
+}
+
 class LupitaSpot {
   final String id;
   final String speciesId;
@@ -53,6 +92,7 @@ class LupitaSpot {
   final double longitude;
   final List<LupitaReason> reasons;
   final String? seaSummary;
+  final LupitaBiteWindow? biteWindow;
 
   const LupitaSpot({
     required this.id,
@@ -65,6 +105,7 @@ class LupitaSpot {
     required this.longitude,
     required this.reasons,
     this.seaSummary,
+    this.biteWindow,
   });
 
   factory LupitaSpot.fromJson(Map<String, dynamic> json, String defaultSpeciesId) {
@@ -82,7 +123,10 @@ class LupitaSpot {
         : <LupitaReason>[];
 
     final seaObj = json['sea'] as Map<String, dynamic>?;
-    final seaSummary = seaObj != null ? (seaObj['summary'] as String?) : null;
+    final seaSummary = seaObj != null ? (seaObj['summary'] as String? ?? seaObj['text'] as String?) : null;
+
+    final timingObj = json['timing'] as Map<String, dynamic>?;
+    final biteWindow = timingObj != null ? LupitaBiteWindow.fromJson(timingObj) : null;
 
     return LupitaSpot(
       id: json['id'] as String? ?? '',
@@ -95,6 +139,7 @@ class LupitaSpot {
       longitude: lng,
       reasons: reasonsList,
       seaSummary: seaSummary,
+      biteWindow: biteWindow,
     );
   }
 }
@@ -121,6 +166,9 @@ class LupitaSpecies {
     required this.spotCount,
     required this.spots,
   });
+
+  String get imageUrl =>
+      'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/img/$id.png';
 
   factory LupitaSpecies.fromJson(Map<String, dynamic> json, {List<LupitaSpot> allSpots = const []}) {
     final speciesId = json['id'] as String? ?? '';
