@@ -696,6 +696,126 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     );
   }
 
+  void _showLupitaSpeciesSelectorSheet() {
+    final lupitaDataAsync = ref.read(lupitaDataProvider);
+    final selectedId = ref.read(selectedLupitaSpeciesIdProvider);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: OceanThemeExtension.defaultTokens.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Select Fish Species',
+                      style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                lupitaDataAsync.when(
+                  data: (lData) {
+                    final speciesList = lData.species;
+                    return Flexible(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          ListTile(
+                            leading: const Icon(
+                              Icons.set_meal,
+                              color: Color(0xFF00E5FF),
+                              size: 28,
+                            ),
+                            title: const Text(
+                              'All Species',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              'Show all ${lData.allSpots.length} fish habitat spots',
+                              style: const TextStyle(fontSize: 12, color: Colors.white70),
+                            ),
+                            trailing: selectedId == null
+                                ? const Icon(Icons.check_circle, color: Color(0xFF34D399))
+                                : null,
+                            onTap: () {
+                              ref
+                                  .read(selectedLupitaSpeciesIdProvider.notifier)
+                                  .selectSpecies(null);
+                              Navigator.of(sheetContext).pop();
+                            },
+                          ),
+                          const Divider(),
+                          ...speciesList.map((s) {
+                            final isSelected = selectedId == s.id;
+                            return ListTile(
+                              leading: Image.network(
+                                s.imageUrl,
+                                width: 36,
+                                height: 28,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.set_meal,
+                                  color: Color(0xFF00E5FF),
+                                  size: 28,
+                                ),
+                              ),
+                              title: Text(
+                                s.name,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                '${s.sci.isNotEmpty ? "${s.sci} • " : ""}${s.spotCount} spots',
+                                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                              ),
+                              trailing: isSelected
+                                  ? const Icon(Icons.check_circle, color: Color(0xFF34D399))
+                                  : null,
+                              onTap: () {
+                                ref
+                                    .read(selectedLupitaSpeciesIdProvider.notifier)
+                                    .selectSpecies(s.id);
+                                Navigator.of(sheetContext).pop();
+                              },
+                            );
+                          }),
+                        ],
+                      ),
+                    );
+                  },
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (e, st) => Text(
+                    'Error loading species: $e',
+                    style: TextStyle(color: Theme.of(sheetContext).colorScheme.error),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _fetchWavesForBounds(LatLngBounds bounds) {
     _wavesDebounceTimer?.cancel();
     _wavesDebounceTimer = Timer(const Duration(milliseconds: 800), () async {
@@ -907,8 +1027,6 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     final showWindObs = activeLayers.contains(MapLayerConfig.windObsId);
     final showLupita = activeLayers.contains(MapLayerConfig.lupitaFishId);
     final lupitaSpots = showLupita ? ref.watch(selectedLupitaSpeciesSpotsProvider) : <LupitaSpot>[];
-    final lupitaDataAsync = showLupita ? ref.watch(lupitaDataProvider) : null;
-    final selectedLupitaId = showLupita ? ref.watch(selectedLupitaSpeciesIdProvider) : null;
 
     final ndbcStationsAsync = ref.watch(ndbcStationsProvider);
 
@@ -1536,128 +1654,6 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
           ],
         ),
 
-        // TOP CENTER DROPDOWN BAR FOR LUPITA SPECIES FILTER
-        if (showLupita && lupitaDataAsync != null)
-          Positioned(
-            top: (hasAnyLegend || mostSevereAlert != null || showNoFishingZones)
-                ? (shouldShowLegendContent ? 180 : 110)
-                : 12,
-            left: 16,
-            right: 80,
-            child: SafeArea(
-              child: lupitaDataAsync.when(
-                data: (lData) {
-                  final speciesList = lData.species;
-                  return Container(
-                    height: 44,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: OceanThemeExtension.defaultTokens.surface.withValues(alpha: 0.95),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: OceanThemeExtension.defaultTokens.cyan, width: 2),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black45,
-                          blurRadius: 6,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String?>(
-                        key: const ValueKey('lupita_species_dropdown'),
-                        isExpanded: true,
-                        dropdownColor: OceanThemeExtension.defaultTokens.surface,
-                        value: selectedLupitaId,
-                        hint: const Row(
-                          children: [
-                            Icon(Icons.set_meal, color: Color(0xFF00E5FF), size: 18),
-                            SizedBox(width: 8),
-                            Text(
-                              'Lupita: All Species',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        items: [
-                          const DropdownMenuItem<String?>(
-                            value: null,
-                            child: Text(
-                              'Lupita: All Species',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          ...speciesList.map((s) {
-                            return DropdownMenuItem<String?>(
-                              value: s.id,
-                              child: Row(
-                                children: [
-                                  Image.network(
-                                    s.imageUrl,
-                                    width: 28,
-                                    height: 20,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (_, __, ___) => Icon(
-                                      Icons.set_meal,
-                                      color: OceanThemeExtension.defaultTokens.cyan,
-                                      size: 18,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${s.name} (${s.spotCount} spots)',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ],
-                        onChanged: (val) {
-                          ref
-                              .read(selectedLupitaSpeciesIdProvider.notifier)
-                              .selectSpecies(val);
-                        },
-                      ),
-                    ),
-                  );
-                },
-                loading: () => Container(
-                  height: 44,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: OceanThemeExtension.defaultTokens.surface.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      SizedBox(width: 8),
-                      Text('Loading Lupita Fish Data...', style: TextStyle(fontSize: 12, color: Colors.white)),
-                    ],
-                  ),
-                ),
-                error: (e, st) => const SizedBox.shrink(),
-              ),
-            ),
-          ),
 
         // TOP-RIGHT CONTROLS OVERLAY: Layers, Location, and Add Pointer Controls with Chrome Gradient Border
         Positioned(
@@ -1797,6 +1793,42 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     ),
                   ),
                 ),
+
+                // Green Lupita Fish Selector Button (directly under Add button)
+                if (showLupita) ...[
+                  const SizedBox(height: 8),
+                  ChromeBorderContainer(
+                    borderRadius: BorderRadius.circular(24),
+                    borderWidth: 2,
+                    backgroundColor: const Color(0xFF10B981), // Green
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black45,
+                        blurRadius: 6,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                    child: Tooltip(
+                      message: 'Fish Species Selector',
+                      child: InkWell(
+                        key: const ValueKey('lupita_fish_selector_button'),
+                        onTap: _showLupitaSpeciesSelectorSheet,
+                        borderRadius: BorderRadius.circular(22),
+                        child: const SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: Center(
+                            child: Icon(
+                              Icons.set_meal,
+                              size: 22,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
