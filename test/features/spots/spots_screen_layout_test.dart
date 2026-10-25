@@ -177,7 +177,7 @@ void main() {
     expect(find.text('Start Trip Recording'), findsOneWidget);
   });
 
-  testWidgets('SpotsScreen renders Lupita top species dropdown when Lupita layer is active',
+  testWidgets('SpotsScreen renders Lupita green round button when Lupita layer is active and opens species selector sheet',
       (WidgetTester tester) async {
     const spot1 = LupitaSpot(
       id: 'spot-1',
@@ -228,11 +228,20 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Check Lupita dropdown exists
-    expect(find.byKey(const ValueKey('lupita_species_dropdown')), findsOneWidget);
-    expect(find.text('Lupita: All Species'), findsOneWidget);
+    // Check green Lupita fish selector button exists under Add button
+    final greenButtonFinder = find.byKey(const ValueKey('lupita_fish_selector_button'));
+    expect(greenButtonFinder, findsOneWidget);
 
     // Verify score badge for Lupita spot marker
     expect(find.text('88%'), findsOneWidget);
+
+    // Tap green button to open species selector sheet
+    await tester.tap(greenButtonFinder);
+    await tester.pumpAndSettle();
+
+    // Verify species selector sheet appears
+    expect(find.text('Select Fish Species'), findsOneWidget);
+    expect(find.text('All Species'), findsOneWidget);
+    expect(find.text('Cobia'), findsOneWidget);
   });
 }
