@@ -1,0 +1,697 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
+import '../../core/app_theme.dart';
+import '../../core/floating_top_bar.dart';
+import '../../core/gradient_background.dart';
+import '../auth/auth_providers.dart';
+import '../spots/spots_providers.dart';
+import '../trips/trips_providers.dart';
+import 'badge_pin.dart';
+import 'badge_service.dart';
+import 'catalog.dart';
+import 'profile_providers.dart';
+
+class ProfileScreen extends ConsumerStatefulWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen>
+    with SingleTickerProviderStateMixin<ProfileScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _isSearching = false;
+
+  late final AnimationController _secretController;
+  int _avatarTapCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _secretController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initProfileOnOpen();
+    });
+  }
+
+  @override
+  void dispose() {
+    _secretController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onAvatarTap() {
+    _avatarTapCount++;
+    if (_avatarTapCount >= 5) {
+      _avatarTapCount = 0;
+      _secretController.forward(from: 0.0);
+    }
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+    });
+
+    try {
+      final repo = ref.read(profileRepositoryProvider);
+      final results = await repo.searchCaptains(query);
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+        });
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSearching = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _initProfileOnOpen() async {
+    final authState = ref.read(authStateProvider);
+    final user = authState.asData?.value;
+    if (user != null) {
+      final repository = ref.read(profileRepositoryProvider);
+      await repository.removeEmailFromUserDoc(user.uid);
+
+      final badgeService = ref.read(badgeServiceProvider);
+      final result = await badgeService.checkAllBadges();
+
+      if (mounted) {
+        showBadgeUnlocks(context, result);
+      }
+    }
+  }
+
+  void _showPinDetailDialog(BuildContext context, AchievementBadge badge, DateTime? earnedAt) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        final isEarned = earnedAt != null;
+        final formattedDate =
+            isEarned ? DateFormat.yMMMMd().format(earnedAt) : null;
+
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              BadgePin(badge: badge, isEarned: isEarned, size: 240),
+              const SizedBox(height: 12),
+              Text(
+                badge.name,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isEarned ? badge.description : badge.hint,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              Chip(
+                label: Text('+${badge.xp} XP',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                backgroundColor: OceanThemeExtension.defaultTokens.surface,
+              ),
+              if (isEarned && formattedDate != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Earned on $formattedDate',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.white70,
+                      ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authStateProvider);
+    final userDocState = ref.watch(userDocStreamProvider);
+    final earnedBadgesState = ref.watch(userEarnedBadgesProvider);
+    final tripsAsync = ref.watch(userTripsStreamProvider);
+    final spotsAsync = ref.watch(allSpotsStreamProvider);
+    final friendsAsync = ref.watch(userFriendsStreamProvider);
+
+    final currentUser = authState.asData?.value;
+    final userDoc = userDocState.asData?.value;
+    final earnedMap = earnedBadgesState.asData?.value ?? {};
+    final friendsList = friendsAsync.asData?.value ?? [];
+
+    final username = userDoc?['username'] as String? ??
+        currentUser?.displayName ??
+        'Captain';
+    final avatarId = userDoc?['avatarId'] as String?;
+    final avatarBgHex = userDoc?['avatarBgColor'] as String?;
+    final avatarBgColorVal = avatarBgHex != null && avatarBgHex.startsWith('#')
+        ? int.tryParse(avatarBgHex.replaceFirst('#', '0xFF'))
+        : null;
+
+    int totalXp = 0;
+    for (final badgeId in earnedMap.keys) {
+      final b = Catalog.getBadgeById(badgeId);
+      if (b != null) totalXp += b.xp;
+    }
+
+    final level = Catalog.getLevelFromXp(totalXp);
+    final title = Catalog.getTitleFromLevel(level);
+
+    final currentLevelXp = Catalog.xpForLevel(level);
+    final nextLevelXp = Catalog.xpForLevel(level + 1);
+    final levelXpProgress = totalXp - currentLevelXp;
+    final levelXpNeeded = nextLevelXp - currentLevelXp;
+    final progressFraction =
+        levelXpNeeded > 0 ? (levelXpProgress / levelXpNeeded).clamp(0.0, 1.0) : 1.0;
+
+    final tripCount = tripsAsync.asData?.value.length ?? 0;
+    final spotCount = spotsAsync.asData?.value
+            .where((s) => s.userId == currentUser?.uid)
+            .length ??
+        0;
+
+    return GradientBackground.red(
+      customColor: avatarBgColorVal != null ? Color(avatarBgColorVal) : null,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 88, left: 24, right: 24, bottom: 120),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Column(
+                    children: [
+                      // Search Captain Input Field at VERY TOP
+                      TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search Captains...',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    _performSearch('');
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: Colors.black.withValues(alpha: 0.35),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: Colors.white30),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: Colors.white30),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: OceanThemeExtension.defaultTokens.cyan,
+                              width: 2,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                        onChanged: (val) {
+                          _performSearch(val);
+                        },
+                      ),
+                      if (_isSearching) ...[
+                        const SizedBox(height: 8),
+                        const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ],
+                      if (_searchResults.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF000000),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white24, width: 1.5),
+                          ),
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _searchResults.length,
+                            separatorBuilder: (_, _) => const Divider(height: 1, color: Colors.white12),
+                            itemBuilder: (context, index) {
+                              final captain = _searchResults[index];
+                              final uid = captain['uid'] as String;
+                              final cUsername = captain['username'] as String? ?? 'Captain';
+                              final cAvatarId = captain['avatarId'] as String?;
+
+                              return ListTile(
+                                leading: SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: cAvatarId != null && cAvatarId.isNotEmpty
+                                      ? Image.asset(
+                                          'assets/avatars/$cAvatarId.png',
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: Colors.white),
+                                        )
+                                      : const Icon(Icons.person, color: Colors.white),
+                                ),
+                                title: Text(
+                                  cUsername,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                trailing: const Icon(Icons.chevron_right, color: Colors.white70),
+                                onTap: () {
+                                  context.push('/profile/user/$uid');
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 20),
+
+                      // Profile Avatar
+                      GestureDetector(
+                        key: const ValueKey('profile_avatar_tap_area'),
+                        onTap: _onAvatarTap,
+                        behavior: HitTestBehavior.opaque,
+                        child: SizedBox(
+                          width: 125,
+                          height: 125,
+                          child: avatarId != null && avatarId.isNotEmpty
+                              ? Image.asset(
+                                  'assets/avatars/$avatarId.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.person,
+                                      size: 72,
+                                      color: Colors.white,
+                                    );
+                                  },
+                                )
+                              : const Icon(
+                                  Icons.person,
+                                  size: 72,
+                                  color: Colors.white,
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Username 36 w900
+                      Text(
+                        username,
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$title • Level $level',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: OceanThemeExtension.defaultTokens.cyan,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // XP Progress Bar with Dark Outline
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Level $level Progress',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                '$totalXp / $nextLevelXp XP',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.black.withValues(alpha: 0.8), width: 2),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: LinearProgressIndicator(
+                                value: progressFraction,
+                                minHeight: 12,
+                                backgroundColor: Colors.black45,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  OceanThemeExtension.defaultTokens.cyan,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Stats Section on Solid Black (#000000) rounded container with 2px white border
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF000000),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _CircleStatTile(label: 'Trips', value: '$tripCount'),
+                            _CircleStatTile(label: 'Spots', value: '$spotCount'),
+                            _CircleStatTile(label: 'Pins', value: '${earnedMap.length}'),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 40, color: Colors.white30),
+
+                      // Pins Grid Section
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Earned Pins & Badges',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 130,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.80,
+                        ),
+                        itemCount: Catalog.starterBadges.length,
+                        itemBuilder: (context, index) {
+                          final badge = Catalog.starterBadges[index];
+                          final earnedAt = earnedMap[badge.id];
+                          final isEarned = earnedAt != null;
+
+                          return GestureDetector(
+                            onTap: () => _showPinDetailDialog(context, badge, earnedAt),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                BadgePin(
+                                  badge: badge,
+                                  isEarned: isEarned,
+                                  size: 84,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  badge.name,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isEarned
+                                        ? FontWeight.w800
+                                        : FontWeight.w600,
+                                    color: isEarned
+                                        ? Colors.white
+                                        : Colors.white60,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+
+                      // Friends List Section at Bottom
+                      const Divider(height: 40, color: Colors.white30),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Friends (${friendsList.length})',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (friendsList.isEmpty)
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'No friends added yet. Search for captains to connect!',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: friendsList.length,
+                          itemBuilder: (context, index) {
+                            final friend = friendsList[index];
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              color: Colors.black.withValues(alpha: 0.35),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: const BorderSide(color: Colors.white24),
+                              ),
+                              child: ListTile(
+                                leading: SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: friend.avatarId != null && friend.avatarId!.isNotEmpty
+                                      ? Image.asset(
+                                          'assets/avatars/${friend.avatarId}.png',
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: Colors.white),
+                                        )
+                                      : const Icon(Icons.person, color: Colors.white),
+                                ),
+                                title: Text(
+                                  friend.username,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                trailing: const Icon(Icons.chevron_right, color: Colors.white70),
+                                onTap: () {
+                                  context.push('/profile/user/${friend.uid}');
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Secret Easter Egg Animation Overlay
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: AnimatedBuilder(
+                  animation: _secretController,
+                  builder: (context, child) {
+                    if (!_secretController.isAnimating) return const SizedBox.shrink();
+                    final progress = _secretController.value;
+                    double slideY = 1.0;
+                    if (progress < 0.22) {
+                      final t = progress / 0.22;
+                      slideY = Curves.easeOut.transform(1.0 - t);
+                    } else if (progress <= 0.78) {
+                      slideY = 0.0;
+                    } else {
+                      final t = (progress - 0.78) / 0.22;
+                      slideY = Curves.easeIn.transform(t);
+                    }
+
+                    final shakeProgress = (progress - 0.22).clamp(0.0, 0.56) / 0.56;
+                    final shakeAngle = (progress >= 0.22 && progress <= 0.78)
+                        ? math.sin(shakeProgress * math.pi * 8) * 0.10
+                        : 0.0;
+                    final shakeOffsetX = (progress >= 0.22 && progress <= 0.78)
+                        ? math.sin(shakeProgress * math.pi * 8) * 15.0
+                        : 0.0;
+
+                    final screenHeight = MediaQuery.of(context).size.height;
+                    final imageHeight = (screenHeight * 0.55).clamp(280.0, 500.0);
+
+                    return Transform.translate(
+                      offset: Offset(shakeOffsetX, slideY * imageHeight),
+                      child: Transform.rotate(
+                        angle: shakeAngle,
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Image.asset(
+                            'assets/ui/easter_egg.png',
+                            key: const ValueKey('secret_easter_egg_image'),
+                            height: imageHeight,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            // Floating Top Bar Overlay
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: FloatingTopBar(
+                isRedScreen: true,
+                actions: [
+                  FloatingTopBarButton(
+                    icon: Icons.edit_outlined,
+                    tooltip: 'Edit Profile',
+                    isRedScreen: true,
+                    onPressed: () {
+                      context.push('/profile/edit');
+                    },
+                  ),
+                  FloatingTopBarButton(
+                    icon: Icons.info_outline,
+                    tooltip: 'About & Data Sources',
+                    isRedScreen: true,
+                    onPressed: () {
+                      context.push('/about');
+                    },
+                  ),
+                  FloatingTopBarButton(
+                    icon: Icons.logout,
+                    tooltip: 'Sign Out',
+                    isRedScreen: true,
+                    onPressed: () async {
+                      final authRepo = ref.read(authRepositoryProvider);
+                      await authRepo.signOut();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CircleStatTile extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _CircleStatTile({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 88,
+          height: 88,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: ChromeBorder.gradient,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(3.0),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: OceanThemeExtension.defaultTokens.surface,
+              ),
+              child: Center(
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+}

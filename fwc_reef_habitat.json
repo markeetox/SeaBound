@@ -1,0 +1,21 @@
+HTTP/2 200
+cache-control: private
+content-type: text/plain;charset=UTF-8
+vary: Origin
+server: Microsoft-IIS/10.0
+access-control-allow-origin: https://fishy-one.vercel.app
+access-control-allow-credentials: true
+x-content-type-options: nosniff
+x-aspnet-version: 4.0.30319
+x-powered-by: ASP.NET
+x-powered-by: ARR/3.0
+date: Tue, 06 Oct 2026 12:20:40 GMT
+content-length: 142
+
+{
+ "error": {
+  "code": 500,
+  "message": "Service Projects_FWC/Unified_Florida_Reef_Tract_Map_FWC/MapServer not found ",
+  "details": []
+ }
+}

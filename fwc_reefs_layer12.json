@@ -1,0 +1,759 @@
+HTTP/2 200
+cache-control: must-revalidate,max-age=0,public
+content-type: text/plain; charset=UTF-8
+etag: "fa13ec2a"
+vary: Origin
+server: Microsoft-IIS/10.0
+content-security-policy: script-src 'self';
+x-content-type-options: nosniff
+access-control-allow-origin: https://fishy-one.vercel.app
+access-control-allow-credentials: true
+set-cookie: AGS_ROLES=sym-gcm|1|Z7KEL0UR5iDpKkNpOMwUOQ==|2dhoE2qOsrQ7ne2CEc1SRnfiKLyt90cYxf_dTgiF; Max-Age=60; Expires=Tue, 06 Oct 2026 12:19:29 GMT; Path=/mapping/rest; Secure; HttpOnly; SameSite=Lax
+date: Tue, 06 Oct 2026 12:18:29 GMT
+
+{
+ "currentVersion": 11.5,
+ "cimVersion": "3.5.0",
+ "id": 12,
+ "name": "Artificial Reef Locations in Florida",
+ "type": "Feature Layer",
+ "description": "Encompassing 34 of 35 different coastal counties spread along 1,357 miles of ocean fronting coastline, Florida manages one of the most diverse, and most active artificial reef programs in the United States. As of May 2025, the FWC Artificial Reef Program reports over 4,442 artificial reef deployment locations state-wide. Artificial Reefs are about evenly divided between state and federal waters and range from 1 feet in depth to 511 feet (average depth 68 feet). Each point in this GIS data set represents a single deployment event (either a uniquely located artificial reef or deployments of the same reef on different days). Division of Marine Fisheries Management maintains and updates the source database. This data set represents deployments through May 1, 2025.",
+ "geometryType": "esriGeometryPoint",
+ "sourceSpatialReference": {
+  "wkid": 102967,
+  "latestWkid": 6439,
+  "xyTolerance": 0.001,
+  "zTolerance": 0.001,
+  "mTolerance": 0.001,
+  "falseX": -19550100,
+  "falseY": -7526400,
+  "xyUnits": 10000,
+  "falseZ": -100000,
+  "zUnits": 10000,
+  "falseM": 0,
+  "mUnits": 1
+ },
+ "spatialReference": {
+  "wkid": 102967,
+  "latestWkid": 6439,
+  "xyTolerance": 0.001,
+  "zTolerance": 0.001,
+  "mTolerance": 0.001,
+  "falseX": -19550100,
+  "falseY": -7526400,
+  "xyUnits": 10000,
+  "falseZ": -100000,
+  "zUnits": 10000,
+  "falseM": -100000,
+  "mUnits": 10000
+ },
+ "copyrightText": "FWC Division of Marine Fisheries Management",
+ "parentLayer": null,
+ "subLayers": [],
+ "minScale": 4000000,
+ "maxScale": 1000,
+ "referenceScale": 0.0,
+ "drawingInfo": {
+  "renderer": {
+   "type": "uniqueValue",
+   "field1": "MatCat",
+   "uniqueValueGroups": [
+    {
+     "heading": "Material Category",
+     "classes": [
+      {
+       "label": "Concrete",
+       "description": "Concrete",
+       "symbol": {
+        "type": "esriPMS",
+        "url": "e58235055342b40f01d05fc2442fea7d",
+        "imageData": "iVBORw0KGgoAAAANSUhEUgAAABsAAAATCAYAAABhh3Y4AAAACXBIWXMAAA7EAAAOxAGVKw4bAAADX0lEQVRIic2VDUzMYRzHv/cSKrm6O1x3OknebkhJ4m6LJquFLZq829G8azYvnZdVGkKz7Cpj1FEchrIsGb3e7tRyokIU52p1h+66l3JdOsfuz8zMu5jv9tue756Xz/P8fnv2o+Ifivpfw8L5I8Z4sdz5E9isc3HpRT1/C0YKCRx+xpvDiKYN7O98pfKReF9c6Ow94tLbfQ0jT+axFRXK5uDM3ZHgDHVD5Aapa+61ulLxzgivuJSi9j6DxS7wz57MYwfXNGhwreIJmO4u0BstYLi79K9vfHkLwKQ+gU2dyLncz4k6f93CQKScksOJSkGz1gQqlQxF7iocylb4bV4yJSNdemfTH8HCBb6imPDx85QP20gOPzPIG1tXTkP5HTWy8mpgMFth7urBmYK6DXs3zsxPzCwr+S1Y0EROaGOzPjk6bJxTWk4lMs5Xo0Vrwp70Ujxt6QB7sBtKqlTwH8vCiYQ5pINZ8gJxUoRnXFKR+ZdgNBo83tlxcRSX7pR0rBw6owUCfy42LQ4i5h8/1yE+rRjRs3mEt721Y6koz6VEpqoCwPslmLcnq3hNdAAzdkHAh0UUMtKl1fBiDSK8tr0LBWVPQOcfwhC6K1StBohFEXjW2jFubUzghRMXlYt+CjZjCncZiUT2K6tWIzv/Hny5dNyQP0Xe0RjI77WgQaXD3JDRoNOcMZThii3LgzFDeBqRIaOgfKDB4h1XYnYI+arDEsWuH8H6vQN5f1nWSorDLNx6CTkHojA+6hgEAVwYO63oMHVjrA8T7QYLCmWNxKbnbcZPB4wZwYD5tTV+u3Bab6qkMvGbMDbTbYVMqeYmZpYTt3a85EsVypqIFB6NDydqmHy8Aj1vbIhNKMALfRdmBftAtFpA5oalJQij/NSS/FrJV2EaXedZn2EeI7t7bIFaXddIg8k6fFvqzSa90TJsc0qRQfOq01O0WkAprlI5vgWxp77pFbYLpxPjk5drIL1ej9NX71sDeJ73Jfm1ud9Lo1XVatiZKlEQKQVgP5JTaXOYDGm1K8PdJUzdZlxhMHfz1ycXUpwHUGl3H2nJLObATpvd3l7X+NJosfaaLhQ3JNU+1Mh/VLPP9eYL/1pvtFx1hMMcv6TkAOAC6JXdbTYBcOT8u13gT/pZ28f4af3T5vkeZ71YxU+1HuwAAAAASUVORK5CYII=",
+        "contentType": "image/png",
+        "width": 20,
+        "height": 14,
+        "angle": 0,
+        "xoffset": 0,
+        "yoffset": 0
+       },
+       "values": [
+        [
+         "Concrete"
+        ]
+       ]
+      },
+      {
+       "label": "Metal",
+       "description": "Metal",
+       "symbol": {
+        "type": "esriPMS",
+        "url": "74da64ad5d9986857bbd6f8e68008f41",
+        "imageData": "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAW0lEQVQokWNhIBOwUKxRj4HBiYuBQQCf4hcMDOceMDA8QNFYzMBQHsfA4IZPYxoDQ/ZsBoZp1HEqqYCFZB0jUeNdBobXaxkYLuFT/IeB4S2GxiYGhhiybCQVAAD4Qw3X4SfKaQAAAABJRU5ErkJggg==",
+        "contentType": "image/png",
+        "width": 10,
+        "height": 10,
+        "angle": 0,
+        "xoffset": 0,
+        "yoffset": 0
+       },
+       "values": [
+        [
+         "Metal"
+        ]
+       ]
+      },
+      {
+       "label": "Module",
+       "description": "Module",
+       "symbol": {
+        "type": "esriPMS",
+        "url": "9c936f36ffea8c81a2490eba284ec84c",
+        "imageData": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAOCAYAAAAmL5yKAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAA6UlEQVQokbXTvyuEARgH8E9vb1dkkOmGK25xJd2iruRMBmdRpkvKj7oLf4EyXMwuZZDN4Kz+Agu9NhaTGGXgD7iUFKHUde+d4/LdnqeeT88zPKEuE/4vsGZa0o0t938DBlTVPWDm98CyTSWjbg17kbfnonNgTK+sdWmkJUR2MN45kHWgLPVdF+U8WnTo6GegIGPKrL4GMDBkAzW8tQdS9s3rb+qXjbhTcWy7NVAwZ8mkIOasJHJWnKp6Uo8DAhkVeYmY8a+UDLq0q2a1GQhNuHZuwUlL4CNXn7v04LkReBU5E7UdjknXv/AOwRgqXVDj0MwAAAAASUVORK5CYII=",
+        "contentType": "image/png",
+        "width": 12,
+        "height": 10,
+        "angle": 0,
+        "xoffset": 0,
+        "yoffset": 0
+       },
+       "values": [
+        [
+         "Module"
+        ]
+       ]
+      },
+      {
+       "label": "Rock",
+       "description": "Rock",
+       "symbol": {
+        "type": "esriPMS",
+        "url": "b5fb0d8a49eed886d25a7485bb3e687a",
+        "imageData": "iVBORw0KGgoAAAANSUhEUgAAABYAAAAQCAYAAAAS7Y8mAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACV0lEQVQ4jcXSP2gaURwH8O/5l/ytUqPISVtOqoYu4qBROtwc6JRAIUOKS2IDXdogTiJ1aApZmuGK4lLaJepUspRI7FJyWDyT1CVYCjokUSSN54Ek0bPcEdNSbJo2lH7h8d778e7D8XtPhX8U1X+FY7GYOplMLhWLRUW1Wn0GoHZleGtriwyFQgWSJMcmJydPlpeXXfv7+4sAPv41zLKsZXV1lbPb7WNTU1MYGBjQWCwW5/z8/MLR0dFLALk/hnd2dvTFYvF9rVYbm52dlWvdbheNRmN0fX3d5vF4/KIofgVQujSczWZVPM+/TafT1mAwCJXq+zGdTgdBEHwbGxsfaJp+CiAAoHEpeGRk5DnDMHf9fr+M7u3tYXNzE1I7hoeHoVaroVAonkQiEX8kElkC8PC3cD6fv5dKpR47HA4MDQ3JoNfrlVEpRqNRnjmOU9hsthW3272Yy+UWADC/hAuFgi6Tybw6ODjA9PQ0Wq3WOdQLx3EgSRIul0vaXmMYJkjT9DtBEG4AqPSFE4nE60qlopf6Go/HMTc3B6vVisPDQ4iiCIPBgHa7La97icfjt8PhsCYajY42m80HfWGWZe/4fD4olUoZ7aVer5/D0t/u7u5ie3sbWq1Wrq2trd2kKGpcqvWF8/m8lef5R8lk8r4oiieDg4MlkiRPTSbTuCAIzk6no6coSm6D2WwGz/PHnU7n08zMzItAIPDmosvrlkqlFQDSUAC4VS6Xr5+tP7Msq9JoNBSAU4Ig6k6ns0wQRPfnB9AP/jFSI7+cDTkTExPSVL3gm0vBV8o3ZaHvR0xHq64AAAAASUVORK5CYII=",
+        "contentType": "image/png",
+        "width": 16,
+        "height": 12,
+        "angle": 0,
+        "xoffset": 0,
+        "yoffset": 0
+       },
+       "values": [
+        [
+         "Rock"
+        ]
+       ]
+      },
+      {
+       "label": "Vessel",
+       "description": "Vessel",
+       "symbol": {
+        "type": "esriPMS",
+        "url": "d98d18c4dce60f9411ed89e70c471dc3",
+        "imageData": "iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAByUDbMAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABYElEQVQ4jd3UPUsDMRgH8CfXFxA8aA+LtL0OR5GCgw4Wu7iJIEUnKbi4+gXcXPwMOomzTi5CnQQVcetWcBCF9pCqcLVpermmXK+5SBehp0fB6yD+l4Q8yS/hGRKGCSb8P7GULJffKN0MjC2n04uYMXMiL6O2vd8eDA4mgnX7/WSL0sfAWEFVt1qMVbzrv8JajO02Md4OjC0BRD44j3YA2oExKZXai9j2+U+1EWw+kTiKSJL63u2eGpZ1AQCu90CTsXWdkLWxWFKWr+bi8bIcjW5UDaP6Sun9S6dzTG37aVgvaNqsQUgPAJyx2HWtdjmdyxEtk4mtalpeAORrGO88Y1zRCbkxLWtBIHTo14JvPbMc5wEAVoZzBABZRZnJKkrR4bxYNQzSMM2pgeOoDUrPAKDni4UQ4rf1unSn636XxwCgxIUoIYROEIDrCvFljGBciNBwdIXww0bi3fV3viBvPgHWYo7dRwuvWQAAAABJRU5ErkJggg==",
+        "contentType": "image/png",
+        "width": 14,
+        "height": 14,
+        "angle": 0,
+        "xoffset": 0,
+        "yoffset": 0
+       },
+       "values": [
+        [
+         "Vessel"
+        ]
+       ]
+      },
+      {
+       "label": "Other",
+       "description": "Other",
+       "symbol": {
+        "type": "esriPMS",
+        "url": "e13bde7f1fcf2929713ec2c589e1dacf",
+        "imageData": "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABK0lEQVQoka3RMUgCcRTH8a94IJIRJQ4JDg4i2BwoohDR4JZETWKCi4O4uYQ53lgUQbo5hLiKcIOrylFD1lCT52SLCG4H4hVhoCh3JxH9tvf/8/nz3vsL/DHCf0Ovz0dgPEYdjXgE1LXQ4cCVSnGVzXLo97OraXw2GjyXSjw0m9yaQUuxyH0+z8niUsAaj7MfjRJIJrFKEtc6mEiQzuU4Nurb6WQjkyEtSZTnbS9gOMyBzYbVbBmxGHuRCEetFvUVaLezZYZmEQRwu9n5KZbhcMgHa9LrMR0MeNJBReFGljkNhdg2grUacqfDmw6Wy7x7PBQtFsRgkM35+WQC1SqvisL58kMr/1gocKeqtLtdLlwuvNMpar9PW9O4rFT4MoWziCIvwNm6eQ3hb/MN7gpT3i9N23cAAAAASUVORK5CYII=",
+        "contentType": "image/png",
+        "width": 10,
+        "height": 10,
+        "angle": 0,
+        "xoffset": 0,
+        "yoffset": 0
+       },
+       "values": [
+        [
+         "Other"
+        ]
+       ]
+      }
+     ]
+    }
+   ],
+   "uniqueValueInfos": [
+    {
+     "symbol": {
+      "type": "esriPMS",
+      "url": "e58235055342b40f01d05fc2442fea7d",
+      "imageData": "iVBORw0KGgoAAAANSUhEUgAAABsAAAATCAYAAABhh3Y4AAAACXBIWXMAAA7EAAAOxAGVKw4bAAADX0lEQVRIic2VDUzMYRzHv/cSKrm6O1x3OknebkhJ4m6LJquFLZq829G8azYvnZdVGkKz7Cpj1FEchrIsGb3e7tRyokIU52p1h+66l3JdOsfuz8zMu5jv9tue756Xz/P8fnv2o+Ifivpfw8L5I8Z4sdz5E9isc3HpRT1/C0YKCRx+xpvDiKYN7O98pfKReF9c6Ow94tLbfQ0jT+axFRXK5uDM3ZHgDHVD5Aapa+61ulLxzgivuJSi9j6DxS7wz57MYwfXNGhwreIJmO4u0BstYLi79K9vfHkLwKQ+gU2dyLncz4k6f93CQKScksOJSkGz1gQqlQxF7iocylb4bV4yJSNdemfTH8HCBb6imPDx85QP20gOPzPIG1tXTkP5HTWy8mpgMFth7urBmYK6DXs3zsxPzCwr+S1Y0EROaGOzPjk6bJxTWk4lMs5Xo0Vrwp70Ujxt6QB7sBtKqlTwH8vCiYQ5pINZ8gJxUoRnXFKR+ZdgNBo83tlxcRSX7pR0rBw6owUCfy42LQ4i5h8/1yE+rRjRs3mEt721Y6koz6VEpqoCwPslmLcnq3hNdAAzdkHAh0UUMtKl1fBiDSK8tr0LBWVPQOcfwhC6K1StBohFEXjW2jFubUzghRMXlYt+CjZjCncZiUT2K6tWIzv/Hny5dNyQP0Xe0RjI77WgQaXD3JDRoNOcMZThii3LgzFDeBqRIaOgfKDB4h1XYnYI+arDEsWuH8H6vQN5f1nWSorDLNx6CTkHojA+6hgEAVwYO63oMHVjrA8T7QYLCmWNxKbnbcZPB4wZwYD5tTV+u3Bab6qkMvGbMDbTbYVMqeYmZpYTt3a85EsVypqIFB6NDydqmHy8Aj1vbIhNKMALfRdmBftAtFpA5oalJQij/NSS/FrJV2EaXedZn2EeI7t7bIFaXddIg8k6fFvqzSa90TJsc0qRQfOq01O0WkAprlI5vgWxp77pFbYLpxPjk5drIL1ej9NX71sDeJ73Jfm1ud9Lo1XVatiZKlEQKQVgP5JTaXOYDGm1K8PdJUzdZlxhMHfz1ycXUpwHUGl3H2nJLObATpvd3l7X+NJosfaaLhQ3JNU+1Mh/VLPP9eYL/1pvtFx1hMMcv6TkAOAC6JXdbTYBcOT8u13gT/pZ28f4af3T5vkeZ71YxU+1HuwAAAAASUVORK5CYII=",
+      "contentType": "image/png",
+      "width": 20,
+      "height": 14,
+      "angle": 0,
+      "xoffset": 0,
+      "yoffset": 0
+     },
+     "value": "Concrete",
+     "label": "Concrete"
+    },
+    {
+     "symbol": {
+      "type": "esriPMS",
+      "url": "74da64ad5d9986857bbd6f8e68008f41",
+      "imageData": "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAW0lEQVQokWNhIBOwUKxRj4HBiYuBQQCf4hcMDOceMDA8QNFYzMBQHsfA4IZPYxoDQ/ZsBoZp1HEqqYCFZB0jUeNdBobXaxkYLuFT/IeB4S2GxiYGhhiybCQVAAD4Qw3X4SfKaQAAAABJRU5ErkJggg==",
+      "contentType": "image/png",
+      "width": 10,
+      "height": 10,
+      "angle": 0,
+      "xoffset": 0,
+      "yoffset": 0
+     },
+     "value": "Metal",
+     "label": "Metal"
+    },
+    {
+     "symbol": {
+      "type": "esriPMS",
+      "url": "9c936f36ffea8c81a2490eba284ec84c",
+      "imageData": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAOCAYAAAAmL5yKAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAA6UlEQVQokbXTvyuEARgH8E9vb1dkkOmGK25xJd2iruRMBmdRpkvKj7oLf4EyXMwuZZDN4Kz+Agu9NhaTGGXgD7iUFKHUde+d4/LdnqeeT88zPKEuE/4vsGZa0o0t938DBlTVPWDm98CyTSWjbg17kbfnonNgTK+sdWmkJUR2MN45kHWgLPVdF+U8WnTo6GegIGPKrL4GMDBkAzW8tQdS9s3rb+qXjbhTcWy7NVAwZ8mkIOasJHJWnKp6Uo8DAhkVeYmY8a+UDLq0q2a1GQhNuHZuwUlL4CNXn7v04LkReBU5E7UdjknXv/AOwRgqXVDj0MwAAAAASUVORK5CYII=",
+      "contentType": "image/png",
+      "width": 12,
+      "height": 10,
+      "angle": 0,
+      "xoffset": 0,
+      "yoffset": 0
+     },
+     "value": "Module",
+     "label": "Module"
+    },
+    {
+     "symbol": {
+      "type": "esriPMS",
+      "url": "b5fb0d8a49eed886d25a7485bb3e687a",
+      "imageData": "iVBORw0KGgoAAAANSUhEUgAAABYAAAAQCAYAAAAS7Y8mAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACV0lEQVQ4jcXSP2gaURwH8O/5l/ytUqPISVtOqoYu4qBROtwc6JRAIUOKS2IDXdogTiJ1aApZmuGK4lLaJepUspRI7FJyWDyT1CVYCjokUSSN54Ek0bPcEdNSbJo2lH7h8d778e7D8XtPhX8U1X+FY7GYOplMLhWLRUW1Wn0GoHZleGtriwyFQgWSJMcmJydPlpeXXfv7+4sAPv41zLKsZXV1lbPb7WNTU1MYGBjQWCwW5/z8/MLR0dFLALk/hnd2dvTFYvF9rVYbm52dlWvdbheNRmN0fX3d5vF4/KIofgVQujSczWZVPM+/TafT1mAwCJXq+zGdTgdBEHwbGxsfaJp+CiAAoHEpeGRk5DnDMHf9fr+M7u3tYXNzE1I7hoeHoVaroVAonkQiEX8kElkC8PC3cD6fv5dKpR47HA4MDQ3JoNfrlVEpRqNRnjmOU9hsthW3272Yy+UWADC/hAuFgi6Tybw6ODjA9PQ0Wq3WOdQLx3EgSRIul0vaXmMYJkjT9DtBEG4AqPSFE4nE60qlopf6Go/HMTc3B6vVisPDQ4iiCIPBgHa7La97icfjt8PhsCYajY42m80HfWGWZe/4fD4olUoZ7aVer5/D0t/u7u5ie3sbWq1Wrq2trd2kKGpcqvWF8/m8lef5R8lk8r4oiieDg4MlkiRPTSbTuCAIzk6no6coSm6D2WwGz/PHnU7n08zMzItAIPDmosvrlkqlFQDSUAC4VS6Xr5+tP7Msq9JoNBSAU4Ig6k6ns0wQRPfnB9AP/jFSI7+cDTkTExPSVL3gm0vBV8o3ZaHvR0xHq64AAAAASUVORK5CYII=",
+      "contentType": "image/png",
+      "width": 16,
+      "height": 12,
+      "angle": 0,
+      "xoffset": 0,
+      "yoffset": 0
+     },
+     "value": "Rock",
+     "label": "Rock"
+    },
+    {
+     "symbol": {
+      "type": "esriPMS",
+      "url": "d98d18c4dce60f9411ed89e70c471dc3",
+      "imageData": "iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAByUDbMAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABYElEQVQ4jd3UPUsDMRgH8CfXFxA8aA+LtL0OR5GCgw4Wu7iJIEUnKbi4+gXcXPwMOomzTi5CnQQVcetWcBCF9pCqcLVpermmXK+5SBehp0fB6yD+l4Q8yS/hGRKGCSb8P7GULJffKN0MjC2n04uYMXMiL6O2vd8eDA4mgnX7/WSL0sfAWEFVt1qMVbzrv8JajO02Md4OjC0BRD44j3YA2oExKZXai9j2+U+1EWw+kTiKSJL63u2eGpZ1AQCu90CTsXWdkLWxWFKWr+bi8bIcjW5UDaP6Sun9S6dzTG37aVgvaNqsQUgPAJyx2HWtdjmdyxEtk4mtalpeAORrGO88Y1zRCbkxLWtBIHTo14JvPbMc5wEAVoZzBABZRZnJKkrR4bxYNQzSMM2pgeOoDUrPAKDni4UQ4rf1unSn636XxwCgxIUoIYROEIDrCvFljGBciNBwdIXww0bi3fV3viBvPgHWYo7dRwuvWQAAAABJRU5ErkJggg==",
+      "contentType": "image/png",
+      "width": 14,
+      "height": 14,
+      "angle": 0,
+      "xoffset": 0,
+      "yoffset": 0
+     },
+     "value": "Vessel",
+     "label": "Vessel"
+    },
+    {
+     "symbol": {
+      "type": "esriPMS",
+      "url": "e13bde7f1fcf2929713ec2c589e1dacf",
+      "imageData": "iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABK0lEQVQoka3RMUgCcRTH8a94IJIRJQ4JDg4i2BwoohDR4JZETWKCi4O4uYQ53lgUQbo5hLiKcIOrylFD1lCT52SLCG4H4hVhoCh3JxH9tvf/8/nz3vsL/DHCf0Ovz0dgPEYdjXgE1LXQ4cCVSnGVzXLo97OraXw2GjyXSjw0m9yaQUuxyH0+z8niUsAaj7MfjRJIJrFKEtc6mEiQzuU4Nurb6WQjkyEtSZTnbS9gOMyBzYbVbBmxGHuRCEetFvUVaLezZYZmEQRwu9n5KZbhcMgHa9LrMR0MeNJBReFGljkNhdg2grUacqfDmw6Wy7x7PBQtFsRgkM35+WQC1SqvisL58kMr/1gocKeqtLtdLlwuvNMpar9PW9O4rFT4MoWziCIvwNm6eQ3hb/MN7gpT3i9N23cAAAAASUVORK5CYII=",
+      "contentType": "image/png",
+      "width": 10,
+      "height": 10,
+      "angle": 0,
+      "xoffset": 0,
+      "yoffset": 0
+     },
+     "value": "Other",
+     "label": "Other"
+    }
+   ],
+   "fieldDelimiter": ",",
+   "authoringInfo": {
+    "colorRamp": {
+     "type": "multipart",
+     "colorRamps": [
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        182,
+        224,
+        252,
+        255
+       ],
+       "toColor": [
+        182,
+        224,
+        252,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        205,
+        252,
+        179,
+        255
+       ],
+       "toColor": [
+        205,
+        252,
+        179,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        252,
+        196,
+        179,
+        255
+       ],
+       "toColor": [
+        252,
+        196,
+        179,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        249,
+        192,
+        252,
+        255
+       ],
+       "toColor": [
+        249,
+        192,
+        252,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        189,
+        252,
+        225,
+        255
+       ],
+       "toColor": [
+        189,
+        252,
+        225,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        184,
+        189,
+        252,
+        255
+       ],
+       "toColor": [
+        184,
+        189,
+        252,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        252,
+        243,
+        189,
+        255
+       ],
+       "toColor": [
+        252,
+        243,
+        189,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        252,
+        210,
+        235,
+        255
+       ],
+       "toColor": [
+        252,
+        210,
+        235,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        215,
+        252,
+        252,
+        255
+       ],
+       "toColor": [
+        215,
+        252,
+        252,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        252,
+        235,
+        215,
+        255
+       ],
+       "toColor": [
+        252,
+        235,
+        215,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        227,
+        252,
+        215,
+        255
+       ],
+       "toColor": [
+        227,
+        252,
+        215,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        210,
+        210,
+        252,
+        255
+       ],
+       "toColor": [
+        210,
+        210,
+        252,
+        255
+       ]
+      },
+      {
+       "type": "algorithmic",
+       "algorithm": "esriCIELabAlgorithm",
+       "fromColor": [
+        182,
+        252,
+        201,
+        255
+       ],
+       "toColor": [
+        182,
+        252,
+        201,
+        255
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "scaleSymbols": true,
+  "transparency": 0,
+  "labelingInfo": null
+ },
+ "defaultVisibility": true,
+ "extent": {
+  "xmin": 63879.550799999386,
+  "ymin": 48148.00530000031,
+  "xmax": 801385.4948999994,
+  "ymax": 747683.5535000004,
+  "zmin": 0,
+  "zmax": 0,
+  "spatialReference": {
+   "wkid": 102967,
+   "latestWkid": 6439,
+   "xyTolerance": 0.001,
+   "zTolerance": 0.001,
+   "mTolerance": 0.001,
+   "falseX": -19550100,
+   "falseY": -7526400,
+   "xyUnits": 10000,
+   "falseZ": -100000,
+   "zUnits": 10000,
+   "falseM": -100000,
+   "mUnits": 10000
+  }
+ },
+ "hasAttachments": false,
+ "htmlPopupType": "esriServerHTMLPopupTypeAsHTMLText",
+ "displayField": "Name",
+ "typeIdField": null,
+ "subtypeFieldName": null,
+ "subtypeField": null,
+ "defaultSubtypeCode": null,
+ "fields": [
+  {
+   "name": "OBJECTID",
+   "type": "esriFieldTypeOID",
+   "alias": "OBJECTID",
+   "domain": null
+  },
+  {
+   "name": "DeployID",
+   "type": "esriFieldTypeString",
+   "alias": "DeployID",
+   "length": 50,
+   "domain": null
+  },
+  {
+   "name": "DDate",
+   "type": "esriFieldTypeInteger",
+   "alias": "Deployment Date",
+   "domain": null
+  },
+  {
+   "name": "Description",
+   "type": "esriFieldTypeString",
+   "alias": "Description",
+   "length": 1000,
+   "domain": null
+  },
+  {
+   "name": "Tonnage",
+   "type": "esriFieldTypeDouble",
+   "alias": "Tons",
+   "domain": null
+  },
+  {
+   "name": "Depth",
+   "type": "esriFieldTypeDouble",
+   "alias": "Depth (ft)",
+   "domain": null
+  },
+  {
+   "name": "Relief",
+   "type": "esriFieldTypeDouble",
+   "alias": "Relief (ft)",
+   "domain": null
+  },
+  {
+   "name": "Name",
+   "type": "esriFieldTypeString",
+   "alias": "Deployment Name",
+   "length": 100,
+   "domain": null
+  },
+  {
+   "name": "Jurisdiction",
+   "type": "esriFieldTypeString",
+   "alias": "Jurisdiction",
+   "length": 20,
+   "domain": null
+  },
+  {
+   "name": "Coast",
+   "type": "esriFieldTypeString",
+   "alias": "Coast",
+   "length": 20,
+   "domain": null
+  },
+  {
+   "name": "County",
+   "type": "esriFieldTypeString",
+   "alias": "County",
+   "length": 30,
+   "domain": null
+  },
+  {
+   "name": "MatDescrip",
+   "type": "esriFieldTypeString",
+   "alias": "Description",
+   "length": 200,
+   "domain": null
+  },
+  {
+   "name": "MatCat",
+   "type": "esriFieldTypeString",
+   "alias": "MatCat",
+   "length": 255,
+   "domain": null
+  },
+  {
+   "name": "DeployDate",
+   "type": "esriFieldTypeString",
+   "alias": "Deploy Date",
+   "length": 255,
+   "domain": null
+  },
+  {
+   "name": "Long_DM",
+   "type": "esriFieldTypeString",
+   "alias": "Longitude (DM)",
+   "length": 255,
+   "domain": null
+  },
+  {
+   "name": "Lat_DM",
+   "type": "esriFieldTypeString",
+   "alias": "Latitude (DM)",
+   "length": 255,
+   "domain": null
+  },
+  {
+   "name": "Long_DD",
+   "type": "esriFieldTypeDouble",
+   "alias": "Longitude (DD)",
+   "domain": null
+  },
+  {
+   "name": "Lat_DD",
+   "type": "esriFieldTypeDouble",
+   "alias": "Latitude (DD)",
+   "domain": null
+  },
+  {
+   "name": "LocAccuracy",
+   "type": "esriFieldTypeInteger",
+   "alias": "Location Accuracy",
+   "domain": null
+  },
+  {
+   "name": "Shape",
+   "type": "esriFieldTypeGeometry",
+   "alias": "Shape",
+   "domain": null
+  },
+  {
+   "name": "last_edited_date",
+   "type": "esriFieldTypeDate",
+   "alias": "last_edited_date",
+   "length": 8,
+   "domain": null
+  }
+ ],
+ "geometryField": {
+  "name": "Shape",
+  "type": "esriFieldTypeGeometry",
+  "alias": "Shape"
+ },
+ "indexes": [
+  {
+   "name": "R2054_pk",
+   "fields": "OBJECTID",
+   "isAscending": true,
+   "isUnique": true,
+   "description": ""
+  },
+  {
+   "name": "S2020_idx",
+   "fields": "Shape",
+   "isAscending": true,
+   "isUnique": true,
+   "description": ""
+  }
+ ],
+ "subtypes": [],
+ "relationships": [],
+ "canModifyLayer": true,
+ "canScaleSymbols": false,
+ "hasLabels": false,
+ "capabilities": "Query,Map,Data",
+ "maxRecordCount": 2000,
+ "maxSelectionCount": 2000,
+ "supportsStatistics": true,
+ "supportsExceedsLimitStatistics": true,
+ "supportsAdvancedQueries": true,
+ "hasZ": true,
+ "supportedQueryFormats": "JSON, geoJSON, PBF",
+ "isDataVersioned": false,
+ "ownershipBasedAccessControlForFeatures": {"allowOthersToQuery": true},
+ "useStandardizedQueries": true,
+ "supportedSpatialRelationships": [
+  "esriSpatialRelIntersects",
+  "esriSpatialRelContains",
+  "esriSpatialRelCrosses",
+  "esriSpatialRelEnvelopeIntersects",
+  "esriSpatialRelIndexIntersects",
+  "esriSpatialRelOverlaps",
+  "esriSpatialRelTouches",
+  "esriSpatialRelWithin",
+  "esriSpatialRelRelation"
+ ],
+ "advancedQueryCapabilities": {
+  "useStandardizedQueries": true,
+  "supportsStatistics": true,
+  "supportsPercentileStatistics": true,
+  "supportsHavingClause": true,
+  "supportsOrderBy": true,
+  "supportsDistinct": true,
+  "supportsCountDistinct": true,
+  "supportsAdvancedQueryRelated": true,
+  "supportsQueryRelatedPagination": true,
+  "supportsPagination": true,
+  "supportsLod": false,
+  "supportsQueryWithLodSR": false,
+  "supportsTrueCurve": true,
+  "supportsQueryWithDatumTransformation": true,
+  "supportsReturningQueryExtent": true,
+  "supportsQueryWithDistance": true,
+  "supportsSqlExpression": true,
+  "supportsTimeRelation": true,
+  "supportsSqlFormat": false,
+  "supportsQueryAnalytic": true,
+  "supportsCurrentUserQueries": true
+ },
+ "supportsDatumTransformation": true,
+ "advancedQueryAnalyticCapabilities": {
+  "supportsLinearRegression": true,
+  "supportsAsync": false,
+  "supportsPercentileAnalytic": true
+ },
+ "dateFieldsTimeReference": null,
+ "preferredTimeReference": null,
+ "datesInUnknownTimezone": false,
+ "hasMetadata": true,
+ "isDataArchived": false,
+ "archivingInfo": {
+  "supportsQueryWithHistoricMoment": false,
+  "startArchivingMoment": -1
+ },
+ "supportsCoordinatesQuantization": true,
+ "supportsDynamicLegends": true,
+ "serviceItemId": "774181a0164b4399a159e9de863d6668"
+}
