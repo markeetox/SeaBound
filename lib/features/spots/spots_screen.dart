@@ -300,46 +300,38 @@ class _LupitaDetailSheet extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 8),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 180),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: spot.reasons.length,
-                itemBuilder: (context, index) {
-                  final reason = spot.reasons[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 3, right: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: OceanThemeExtension.defaultTokens.cyan.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            reason.category.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: OceanThemeExtension.defaultTokens.cyan,
-                            ),
-                          ),
+            ...spot.reasons.map((reason) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 3, right: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: OceanThemeExtension.defaultTokens.cyan.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        reason.category.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: OceanThemeExtension.defaultTokens.cyan,
                         ),
-                        Expanded(
-                          child: Text(
-                            reason.text,
-                            style: const TextStyle(fontSize: 12, color: Colors.white70),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  );
-                },
-              ),
-            ),
+                    Expanded(
+                      child: Text(
+                        reason.text,
+                        style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
