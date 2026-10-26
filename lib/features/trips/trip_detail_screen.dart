@@ -311,6 +311,8 @@ class TripDetailScreen extends ConsumerWidget {
                           options: MapOptions(
                             initialCenter: trip.locationCoordinates,
                             initialZoom: 12.0,
+                            minZoom: 3.0,
+                            maxZoom: 20.0,
                           ),
                           children: [
                             TileLayer(
