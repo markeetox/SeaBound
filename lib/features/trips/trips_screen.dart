@@ -314,6 +314,8 @@ class _TripCard extends ConsumerWidget {
                       options: MapOptions(
                         initialCenter: trip.locationCoordinates,
                         initialZoom: 11.0,
+                        minZoom: 3.0,
+                        maxZoom: 20.0,
                         interactionOptions: const InteractionOptions(
                           flags: InteractiveFlag.none,
                         ),

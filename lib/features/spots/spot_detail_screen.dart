@@ -183,6 +183,8 @@ class SpotDetailScreen extends ConsumerWidget {
                           options: MapOptions(
                             initialCenter: spotLatLng,
                             initialZoom: 12.0,
+                            minZoom: 3.0,
+                            maxZoom: 20.0,
                           ),
                           children: [
                             TileLayer(

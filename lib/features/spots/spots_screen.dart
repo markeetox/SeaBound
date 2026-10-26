@@ -1093,6 +1093,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
           options: MapOptions(
             initialCenter: initialCenter,
             initialZoom: widget.spots.isNotEmpty ? 10.0 : 9.0,
+            minZoom: 3.0,
             maxZoom: 20.0,
             onMapReady: () {
               final bounds = _mapController.camera.visibleBounds;

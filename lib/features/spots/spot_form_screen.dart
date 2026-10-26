@@ -368,6 +368,8 @@ class _SpotFormScreenState extends ConsumerState<SpotFormScreen> {
                         options: MapOptions(
                           initialCenter: initialMapCenter,
                           initialZoom: _pinnedLocation != null ? 12.0 : 9.0,
+                          minZoom: 3.0,
+                          maxZoom: 20.0,
                           onTap: (tapPosition, point) {
                             setState(() {
                               _pinnedLocation = point;
