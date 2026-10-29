@@ -42,6 +42,61 @@ class LupitaReason {
   }
 }
 
+class LupitaLocationDetail {
+  final String label;
+  final String value;
+
+  const LupitaLocationDetail({
+    required this.label,
+    required this.value,
+  });
+
+  factory LupitaLocationDetail.fromList(List<dynamic> list) {
+    if (list.length >= 2) {
+      return LupitaLocationDetail(
+        label: list[0].toString(),
+        value: list[1].toString(),
+      );
+    }
+    return const LupitaLocationDetail(label: '', value: '');
+  }
+}
+
+class LupitaRegulation {
+  final String summary;
+  final String minSize;
+  final String maxSize;
+  final String bagLimit;
+  final String season;
+  final String jurisdiction;
+  final String sourceName;
+  final String sourceUrl;
+
+  const LupitaRegulation({
+    required this.summary,
+    required this.minSize,
+    required this.maxSize,
+    required this.bagLimit,
+    required this.season,
+    required this.jurisdiction,
+    required this.sourceName,
+    required this.sourceUrl,
+  });
+
+  factory LupitaRegulation.fromJson(Map<String, dynamic> json) {
+    return LupitaRegulation(
+      summary: json['summary'] as String? ?? '',
+      minSize: json['min_size'] as String? ?? '',
+      maxSize: json['max_size'] as String? ?? '',
+      bagLimit: json['bag_limit'] as String? ?? '',
+      season: json['season'] as String? ?? '',
+      jurisdiction: json['jurisdiction'] as String? ?? '',
+      sourceName: json['source_name'] as String? ?? '',
+      sourceUrl: json['source_url'] as String? ?? '',
+    );
+  }
+}
+
 class LupitaBiteWindow {
   final DateTime? startTime;
   final DateTime? endTime;
@@ -91,6 +146,7 @@ class LupitaSpot {
   final double latitude;
   final double longitude;
   final List<LupitaReason> reasons;
+  final List<LupitaLocationDetail> locationDetails;
   final String? seaSummary;
   final LupitaBiteWindow? biteWindow;
 
@@ -104,6 +160,7 @@ class LupitaSpot {
     required this.latitude,
     required this.longitude,
     required this.reasons,
+    this.locationDetails = const [],
     this.seaSummary,
     this.biteWindow,
   });
@@ -122,6 +179,15 @@ class LupitaSpot {
             .toList()
         : <LupitaReason>[];
 
+    final rawLocation = json['location'] as List<dynamic>?;
+    final locationList = rawLocation != null
+        ? rawLocation
+            .whereType<List<dynamic>>()
+            .map((loc) => LupitaLocationDetail.fromList(loc))
+            .where((loc) => loc.label.isNotEmpty && loc.value.isNotEmpty)
+            .toList()
+        : <LupitaLocationDetail>[];
+
     final seaObj = json['sea'] as Map<String, dynamic>?;
     final seaSummary = seaObj != null ? (seaObj['summary'] as String? ?? seaObj['text'] as String?) : null;
 
@@ -138,6 +204,7 @@ class LupitaSpot {
       latitude: lat,
       longitude: lng,
       reasons: reasonsList,
+      locationDetails: locationList,
       seaSummary: seaSummary,
       biteWindow: biteWindow,
     );
@@ -150,6 +217,7 @@ class LupitaSpecies {
   final String sci;
   final String colorHex;
   final List<LupitaSpec> specs;
+  final LupitaRegulation? regulations;
   final String status;
   final String message;
   final int spotCount;
@@ -161,6 +229,7 @@ class LupitaSpecies {
     required this.sci,
     required this.colorHex,
     required this.specs,
+    this.regulations,
     required this.status,
     required this.message,
     required this.spotCount,
@@ -180,6 +249,9 @@ class LupitaSpecies {
             .where((s) => s.label.isNotEmpty)
             .toList()
         : <LupitaSpec>[];
+
+    final regObj = json['regulations'] as Map<String, dynamic>?;
+    final regulations = regObj != null ? LupitaRegulation.fromJson(regObj) : null;
 
     // Read spot count if stored as num, or count matching spots
     final rawSpotsCount = json['spots'] is num
@@ -204,6 +276,7 @@ class LupitaSpecies {
       sci: json['sci'] as String? ?? '',
       colorHex: json['color'] as String? ?? '#00E5FF',
       specs: specsList,
+      regulations: regulations,
       status: json['status'] as String? ?? 'ok',
       message: json['message'] as String? ?? '',
       spotCount: rawSpotsCount ?? matchingSpots.length,

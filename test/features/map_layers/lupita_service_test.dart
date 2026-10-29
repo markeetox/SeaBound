@@ -3,7 +3,7 @@ import 'package:seabound/features/map_layers/lupita_service.dart';
 
 void main() {
   group('Lupita Models & Data Parsing Tests', () {
-    test('LupitaData.fromJson parses species and spot details correctly', () {
+    test('LupitaData.fromJson parses species, regulations, location details, and spot details correctly', () {
       final sampleJson = {
         'version': 1,
         'generated_utc': '2026-10-24T20:23:29Z',
@@ -20,7 +20,17 @@ void main() {
             'specs': [
               ['Diet', 'Crabs, fish and squid'],
               ['Adult depth', '30-70 ft']
-            ]
+            ],
+            'regulations': {
+              'summary': 'Regulated species - See MyFWC/NOAA guidelines',
+              'min_size': '36 inch FL',
+              'max_size': 'None',
+              'bag_limit': '1 per person',
+              'season': 'Open year-round',
+              'jurisdiction': 'Atlantic State & Federal Waters',
+              'source_name': 'MyFWC Saltwater Regulations',
+              'source_url': 'https://myfwc.com/fishing/saltwater/recreational/'
+            }
           }
         ],
         'spots': [
@@ -41,6 +51,10 @@ void main() {
               },
               'why': ['Incoming tide peak', 'Major solunar period']
             },
+            'location': [
+              ['Water depth', 'About 30 m'],
+              ['Surface temp', '28.8 C']
+            ],
             'reasons': [
               ['static', 'Depth is 12m nearshore structure'],
               ['modeled', 'Water temperature 28.8C']
@@ -57,11 +71,18 @@ void main() {
       final cobia = data.species.first;
       expect(cobia.id, equals('cobia'));
       expect(cobia.name, equals('Cobia'));
+      expect(cobia.sci, equals('Rachycentron canadum'));
       expect(cobia.colorHex, equals('#c084fc'));
       expect(cobia.specs.length, equals(2));
       expect(cobia.specs.first.label, equals('Diet'));
       expect(cobia.specs.first.value, equals('Crabs, fish and squid'));
       expect(cobia.imageUrl, equals('https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/img/cobia.png'));
+
+      expect(cobia.regulations, isNotNull);
+      expect(cobia.regulations!.summary, contains('Regulated species'));
+      expect(cobia.regulations!.minSize, equals('36 inch FL'));
+      expect(cobia.regulations!.bagLimit, equals('1 per person'));
+      expect(cobia.regulations!.sourceName, equals('MyFWC Saltwater Regulations'));
 
       expect(cobia.spots.length, equals(1));
       final spot = cobia.spots.first;
@@ -75,6 +96,10 @@ void main() {
       expect(spot.reasons.length, equals(2));
       expect(spot.reasons.first.category, equals('static'));
       expect(spot.reasons.first.text, equals('Depth is 12m nearshore structure'));
+
+      expect(spot.locationDetails.length, equals(2));
+      expect(spot.locationDetails.first.label, equals('Water depth'));
+      expect(spot.locationDetails.first.value, equals('About 30 m'));
 
       expect(spot.biteWindow, isNotNull);
       expect(spot.biteWindow!.score, equals(0.92));
