@@ -104,19 +104,40 @@ class _SpotsScreenState extends ConsumerState<SpotsScreen> {
   }
 }
 
-class _LupitaDetailSheet extends StatelessWidget {
+class _LupitaDetailSheet extends ConsumerWidget {
   final LupitaSpot spot;
 
   const _LupitaDetailSheet({required this.spot});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final latStr = spot.latitude.toStringAsFixed(4);
     final lngStr = spot.longitude.toStringAsFixed(4);
     final coordStr = '$latStr, $lngStr';
     final scorePct = (spot.score * 100).round();
     final imageUrl =
         'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/img/${spot.speciesId}.png';
+
+    final dataAsync = ref.watch(lupitaDataProvider);
+    final speciesObj = dataAsync.asData?.value.species.firstWhere(
+      (s) => s.id == spot.speciesId,
+      orElse: () => LupitaSpecies(
+        id: spot.speciesId,
+        name: spot.speciesId.replaceAll('-', ' ').toUpperCase(),
+        sci: '',
+        colorHex: '#00E5FF',
+        specs: const [],
+        status: 'ok',
+        message: '',
+        spotCount: 0,
+        spots: const [],
+      ),
+    );
+
+    final speciesName = speciesObj?.name ?? spot.speciesId;
+    final sciName = speciesObj?.sci ?? '';
+    final specs = speciesObj?.specs ?? [];
+    final regs = speciesObj?.regulations;
 
     final bite = spot.biteWindow;
     String? biteTimeStr;
@@ -141,13 +162,23 @@ class _LupitaDetailSheet extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        spot.title,
+                        speciesName,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w900,
                             ),
                       ),
+                      if (sciName.isNotEmpty) ...[
+                        Text(
+                          sciName,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontStyle: FontStyle.italic,
+                                color: const Color(0xFF38BDF8),
+                              ),
+                        ),
+                      ],
+                      const SizedBox(height: 2),
                       Text(
-                        'Species: ${spot.speciesId.toUpperCase()} • Confidence: ${spot.confidence}',
+                        '${spot.title} • Confidence: ${spot.confidence}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.white70,
                             ),
@@ -293,6 +324,179 @@ class _LupitaDetailSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+
+            // Species Specs & Biology Section
+            if (specs.isNotEmpty) ...[
+              Text(
+                'Species Specs & Biology:',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                color: const Color(0xFF0F172A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: const BorderSide(color: Color(0xFF1E293B)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    children: specs.map((spec) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 110,
+                              child: Text(
+                                spec.label,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF38BDF8),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                spec.value,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Spot Location & Environmental Conditions Section
+            if (spot.locationDetails.isNotEmpty) ...[
+              Text(
+                'Spot Environment & Conditions:',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                color: const Color(0xFF0F172A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: const BorderSide(color: Color(0xFF1E293B)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    children: spot.locationDetails.map((loc) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 120,
+                              child: Text(
+                                loc.label,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF34D399),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                loc.value,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Fishing Regulations Section
+            if (regs != null) ...[
+              Text(
+                'Fishing Regulations:',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                color: const Color(0xFF0F172A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: const BorderSide(color: Color(0xFF1E293B)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (regs.summary.isNotEmpty) ...[
+                        Text(
+                          regs.summary,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFFBBF24),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      if (regs.minSize.isNotEmpty) ...[
+                        _RegRow(label: 'Min Size', value: regs.minSize),
+                      ],
+                      if (regs.maxSize.isNotEmpty) ...[
+                        _RegRow(label: 'Max Size', value: regs.maxSize),
+                      ],
+                      if (regs.bagLimit.isNotEmpty) ...[
+                        _RegRow(label: 'Bag Limit', value: regs.bagLimit),
+                      ],
+                      if (regs.season.isNotEmpty) ...[
+                        _RegRow(label: 'Season', value: regs.season),
+                      ],
+                      if (regs.jurisdiction.isNotEmpty) ...[
+                        _RegRow(label: 'Jurisdiction', value: regs.jurisdiction),
+                      ],
+                      if (regs.sourceName.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          'Source: ${regs.sourceName}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.white54,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             Text(
               'Habitat Match Reasons:',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -362,6 +566,45 @@ class _LupitaDetailSheet extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _RegRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _RegRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFFFBBF24),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
