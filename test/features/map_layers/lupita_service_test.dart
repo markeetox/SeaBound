@@ -80,6 +80,8 @@ void main() {
       expect(data.version, equals(1));
       expect(data.species.length, equals(2));
       expect(data.speciesWithPredictionsCount, equals(1));
+      expect(data.status, equals(LupitaSyncStatus.fresh));
+      expect(data.catalogGeneratedUtc, equals('2026-10-24T20:23:29Z'));
 
       final cobia = data.species.firstWhere((s) => s.id == 'cobia');
       expect(cobia.name, equals('Cobia'));
@@ -106,7 +108,7 @@ void main() {
       expect(tarpon.spots, isEmpty);
     });
 
-    test('LupitaData handles partial prediction payload without overwriting valid data', () {
+    test('LupitaData handles structurally valid empty prediction runs (spots: []) correctly', () {
       final sampleJsonNoSpots = {
         'version': 1,
         'generated_utc': '2026-10-24T20:23:29Z',
@@ -129,6 +131,7 @@ void main() {
       expect(data.species.length, equals(1));
       expect(data.allSpots, isEmpty);
       expect(data.speciesWithPredictionsCount, equals(0));
+      expect(data.status, equals(LupitaSyncStatus.empty));
     });
   });
 }

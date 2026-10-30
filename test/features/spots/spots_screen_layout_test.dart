@@ -193,7 +193,9 @@ void main() {
 
     final sampleLupitaData = LupitaData(
       version: 1,
-      generatedUtc: '2026-10-24T20:00:00Z',
+      catalogGeneratedUtc: '2026-10-24T20:00:00Z',
+      predictionsGeneratedUtc: '2026-10-24T20:00:00Z',
+      lastRefreshedAt: DateTime.parse('2026-10-24T20:00:00Z'),
       disclaimer: 'Test',
       allSpots: [spot1],
       species: [

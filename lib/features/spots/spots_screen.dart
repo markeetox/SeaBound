@@ -168,14 +168,36 @@ class _LupitaSpeciesSelectorSheetState
                           ),
                     ),
                     widget.lupitaDataAsync.maybeWhen(
-                      data: (lData) => Text(
-                        'Catalog: ${lData.species.length} species • Active predictions: ${lData.speciesWithPredictionsCount}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF38BDF8),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      data: (lData) {
+                        final statusLabel = switch (lData.status) {
+                          LupitaSyncStatus.fresh => 'Fresh',
+                          LupitaSyncStatus.cached => 'Cached',
+                          LupitaSyncStatus.partial => 'Partial',
+                          LupitaSyncStatus.empty => 'No Active Spots',
+                          LupitaSyncStatus.error => 'Error',
+                        };
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Catalog: ${lData.species.length} species • Active: ${lData.speciesWithPredictionsCount} (${lData.allSpots.length} spots)',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF38BDF8),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (lData.predictionsGeneratedUtc.isNotEmpty)
+                              Text(
+                                'Dataset: ${lData.predictionsGeneratedUtc.substring(0, 10)} • Status: $statusLabel',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.white54,
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                       orElse: () => const SizedBox.shrink(),
                     ),
                   ],
