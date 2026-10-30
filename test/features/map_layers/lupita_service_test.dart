@@ -105,5 +105,30 @@ void main() {
       expect(tarpon.name, equals('Tarpon'));
       expect(tarpon.spots, isEmpty);
     });
+
+    test('LupitaData handles partial prediction payload without overwriting valid data', () {
+      final sampleJsonNoSpots = {
+        'version': 1,
+        'generated_utc': '2026-10-24T20:23:29Z',
+        'disclaimer': 'Catalog only',
+        'species': [
+          {
+            'id': 'cobia',
+            'name': 'Cobia',
+            'sci': 'Rachycentron canadum',
+            'color': '#c084fc',
+            'status': 'ok',
+            'message': '',
+            'spots': 0
+          }
+        ],
+        'spots': []
+      };
+
+      final data = LupitaData.fromJson(sampleJsonNoSpots);
+      expect(data.species.length, equals(1));
+      expect(data.allSpots, isEmpty);
+      expect(data.speciesWithPredictionsCount, equals(0));
+    });
   });
 }
