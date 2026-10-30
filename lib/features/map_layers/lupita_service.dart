@@ -304,6 +304,7 @@ class LupitaData {
   final String disclaimer;
   final List<LupitaSpecies> species;
   final List<LupitaSpot> allSpots;
+  final bool isPartial;
 
   const LupitaData({
     required this.version,
@@ -311,6 +312,7 @@ class LupitaData {
     required this.disclaimer,
     required this.species,
     this.allSpots = const [],
+    this.isPartial = false,
   });
 
   int get speciesWithPredictionsCount =>
@@ -361,10 +363,17 @@ class LupitaService {
   static const String apiV1IndexUrl =
       'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/index.json';
 
-  Future<Map<String, dynamic>?> _fetchJsonFromUrls(List<String> urls) async {
+  LupitaData? _lastKnownGoodData;
+
+  LupitaData? get lastKnownGoodData => _lastKnownGoodData;
+
+  Future<Map<String, dynamic>?> _fetchJsonFromUrls(
+    List<String> urls, {
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
     for (final url in urls) {
       try {
-        final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+        final response = await http.get(Uri.parse(url)).timeout(timeout);
         if (response.statusCode == 200) {
           final decoded = json.decode(response.body);
           if (decoded is Map<String, dynamic>) {
@@ -376,27 +385,38 @@ class LupitaService {
     return null;
   }
 
+  bool _isValidPredictionJson(Map<String, dynamic> json) {
+    final rawSpots = json['spots'];
+    if (rawSpots is List && rawSpots.isNotEmpty) {
+      return true;
+    }
+    return false;
+  }
+
   Future<LupitaData> fetchLupitaData() async {
     final catalogUrls = [
       jsDelivrCatalogUrl,
+      rawGithubCatalogUrl,
       'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubCatalogUrl)}',
       'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubCatalogUrl)}',
-      rawGithubCatalogUrl,
     ];
 
     final fishUrls = [
       jsDelivrFishUrl,
+      rawGithubFishUrl,
       'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubFishUrl)}',
       'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubFishUrl)}',
-      rawGithubFishUrl,
     ];
 
     final catalogJson = await _fetchJsonFromUrls(catalogUrls);
     final fishJson = await _fetchJsonFromUrls(fishUrls);
 
-    if (catalogJson != null || fishJson != null) {
+    final bool hasValidPredictions =
+        fishJson != null && _isValidPredictionJson(fishJson);
+
+    if (catalogJson != null || hasValidPredictions) {
       final List<LupitaSpot> allSpots = [];
-      if (fishJson != null) {
+      if (hasValidPredictions) {
         final rawSpots = fishJson['spots'] as List<dynamic>?;
         if (rawSpots != null) {
           allSpots.addAll(
@@ -419,7 +439,7 @@ class LupitaService {
         }
       }
 
-      if (fishJson != null) {
+      if (hasValidPredictions) {
         final rawFishSpecies = fishJson['species'] as List<dynamic>?;
         if (rawFishSpecies != null) {
           for (final item in rawFishSpecies.whereType<Map<String, dynamic>>()) {
@@ -428,7 +448,8 @@ class LupitaService {
               speciesMap[s.id] = s;
             } else {
               final existing = speciesMap[s.id]!;
-              final mergedSpots = s.spots.isNotEmpty ? s.spots : existing.spots;
+              final mergedSpots =
+                  s.spots.isNotEmpty ? s.spots : existing.spots;
               speciesMap[s.id] = existing.copyWithSpots(mergedSpots);
             }
           }
@@ -439,7 +460,8 @@ class LupitaService {
         if (speciesMap.containsKey(spot.speciesId)) {
           final existing = speciesMap[spot.speciesId]!;
           if (!existing.spots.any((s) => s.id == spot.id)) {
-            final updatedSpots = List<LupitaSpot>.from(existing.spots)..add(spot);
+            final updatedSpots = List<LupitaSpot>.from(existing.spots)
+              ..add(spot);
             speciesMap[spot.speciesId] = existing.copyWithSpots(updatedSpots);
           }
         }
@@ -447,21 +469,63 @@ class LupitaService {
 
       final List<LupitaSpecies> finalSpeciesList = speciesMap.values.toList();
 
-      final version = catalogJson?['version'] as int? ?? fishJson?['version'] as int? ?? 1;
-      final generatedUtc = catalogJson?['generated_utc'] as String? ?? fishJson?['generated_utc'] as String? ?? '';
-      final disclaimer = catalogJson?['disclaimer'] as String? ?? fishJson?['disclaimer'] as String? ?? '';
+      final version = catalogJson?['version'] as int? ??
+          fishJson?['version'] as int? ??
+          1;
+      final generatedUtc = catalogJson?['generated_utc'] as String? ??
+          fishJson?['generated_utc'] as String? ??
+          '';
+      final disclaimer = catalogJson?['disclaimer'] as String? ??
+          fishJson?['disclaimer'] as String? ??
+          '';
 
-      return LupitaData(
+      if (!hasValidPredictions && _lastKnownGoodData != null) {
+        final Map<String, LupitaSpecies> mergedWithCached = {};
+        for (final s in finalSpeciesList) {
+          final cachedSpecies = _lastKnownGoodData!.species
+              .where((cs) => cs.id == s.id)
+              .firstOrNull;
+          if (cachedSpecies != null && cachedSpecies.spots.isNotEmpty) {
+            mergedWithCached[s.id] = s.copyWithSpots(cachedSpecies.spots);
+          } else {
+            mergedWithCached[s.id] = s;
+          }
+        }
+
+        return LupitaData(
+          version: version,
+          generatedUtc: generatedUtc,
+          disclaimer: disclaimer,
+          species: mergedWithCached.values.toList(),
+          allSpots: _lastKnownGoodData!.allSpots,
+          isPartial: true,
+        );
+      }
+
+      final resultData = LupitaData(
         version: version,
         generatedUtc: generatedUtc,
         disclaimer: disclaimer,
         species: finalSpeciesList,
         allSpots: allSpots,
+        isPartial: !hasValidPredictions,
       );
+
+      if (hasValidPredictions && allSpots.isNotEmpty) {
+        _lastKnownGoodData = resultData;
+      }
+
+      return resultData;
+    }
+
+    if (_lastKnownGoodData != null) {
+      return _lastKnownGoodData!;
     }
 
     try {
-      final v1Response = await http.get(Uri.parse(apiV1IndexUrl)).timeout(const Duration(seconds: 10));
+      final v1Response = await http
+          .get(Uri.parse(apiV1IndexUrl))
+          .timeout(const Duration(seconds: 15));
       if (v1Response.statusCode == 200) {
         final v1Decoded = json.decode(v1Response.body) as Map<String, dynamic>;
         final rawSpecies = v1Decoded['species'] as List<dynamic>?;
@@ -470,27 +534,6 @@ class LupitaService {
         if (rawSpecies != null) {
           for (final item in rawSpecies.whereType<Map<String, dynamic>>()) {
             final speciesId = item['id'] as String? ?? '';
-            final detailPath = item['details'] as String?;
-
-            List<LupitaSpot> spotsList = [];
-            if (detailPath != null && detailPath.isNotEmpty) {
-              try {
-                final specDetailUrl =
-                    'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/$detailPath';
-                final specResp = await http.get(Uri.parse(specDetailUrl)).timeout(const Duration(seconds: 6));
-                if (specResp.statusCode == 200) {
-                  final specData = json.decode(specResp.body) as Map<String, dynamic>;
-                  final rawSpots = specData['spots'] as List<dynamic>?;
-                  if (rawSpots != null) {
-                    spotsList = rawSpots
-                        .whereType<Map<String, dynamic>>()
-                        .map((s) => LupitaSpot.fromJson(s, speciesId))
-                        .toList();
-                  }
-                }
-              } catch (_) {}
-            }
-
             speciesList.add(
               LupitaSpecies(
                 id: speciesId,
@@ -500,8 +543,8 @@ class LupitaService {
                 specs: const [],
                 status: item['status'] as String? ?? 'ok',
                 message: item['message'] as String? ?? '',
-                spotCount: (item['area_count'] as num?)?.toInt() ?? spotsList.length,
-                spots: spotsList,
+                spotCount: 0,
+                spots: const [],
               ),
             );
           }
@@ -512,12 +555,14 @@ class LupitaService {
           generatedUtc: v1Decoded['generated_utc'] as String? ?? '',
           disclaimer: v1Decoded['disclaimer'] as String? ?? '',
           species: speciesList,
-          allSpots: speciesList.expand((s) => s.spots).toList(),
+          allSpots: const [],
+          isPartial: true,
         );
       }
     } catch (_) {}
 
-    throw Exception('Failed to load Lupita fish data from catalog, fish predictions, or fallback API index.');
+    throw Exception(
+        'Failed to load Lupita fish data from catalog or fish predictions.');
   }
 }
 
