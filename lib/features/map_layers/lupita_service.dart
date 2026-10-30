@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
@@ -591,12 +592,23 @@ class LupitaService {
     }
 
     try {
-      final v1Headers = {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-      };
+      final Map<String, String>? v1Headers = kIsWeb
+          ? null
+          : {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+            };
+      final Uri v1Uri = kIsWeb
+          ? Uri.parse(apiV1IndexUrl).replace(
+              queryParameters: {
+                ...Uri.parse(apiV1IndexUrl).queryParameters,
+                '_t': DateTime.now().millisecondsSinceEpoch.toString(),
+              },
+            )
+          : Uri.parse(apiV1IndexUrl);
+
       final v1Response = await http
-          .get(Uri.parse(apiV1IndexUrl), headers: v1Headers)
+          .get(v1Uri, headers: v1Headers)
           .timeout(const Duration(seconds: 15));
       if (v1Response.statusCode == 200) {
         final v1Decoded = json.decode(v1Response.body) as Map<String, dynamic>;

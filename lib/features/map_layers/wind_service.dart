@@ -72,10 +72,10 @@ class WindService {
 
     if (kIsWeb) {
       // On Flutter Web, browser CORS blocks direct requests to NOAA NDBC.
-      // Use a fast, resilient proxy chain to prevent CORS errors or 408 timeouts.
+      // Use CodeTabs and AllOrigins first to avoid corsproxy.io HTTP 403 Forbidden errors.
       final directProxies = [
-        'https://corsproxy.io/?$encodedTarget',
         'https://api.codetabs.com/v1/proxy?quest=$encodedTarget',
+        'https://corsproxy.io/?$encodedTarget',
       ];
 
       for (final proxy in directProxies) {
@@ -122,7 +122,7 @@ class WindService {
       } catch (_) {
         // Fallback to CORS proxy if direct fetch fails on native
         try {
-          final proxyUrl = 'https://corsproxy.io/?$encodedTarget';
+          final proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=$encodedTarget';
           final res = await _client.get(Uri.parse(proxyUrl)).timeout(const Duration(seconds: 6));
           if (res.statusCode == 200) {
             responseBody = res.body;
