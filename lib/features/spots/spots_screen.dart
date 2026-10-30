@@ -157,11 +157,29 @@ class _LupitaSpeciesSelectorSheetState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Select Fish Species',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Select Fish Species',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
                     ),
+                    widget.lupitaDataAsync.maybeWhen(
+                      data: (lData) => Text(
+                        'Catalog: ${lData.species.length} species • Active predictions: ${lData.speciesWithPredictionsCount}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF38BDF8),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      orElse: () => const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.close),
