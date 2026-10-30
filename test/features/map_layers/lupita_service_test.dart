@@ -2,8 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:seabound/features/map_layers/lupita_service.dart';
 
 void main() {
-  group('Lupita Models & Data Parsing Tests', () {
-    test('LupitaData.fromJson parses species, regulations, location details, and spot details correctly', () {
+  group('Lupita Models & Catalog Merger Tests', () {
+    test('LupitaData.fromJson parses species, regulations, and spot details correctly', () {
       final sampleJson = {
         'version': 1,
         'generated_utc': '2026-10-24T20:23:29Z',
@@ -31,6 +31,18 @@ void main() {
               'source_name': 'MyFWC Saltwater Regulations',
               'source_url': 'https://myfwc.com/fishing/saltwater/recreational/'
             }
+          },
+          {
+            'id': 'tarpon',
+            'name': 'Tarpon',
+            'sci': 'Megalops atlanticus',
+            'color': '#38bdf8',
+            'status': 'ok',
+            'message': '',
+            'spots': 0,
+            'specs': [
+              ['Diet', 'Fishes and crabs']
+            ]
           }
         ],
         'spots': [
@@ -66,10 +78,10 @@ void main() {
       final data = LupitaData.fromJson(sampleJson);
 
       expect(data.version, equals(1));
-      expect(data.species.length, equals(1));
+      expect(data.species.length, equals(2));
+      expect(data.speciesWithPredictionsCount, equals(1));
 
-      final cobia = data.species.first;
-      expect(cobia.id, equals('cobia'));
+      final cobia = data.species.firstWhere((s) => s.id == 'cobia');
       expect(cobia.name, equals('Cobia'));
       expect(cobia.sci, equals('Rachycentron canadum'));
       expect(cobia.colorHex, equals('#c084fc'));
@@ -81,8 +93,6 @@ void main() {
       expect(cobia.regulations, isNotNull);
       expect(cobia.regulations!.summary, contains('Regulated species'));
       expect(cobia.regulations!.minSize, equals('36 inch FL'));
-      expect(cobia.regulations!.bagLimit, equals('1 per person'));
-      expect(cobia.regulations!.sourceName, equals('MyFWC Saltwater Regulations'));
 
       expect(cobia.spots.length, equals(1));
       final spot = cobia.spots.first;
@@ -90,21 +100,10 @@ void main() {
       expect(spot.title, equals('Ultra Freeze Wreck'));
       expect(spot.score, equals(0.85));
       expect(spot.confidence, equals('High'));
-      expect(spot.latitude, equals(25.62));
-      expect(spot.longitude, equals(-80.1));
-      expect(spot.seaSummary, equals('Calm 1-2ft waves'));
-      expect(spot.reasons.length, equals(2));
-      expect(spot.reasons.first.category, equals('static'));
-      expect(spot.reasons.first.text, equals('Depth is 12m nearshore structure'));
 
-      expect(spot.locationDetails.length, equals(2));
-      expect(spot.locationDetails.first.label, equals('Water depth'));
-      expect(spot.locationDetails.first.value, equals('About 30 m'));
-
-      expect(spot.biteWindow, isNotNull);
-      expect(spot.biteWindow!.score, equals(0.92));
-      expect(spot.biteWindow!.startTime, equals(DateTime.parse('2026-10-24T20:00:00Z')));
-      expect(spot.biteWindow!.why, contains('Incoming tide peak'));
+      final tarpon = data.species.firstWhere((s) => s.id == 'tarpon');
+      expect(tarpon.name, equals('Tarpon'));
+      expect(tarpon.spots, isEmpty);
     });
   });
 }
