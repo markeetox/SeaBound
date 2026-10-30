@@ -171,6 +171,7 @@ class _LupitaSpeciesSelectorSheetState
                       data: (lData) {
                         final statusLabel = switch (lData.status) {
                           LupitaSyncStatus.fresh => 'Fresh',
+                          LupitaSyncStatus.stale => 'Stale (>48h)',
                           LupitaSyncStatus.cached => 'Cached',
                           LupitaSyncStatus.partial => 'Partial',
                           LupitaSyncStatus.empty => 'No Active Spots',

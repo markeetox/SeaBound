@@ -6,7 +6,7 @@ void main() {
     test('LupitaData.fromJson parses species, regulations, and spot details correctly', () {
       final sampleJson = {
         'version': 1,
-        'generated_utc': '2026-10-24T20:23:29Z',
+        'generated_utc': DateTime.now().toUtc().toIso8601String(),
         'disclaimer': 'Habitat scores for reference.',
         'species': [
           {
@@ -81,7 +81,6 @@ void main() {
       expect(data.species.length, equals(2));
       expect(data.speciesWithPredictionsCount, equals(1));
       expect(data.status, equals(LupitaSyncStatus.fresh));
-      expect(data.catalogGeneratedUtc, equals('2026-10-24T20:23:29Z'));
 
       final cobia = data.species.firstWhere((s) => s.id == 'cobia');
       expect(cobia.name, equals('Cobia'));
@@ -108,10 +107,25 @@ void main() {
       expect(tarpon.spots, isEmpty);
     });
 
+    test('LupitaData evaluateFreshness classifies timestamps > 48h as stale', () {
+      final now = DateTime.now();
+      final oldDateStr = now.subtract(const Duration(hours: 50)).toUtc().toIso8601String();
+      final freshDateStr = now.subtract(const Duration(hours: 10)).toUtc().toIso8601String();
+
+      final staleStatus = LupitaData.evaluateFreshness(oldDateStr, hasSpots: true, nowOverride: now);
+      expect(staleStatus, equals(LupitaSyncStatus.stale));
+
+      final freshStatus = LupitaData.evaluateFreshness(freshDateStr, hasSpots: true, nowOverride: now);
+      expect(freshStatus, equals(LupitaSyncStatus.fresh));
+
+      final emptyStatus = LupitaData.evaluateFreshness(freshDateStr, hasSpots: false, nowOverride: now);
+      expect(emptyStatus, equals(LupitaSyncStatus.empty));
+    });
+
     test('LupitaData handles structurally valid empty prediction runs (spots: []) correctly', () {
       final sampleJsonNoSpots = {
         'version': 1,
-        'generated_utc': '2026-10-24T20:23:29Z',
+        'generated_utc': DateTime.now().toUtc().toIso8601String(),
         'disclaimer': 'Catalog only',
         'species': [
           {

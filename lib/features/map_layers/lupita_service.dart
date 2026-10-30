@@ -298,7 +298,7 @@ class LupitaSpecies {
   }
 }
 
-enum LupitaSyncStatus { fresh, cached, partial, empty, error }
+enum LupitaSyncStatus { fresh, stale, cached, partial, empty, error }
 
 class LupitaData {
   final int version;
@@ -321,14 +321,40 @@ class LupitaData {
     this.status = LupitaSyncStatus.fresh,
   });
 
-  bool get isPartial => status == LupitaSyncStatus.partial || status == LupitaSyncStatus.cached;
+  bool get isPartial => status == LupitaSyncStatus.partial || status == LupitaSyncStatus.cached || status == LupitaSyncStatus.stale;
 
   int get speciesWithPredictionsCount =>
       species.where((s) => s.spots.isNotEmpty).length;
 
   String get generatedUtc => predictionsGeneratedUtc.isNotEmpty ? predictionsGeneratedUtc : catalogGeneratedUtc;
 
-  factory LupitaData.fromJson(Map<String, dynamic> json, {DateTime? refreshedAt, LupitaSyncStatus? status}) {
+  static LupitaSyncStatus evaluateFreshness(String predictionsUtcStr, {required bool hasSpots, DateTime? nowOverride}) {
+    if (predictionsUtcStr.isEmpty) {
+      return hasSpots ? LupitaSyncStatus.stale : LupitaSyncStatus.empty;
+    }
+    final parsed = DateTime.tryParse(predictionsUtcStr);
+    if (parsed == null) {
+      return hasSpots ? LupitaSyncStatus.stale : LupitaSyncStatus.empty;
+    }
+    final now = nowOverride ?? DateTime.now();
+    final difference = now.difference(parsed.toUtc());
+
+    if (difference.isNegative && difference.abs().inMinutes > 120) {
+      return hasSpots ? LupitaSyncStatus.stale : LupitaSyncStatus.empty;
+    }
+
+    if (difference.inHours > 48) {
+      return hasSpots ? LupitaSyncStatus.stale : LupitaSyncStatus.empty;
+    }
+
+    return hasSpots ? LupitaSyncStatus.fresh : LupitaSyncStatus.empty;
+  }
+
+  factory LupitaData.fromJson(
+    Map<String, dynamic> json, {
+    DateTime? refreshedAt,
+    LupitaSyncStatus? status,
+  }) {
     final rawTopSpots = json['spots'] as List<dynamic>?;
     final topSpotsList = rawTopSpots != null
         ? rawTopSpots
@@ -350,6 +376,7 @@ class LupitaData {
         : speciesList.expand((s) => s.spots).toList();
 
     final genUtc = json['generated_utc'] as String? ?? '';
+    final evaluatedStatus = status ?? evaluateFreshness(genUtc, hasSpots: finalAllSpots.isNotEmpty);
 
     return LupitaData(
       version: json['version'] as int? ?? 1,
@@ -359,21 +386,21 @@ class LupitaData {
       disclaimer: json['disclaimer'] as String? ?? '',
       species: speciesList,
       allSpots: finalAllSpots,
-      status: status ?? (finalAllSpots.isEmpty ? LupitaSyncStatus.empty : LupitaSyncStatus.fresh),
+      status: evaluatedStatus,
     );
   }
 }
 
 class LupitaService {
-  static const String jsDelivrCatalogUrl =
-      'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/species_catalog.json';
   static const String rawGithubCatalogUrl =
       'https://raw.githubusercontent.com/markeetox/lupita/data/species_catalog.json';
+  static const String jsDelivrCatalogUrl =
+      'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/species_catalog.json';
 
-  static const String jsDelivrFishUrl =
-      'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/fish.json';
   static const String rawGithubFishUrl =
       'https://raw.githubusercontent.com/markeetox/lupita/data/fish.json';
+  static const String jsDelivrFishUrl =
+      'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/fish.json';
 
   static const String apiV1IndexUrl =
       'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/index.json';
@@ -386,9 +413,16 @@ class LupitaService {
     List<String> urls, {
     Duration timeout = const Duration(seconds: 15),
   }) async {
+    final headers = {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+    };
+
     for (final url in urls) {
       try {
-        final response = await http.get(Uri.parse(url)).timeout(timeout);
+        final response = await http
+            .get(Uri.parse(url), headers: headers)
+            .timeout(timeout);
         if (response.statusCode == 200) {
           final decoded = json.decode(response.body);
           if (decoded is Map<String, dynamic>) {
@@ -412,15 +446,15 @@ class LupitaService {
   Future<LupitaData> fetchLupitaData() async {
     final now = DateTime.now();
     final catalogUrls = [
-      jsDelivrCatalogUrl,
       rawGithubCatalogUrl,
+      jsDelivrCatalogUrl,
       'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubCatalogUrl)}',
       'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubCatalogUrl)}',
     ];
 
     final fishUrls = [
-      jsDelivrFishUrl,
       rawGithubFishUrl,
+      jsDelivrFishUrl,
       'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubFishUrl)}',
       'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubFishUrl)}',
     ];
@@ -523,7 +557,7 @@ class LupitaService {
 
       final syncStatus = !hasValidPredictionStructure
           ? LupitaSyncStatus.partial
-          : (allSpots.isEmpty ? LupitaSyncStatus.empty : LupitaSyncStatus.fresh);
+          : LupitaData.evaluateFreshness(predictionsUtc, hasSpots: allSpots.isNotEmpty);
 
       final resultData = LupitaData(
         version: version,
@@ -557,8 +591,12 @@ class LupitaService {
     }
 
     try {
+      final v1Headers = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+      };
       final v1Response = await http
-          .get(Uri.parse(apiV1IndexUrl))
+          .get(Uri.parse(apiV1IndexUrl), headers: v1Headers)
           .timeout(const Duration(seconds: 15));
       if (v1Response.statusCode == 200) {
         final v1Decoded = json.decode(v1Response.body) as Map<String, dynamic>;
