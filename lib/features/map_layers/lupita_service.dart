@@ -393,15 +393,15 @@ class LupitaData {
 }
 
 class LupitaService {
-  static const String rawGithubCatalogUrl =
-      'https://raw.githubusercontent.com/markeetox/lupita/data/species_catalog.json';
   static const String jsDelivrCatalogUrl =
       'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/species_catalog.json';
+  static const String rawGithubCatalogUrl =
+      'https://raw.githubusercontent.com/markeetox/lupita/data/species_catalog.json';
 
-  static const String rawGithubFishUrl =
-      'https://raw.githubusercontent.com/markeetox/lupita/data/fish.json';
   static const String jsDelivrFishUrl =
       'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/fish.json';
+  static const String rawGithubFishUrl =
+      'https://raw.githubusercontent.com/markeetox/lupita/data/fish.json';
 
   static const String apiV1IndexUrl =
       'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/index.json';
@@ -414,16 +414,32 @@ class LupitaService {
     List<String> urls, {
     Duration timeout = const Duration(seconds: 15),
   }) async {
-    final headers = {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-    };
-
-    for (final url in urls) {
+    // Absolutely DO NOT send custom non-CORS-safelisted request headers
+    // ('Cache-Control' / 'Pragma') on Web (kIsWeb) or Mobile.
+    // Sending custom headers triggers browser OPTIONS preflight requests,
+    // which fail because GitHub Raw and jsDelivr CORS headers do not list them.
+    for (final baseUrl in urls) {
       try {
+        final Uri requestUri = kIsWeb
+            ? Uri.parse(baseUrl).replace(
+                queryParameters: {
+                  ...Uri.parse(baseUrl).queryParameters,
+                  '_cb': DateTime.now().millisecondsSinceEpoch.toString(),
+                },
+              )
+            : Uri.parse(baseUrl);
+
+        final Map<String, String>? headers = kIsWeb
+            ? null
+            : {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+              };
+
         final response = await http
-            .get(Uri.parse(url), headers: headers)
+            .get(requestUri, headers: headers)
             .timeout(timeout);
+
         if (response.statusCode == 200) {
           final decoded = json.decode(response.body);
           if (decoded is Map<String, dynamic>) {
@@ -446,19 +462,36 @@ class LupitaService {
 
   Future<LupitaData> fetchLupitaData() async {
     final now = DateTime.now();
-    final catalogUrls = [
-      rawGithubCatalogUrl,
-      jsDelivrCatalogUrl,
-      'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubCatalogUrl)}',
-      'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubCatalogUrl)}',
-    ];
 
-    final fishUrls = [
-      rawGithubFishUrl,
-      jsDelivrFishUrl,
-      'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubFishUrl)}',
-      'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubFishUrl)}',
-    ];
+    // On Web (kIsWeb), prioritize jsDelivr CDN endpoints first because jsDelivr
+    // provides full Access-Control-Allow-Origin: * headers for browser requests.
+    final catalogUrls = kIsWeb
+        ? [
+            jsDelivrCatalogUrl,
+            rawGithubCatalogUrl,
+            'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubCatalogUrl)}',
+            'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubCatalogUrl)}',
+          ]
+        : [
+            rawGithubCatalogUrl,
+            jsDelivrCatalogUrl,
+            'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubCatalogUrl)}',
+            'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubCatalogUrl)}',
+          ];
+
+    final fishUrls = kIsWeb
+        ? [
+            jsDelivrFishUrl,
+            rawGithubFishUrl,
+            'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubFishUrl)}',
+            'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubFishUrl)}',
+          ]
+        : [
+            rawGithubFishUrl,
+            jsDelivrFishUrl,
+            'https://api.allorigins.win/raw?url=${Uri.encodeComponent(rawGithubFishUrl)}',
+            'https://api.codetabs.com/v1/proxy?quest=${Uri.encodeComponent(rawGithubFishUrl)}',
+          ];
 
     final catalogJson = await _fetchJsonFromUrls(catalogUrls);
     final fishJson = await _fetchJsonFromUrls(fishUrls);
@@ -592,24 +625,25 @@ class LupitaService {
     }
 
     try {
+      final Uri v1Uri = kIsWeb
+          ? Uri.parse(apiV1IndexUrl).replace(
+              queryParameters: {
+                '_cb': DateTime.now().millisecondsSinceEpoch.toString(),
+              },
+            )
+          : Uri.parse(apiV1IndexUrl);
+
       final Map<String, String>? v1Headers = kIsWeb
           ? null
           : {
               'Cache-Control': 'no-cache, no-store, must-revalidate',
               'Pragma': 'no-cache',
             };
-      final Uri v1Uri = kIsWeb
-          ? Uri.parse(apiV1IndexUrl).replace(
-              queryParameters: {
-                ...Uri.parse(apiV1IndexUrl).queryParameters,
-                '_t': DateTime.now().millisecondsSinceEpoch.toString(),
-              },
-            )
-          : Uri.parse(apiV1IndexUrl);
 
       final v1Response = await http
           .get(v1Uri, headers: v1Headers)
           .timeout(const Duration(seconds: 15));
+
       if (v1Response.statusCode == 200) {
         final v1Decoded = json.decode(v1Response.body) as Map<String, dynamic>;
         final rawSpecies = v1Decoded['species'] as List<dynamic>?;
