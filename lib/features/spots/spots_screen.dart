@@ -337,6 +337,147 @@ class _LupitaSpeciesSelectorSheetState
   }
 }
 
+class _LupitaClusterSheet extends ConsumerWidget {
+  final List<LupitaSpot> spots;
+  final ValueChanged<LupitaSpot> onSelectSpot;
+
+  const _LupitaClusterSheet({
+    required this.spots,
+    required this.onSelectSpot,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lupitaDataAsync = ref.watch(lupitaDataProvider);
+    final speciesMap = <String, LupitaSpecies>{};
+    lupitaDataAsync.whenData((lData) {
+      for (final s in lData.species) {
+        speciesMap[s.id] = s;
+      }
+    });
+
+    final firstSpot = spots.first;
+    final latStr = firstSpot.latitude.toStringAsFixed(4);
+    final lngStr = firstSpot.longitude.toStringAsFixed(4);
+    final coordStr = '$latStr, $lngStr';
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.65,
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${spots.length} Overlapping Fish Spots',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Location: $coordStr',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: ListView.separated(
+              itemCount: spots.length,
+              separatorBuilder: (_, __) => const Divider(color: Color(0xFF1E293B)),
+              itemBuilder: (context, index) {
+                final spot = spots[index];
+                final species = speciesMap[spot.speciesId];
+                final name = species?.name ?? spot.speciesId.replaceAll('-', ' ').toUpperCase();
+                final sci = species?.sci ?? '';
+                final scorePct = (spot.score * 100).round();
+                final imageUrl =
+                    'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/img/${spot.speciesId}.png';
+
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                  leading: Image.network(
+                    imageUrl,
+                    width: 44,
+                    height: 36,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.set_meal,
+                      color: Color(0xFF00E5FF),
+                      size: 32,
+                    ),
+                  ),
+                  title: Text(
+                    name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '${sci.isNotEmpty ? "$sci • " : ""}${spot.confidence} confidence',
+                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: spot.score >= 0.75
+                          ? const Color(0xFF34D399).withValues(alpha: 0.2)
+                          : (spot.score >= 0.5
+                              ? const Color(0xFFFBBF24).withValues(alpha: 0.2)
+                              : Colors.orange.withValues(alpha: 0.2)),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: spot.score >= 0.75
+                            ? const Color(0xFF34D399)
+                            : (spot.score >= 0.5 ? const Color(0xFFFBBF24) : Colors.orange),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      '$scorePct% MATCH',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        color: spot.score >= 0.75
+                            ? const Color(0xFF34D399)
+                            : (spot.score >= 0.5 ? const Color(0xFFFBBF24) : Colors.orange),
+                      ),
+                    ),
+                  ),
+                  onTap: () => onSelectSpot(spot),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _LupitaDetailSheet extends ConsumerWidget {
   final LupitaSpot spot;
 
@@ -1164,6 +1305,26 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     );
   }
 
+  void _showLupitaClusterSheet(List<LupitaSpot> spots) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: OceanThemeExtension.defaultTokens.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return _LupitaClusterSheet(
+          spots: spots,
+          onSelectSpot: (selectedSpot) {
+            Navigator.of(sheetContext).pop();
+            _showLupitaSpotDetailSheet(selectedSpot);
+          },
+        );
+      },
+    );
+  }
+
   void _showLupitaSpeciesSelectorSheet() {
     final lupitaDataAsync = ref.read(lupitaDataProvider);
     final selectedId = ref.read(selectedLupitaSpeciesIdProvider);
@@ -1938,57 +2099,126 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 ],
               ),
 
-            // Lupita Fish Habitat Spot Markers Layer
+            // Lupita Fish Habitat Spot Markers Layer (Clustered for Overlapping Locations)
             if (showLupita && lupitaSpots.isNotEmpty)
               MarkerLayer(
-                markers: lupitaSpots.map((lSpot) {
-                  final scorePct = (lSpot.score * 100).round();
-                  return Marker(
-                    point: LatLng(lSpot.latitude, lSpot.longitude),
-                    width: 48.0,
-                    height: 48.0,
-                    child: GestureDetector(
-                      onTap: () => _showLupitaSpotDetailSheet(lSpot),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0F1B2D),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: lSpot.score >= 0.75
-                                ? const Color(0xFF34D399)
-                                : (lSpot.score >= 0.5 ? const Color(0xFFFBBF24) : Colors.orange),
-                            width: 2.5,
-                          ),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black45,
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.set_meal,
-                              size: 16,
-                              color: Color(0xFF00E5FF),
-                            ),
-                            Text(
-                              '$scorePct%',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
+                markers: () {
+                  final Map<String, List<LupitaSpot>> clusters = {};
+                  for (final lSpot in lupitaSpots) {
+                    final latKey = (lSpot.latitude * 1000).round() / 1000;
+                    final lngKey = (lSpot.longitude * 1000).round() / 1000;
+                    final key = '$latKey,$lngKey';
+                    clusters.putIfAbsent(key, () => []).add(lSpot);
+                  }
+
+                  final List<Marker> markersList = [];
+                  for (final clusterSpots in clusters.values) {
+                    if (clusterSpots.length == 1) {
+                      final lSpot = clusterSpots.first;
+                      final scorePct = (lSpot.score * 100).round();
+                      markersList.add(
+                        Marker(
+                          point: LatLng(lSpot.latitude, lSpot.longitude),
+                          width: 48.0,
+                          height: 48.0,
+                          child: GestureDetector(
+                            onTap: () => _showLupitaSpotDetailSheet(lSpot),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F1B2D),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: lSpot.score >= 0.75
+                                      ? const Color(0xFF34D399)
+                                      : (lSpot.score >= 0.5 ? const Color(0xFFFBBF24) : Colors.orange),
+                                  width: 2.5,
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black45,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.set_meal,
+                                    size: 16,
+                                    color: Color(0xFF00E5FF),
+                                  ),
+                                  Text(
+                                    '$scorePct%',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+                      );
+                    } else {
+                      final avgLat = clusterSpots.map((s) => s.latitude).reduce((a, b) => a + b) / clusterSpots.length;
+                      final avgLng = clusterSpots.map((s) => s.longitude).reduce((a, b) => a + b) / clusterSpots.length;
+                      final maxScore = clusterSpots.map((s) => s.score).reduce((a, b) => a > b ? a : b);
+
+                      markersList.add(
+                        Marker(
+                          point: LatLng(avgLat, avgLng),
+                          width: 52.0,
+                          height: 52.0,
+                          child: GestureDetector(
+                            onTap: () => _showLupitaClusterSheet(clusterSpots),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F1B2D),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: maxScore >= 0.75
+                                      ? const Color(0xFF34D399)
+                                      : (maxScore >= 0.5 ? const Color(0xFFFBBF24) : Colors.orange),
+                                  width: 3.0,
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black54,
+                                    blurRadius: 6,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.layers_rounded,
+                                    size: 16,
+                                    color: Color(0xFF00E5FF),
+                                  ),
+                                  Text(
+                                    '${clusterSpots.length}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                  return markersList;
+                }(),
               ),
 
             // Community Spot Markers Layer
