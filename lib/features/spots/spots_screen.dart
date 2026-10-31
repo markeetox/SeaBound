@@ -1636,7 +1636,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
           mapController: _mapController,
           options: MapOptions(
             initialCenter: initialCenter,
-            initialZoom: widget.spots.isNotEmpty ? 10.0 : 9.0,
+            initialZoom: 12.0,
             minZoom: 3.0,
             maxZoom: 20.0,
             onMapReady: () {
@@ -1770,14 +1770,16 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 tileProvider: NetworkTileProvider(),
                 tileDisplay: const TileDisplay.instantaneous(opacity: 0.85),
                 tileBuilder: (context, tileWidget, tile) {
-                  // Invert-luminance alpha filter: eliminates white/light depth area fills
-                  // (Alpha -> 0) while keeping dark/black sounding numbers sharp and opaque.
+                  // Inverted luminance-to-alpha filter without constant alpha offset (a5 = 0):
+                  // 1. Transparent land pixels (A = 0) remain 100% transparent (A' = 0), eliminating the black land overlay.
+                  // 2. White/pale ocean depth area fills (R=G=B=255, A=255) become 100% transparent (A' = 0).
+                  // 3. Black/dark depth sounding numbers (R=G=B~0, A=255) remain 100% opaque and sharp (A' = 255).
                   return ColorFiltered(
                     colorFilter: const ColorFilter.matrix(<double>[
                       1, 0, 0, 0, 0,
                       0, 1, 0, 0, 0,
                       0, 0, 1, 0, 0,
-                      -0.5, -0.5, -0.5, 1, 230,
+                      -0.45, -0.45, -0.45, 1.15, 0,
                     ]),
                     child: tileWidget,
                   );
