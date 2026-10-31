@@ -1209,6 +1209,13 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     .map((p) => {'lat': p.latitude, 'lng': p.longitude})
                     .toList();
 
+                final startCoord = points.isNotEmpty
+                    ? {'lat': points.first.latitude, 'lng': points.first.longitude}
+                    : {'lat': startPoint.latitude, 'lng': startPoint.longitude};
+                final endCoord = points.isNotEmpty
+                    ? {'lat': points.last.latitude, 'lng': points.last.longitude}
+                    : startCoord;
+
                 final trip = Trip(
                   id: '',
                   userId: authUser?.uid ?? '',
@@ -1220,6 +1227,8 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                   species: speciesList,
                   notes: descController.text.trim(),
                   trailPoints: trailMaps,
+                  startCoordinates: startCoord,
+                  endCoordinates: endCoord,
                 );
 
                 final repo = ref.read(tripsRepositoryProvider);
@@ -1747,7 +1756,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 ],
               ),
 
-            // Depth Numbers (NOAA Soundings) WMS Layer
+            // Depth Numbers (NOAA Soundings) WMS Layer with White Ocean Overlay Removed
             if (showSoundings)
               TileLayer(
                 wmsOptions: WMSTileLayerOptions(
@@ -1760,6 +1769,19 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 maxZoom: 20,
                 tileProvider: NetworkTileProvider(),
                 tileDisplay: const TileDisplay.instantaneous(opacity: 0.85),
+                tileBuilder: (context, tileWidget, tile) {
+                  // Invert-luminance alpha filter: eliminates white/light depth area fills
+                  // (Alpha -> 0) while keeping dark/black sounding numbers sharp and opaque.
+                  return ColorFiltered(
+                    colorFilter: const ColorFilter.matrix(<double>[
+                      1, 0, 0, 0, 0,
+                      0, 1, 0, 0, 0,
+                      0, 0, 1, 0, 0,
+                      -0.5, -0.5, -0.5, 1, 230,
+                    ]),
+                    child: tileWidget,
+                  );
+                },
                 errorTileCallback: (_, _, _) {},
               ),
 

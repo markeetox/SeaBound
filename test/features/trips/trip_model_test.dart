@@ -4,7 +4,7 @@ import 'package:seabound/features/trips/trip_model.dart';
 
 void main() {
   group('Trip Model Tests', () {
-    test('Trip.fromMap parses map correctly with Timestamps', () {
+    test('Trip.fromMap parses map correctly with Timestamps and start/end coordinates', () {
       final now = DateTime(2025, 5, 10, 14, 30);
       final map = {
         'userId': 'user123',
@@ -13,6 +13,8 @@ void main() {
         'locationName': 'Pacific Ocean',
         'species': ['Tuna', 'Marlin'],
         'notes': 'Great weather and catch.',
+        'startCoordinates': {'lat': 25.7617, 'lng': -80.1918},
+        'endCoordinates': {'lat': 25.8000, 'lng': -80.1200},
         'createdAt': Timestamp.fromDate(now),
       };
 
@@ -25,9 +27,15 @@ void main() {
       expect(trip.locationName, 'Pacific Ocean');
       expect(trip.species, ['Tuna', 'Marlin']);
       expect(trip.notes, 'Great weather and catch.');
+      expect(trip.startLatLng, isNotNull);
+      expect(trip.startLatLng!.latitude, 25.7617);
+      expect(trip.startLatLng!.longitude, -80.1918);
+      expect(trip.endLatLng, isNotNull);
+      expect(trip.endLatLng!.latitude, 25.8000);
+      expect(trip.endLatLng!.longitude, -80.1200);
     });
 
-    test('Trip.toMap produces correct map representation', () {
+    test('Trip.toMap produces correct map representation with start/end coordinates', () {
       final date = DateTime(2025, 6, 1);
       final trip = Trip(
         id: 'doc_123',
@@ -37,6 +45,8 @@ void main() {
         locationName: 'Lake Tahoe',
         species: ['Trout', 'Bass'],
         notes: 'Calm waters.',
+        startCoordinates: const {'lat': 39.0968, 'lng': -120.0324},
+        endCoordinates: const {'lat': 39.1200, 'lng': -120.0100},
       );
 
       final map = trip.toMap();
@@ -48,6 +58,8 @@ void main() {
       expect(map['notes'], 'Calm waters.');
       expect(map['date'], isA<Timestamp>());
       expect((map['date'] as Timestamp).toDate(), date);
+      expect(map['startCoordinates'], equals({'lat': 39.0968, 'lng': -120.0324}));
+      expect(map['endCoordinates'], equals({'lat': 39.1200, 'lng': -120.0100}));
     });
 
     test('Trip.copyWith modifies fields correctly', () {
@@ -64,12 +76,14 @@ void main() {
       final updated = trip.copyWith(
         title: 'New Title',
         species: ['Fish A', 'Fish B'],
+        startCoordinates: {'lat': 10.0, 'lng': 20.0},
       );
 
       expect(updated.id, '1');
       expect(updated.title, 'New Title');
       expect(updated.species, ['Fish A', 'Fish B']);
       expect(updated.locationName, 'Loc 1');
+      expect(updated.startLatLng?.latitude, 10.0);
     });
 
     test('Trip equality and hashCode', () {
