@@ -665,6 +665,70 @@ class _LupitaDetailSheet extends ConsumerWidget {
               const SizedBox(height: 16),
             ],
 
+            // Fishing Regulations Section (Right under Best Bite)
+            if (regs != null) ...[
+              Text(
+                'Fishing Regulations:',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                color: const Color(0xFF0F172A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: const BorderSide(color: Color(0xFF1E293B)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (regs.summary.isNotEmpty) ...[
+                        Text(
+                          regs.summary,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFFBBF24),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      if (regs.minSize.isNotEmpty) ...[
+                        _RegRow(label: 'Min Size', value: regs.minSize),
+                      ],
+                      if (regs.maxSize.isNotEmpty) ...[
+                        _RegRow(label: 'Max Size', value: regs.maxSize),
+                      ],
+                      if (regs.bagLimit.isNotEmpty) ...[
+                        _RegRow(label: 'Bag Limit', value: regs.bagLimit),
+                      ],
+                      if (regs.season.isNotEmpty) ...[
+                        _RegRow(label: 'Season', value: regs.season),
+                      ],
+                      if (regs.jurisdiction.isNotEmpty) ...[
+                        _RegRow(label: 'Jurisdiction', value: regs.jurisdiction),
+                      ],
+                      if (regs.sourceName.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          'Source: ${regs.sourceName}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.white54,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -801,70 +865,6 @@ class _LupitaDetailSheet extends ConsumerWidget {
                         ),
                       );
                     }).toList(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            // Fishing Regulations Section
-            if (regs != null) ...[
-              Text(
-                'Fishing Regulations:',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Card(
-                color: const Color(0xFF0F172A),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  side: const BorderSide(color: Color(0xFF1E293B)),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (regs.summary.isNotEmpty) ...[
-                        Text(
-                          regs.summary,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFFFBBF24),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                      if (regs.minSize.isNotEmpty) ...[
-                        _RegRow(label: 'Min Size', value: regs.minSize),
-                      ],
-                      if (regs.maxSize.isNotEmpty) ...[
-                        _RegRow(label: 'Max Size', value: regs.maxSize),
-                      ],
-                      if (regs.bagLimit.isNotEmpty) ...[
-                        _RegRow(label: 'Bag Limit', value: regs.bagLimit),
-                      ],
-                      if (regs.season.isNotEmpty) ...[
-                        _RegRow(label: 'Season', value: regs.season),
-                      ],
-                      if (regs.jurisdiction.isNotEmpty) ...[
-                        _RegRow(label: 'Jurisdiction', value: regs.jurisdiction),
-                      ],
-                      if (regs.sourceName.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          'Source: ${regs.sourceName}',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.white54,
-                          ),
-                        ),
-                      ],
-                    ],
                   ),
                 ),
               ),
