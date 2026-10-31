@@ -302,6 +302,79 @@ class TripDetailScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                    if (trip.startLatLng != null || trip.endLatLng != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F1B2D),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFF1E293B)),
+                        ),
+                        child: Row(
+                          children: [
+                            if (trip.startLatLng != null)
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.play_circle_fill, size: 16, color: Color(0xFF34D399)),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'START POINT',
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w900,
+                                              color: Color(0xFF34D399),
+                                            ),
+                                          ),
+                                          Text(
+                                            '${trip.startLatLng!.latitude.toStringAsFixed(4)}, ${trip.startLatLng!.longitude.toStringAsFixed(4)}',
+                                            style: const TextStyle(fontSize: 11, color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            if (trip.startLatLng != null && trip.endLatLng != null)
+                              Container(width: 1, height: 28, color: const Color(0xFF1E293B), margin: const EdgeInsets.symmetric(horizontal: 8)),
+                            if (trip.endLatLng != null)
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.stop_circle, size: 16, color: Color(0xFFF43F5E)),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'END POINT',
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w900,
+                                              color: Color(0xFFF43F5E),
+                                            ),
+                                          ),
+                                          Text(
+                                            '${trip.endLatLng!.latitude.toStringAsFixed(4)}, ${trip.endLatLng!.longitude.toStringAsFixed(4)}',
+                                            style: const TextStyle(fontSize: 11, color: Colors.white),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
@@ -309,7 +382,7 @@ class TripDetailScreen extends ConsumerWidget {
                         height: 220,
                         child: FlutterMap(
                           options: MapOptions(
-                            initialCenter: trip.locationCoordinates,
+                            initialCenter: trip.startLatLng ?? trip.locationCoordinates,
                             initialZoom: 12.0,
                             minZoom: 3.0,
                             maxZoom: 20.0,
@@ -331,16 +404,39 @@ class TripDetailScreen extends ConsumerWidget {
                               ),
                             MarkerLayer(
                               markers: [
-                                Marker(
-                                  point: trip.locationCoordinates,
-                                  width: 40,
-                                  height: 40,
-                                  child: Icon(
-                                    Icons.location_on,
-                                    size: 40,
-                                    color: pointerColor,
+                                if (trip.startLatLng != null)
+                                  Marker(
+                                    point: trip.startLatLng!,
+                                    width: 32,
+                                    height: 32,
+                                    child: const Icon(
+                                      Icons.play_circle_fill,
+                                      size: 32,
+                                      color: Color(0xFF34D399),
+                                    ),
                                   ),
-                                ),
+                                if (trip.endLatLng != null && trip.endLatLng != trip.startLatLng)
+                                  Marker(
+                                    point: trip.endLatLng!,
+                                    width: 32,
+                                    height: 32,
+                                    child: const Icon(
+                                      Icons.stop_circle,
+                                      size: 32,
+                                      color: Color(0xFFF43F5E),
+                                    ),
+                                  ),
+                                if (trip.startLatLng == null && trip.endLatLng == null)
+                                  Marker(
+                                    point: trip.locationCoordinates,
+                                    width: 40,
+                                    height: 40,
+                                    child: Icon(
+                                      Icons.location_on,
+                                      size: 40,
+                                      color: pointerColor,
+                                    ),
+                                  ),
                               ],
                             ),
                             RichAttributionWidget(

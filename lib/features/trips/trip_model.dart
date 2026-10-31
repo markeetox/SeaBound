@@ -13,6 +13,8 @@ class Trip {
   final List<String> likedBy;
   final List<String> dislikedBy;
   final List<Map<String, double>> trailPoints;
+  final Map<String, double>? startCoordinates;
+  final Map<String, double>? endCoordinates;
   final DateTime? createdAt;
 
   const Trip({
@@ -27,6 +29,8 @@ class Trip {
     this.likedBy = const [],
     this.dislikedBy = const [],
     this.trailPoints = const [],
+    this.startCoordinates,
+    this.endCoordinates,
     this.createdAt,
   });
 
@@ -34,6 +38,30 @@ class Trip {
     return trailPoints
         .map((p) => LatLng(p['lat'] ?? 0.0, p['lng'] ?? 0.0))
         .toList();
+  }
+
+  LatLng? get startLatLng {
+    if (startCoordinates != null &&
+        startCoordinates!['lat'] != null &&
+        startCoordinates!['lng'] != null) {
+      return LatLng(startCoordinates!['lat']!, startCoordinates!['lng']!);
+    }
+    if (trailPoints.isNotEmpty) {
+      return LatLng(trailPoints.first['lat'] ?? 0.0, trailPoints.first['lng'] ?? 0.0);
+    }
+    return null;
+  }
+
+  LatLng? get endLatLng {
+    if (endCoordinates != null &&
+        endCoordinates!['lat'] != null &&
+        endCoordinates!['lng'] != null) {
+      return LatLng(endCoordinates!['lat']!, endCoordinates!['lng']!);
+    }
+    if (trailPoints.isNotEmpty) {
+      return LatLng(trailPoints.last['lat'] ?? 0.0, trailPoints.last['lng'] ?? 0.0);
+    }
+    return null;
   }
 
   int get likeCount => likedBy.length;
@@ -73,6 +101,17 @@ class Trip {
       return DateTime.now();
     }
 
+    Map<String, double>? parseCoords(dynamic raw) {
+      if (raw is Map) {
+        final lat = (raw['lat'] as num?)?.toDouble();
+        final lng = (raw['lng'] as num?)?.toDouble();
+        if (lat != null && lng != null) {
+          return {'lat': lat, 'lng': lng};
+        }
+      }
+      return null;
+    }
+
     return Trip(
       id: documentId,
       userId: map['userId'] as String? ?? '',
@@ -109,6 +148,8 @@ class Trip {
               .where((m) => m.isNotEmpty)
               .toList() ??
           const [],
+      startCoordinates: parseCoords(map['startCoordinates']),
+      endCoordinates: parseCoords(map['endCoordinates']),
       createdAt: map['createdAt'] != null ? parseDateTime(map['createdAt']) : null,
     );
   }
@@ -125,6 +166,8 @@ class Trip {
       'likedBy': likedBy,
       'dislikedBy': dislikedBy,
       'trailPoints': trailPoints,
+      if (startCoordinates != null) 'startCoordinates': startCoordinates,
+      if (endCoordinates != null) 'endCoordinates': endCoordinates,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
@@ -141,6 +184,8 @@ class Trip {
     List<String>? likedBy,
     List<String>? dislikedBy,
     List<Map<String, double>>? trailPoints,
+    Map<String, double>? startCoordinates,
+    Map<String, double>? endCoordinates,
     DateTime? createdAt,
   }) {
     return Trip(
@@ -155,6 +200,8 @@ class Trip {
       likedBy: likedBy ?? this.likedBy,
       dislikedBy: dislikedBy ?? this.dislikedBy,
       trailPoints: trailPoints ?? this.trailPoints,
+      startCoordinates: startCoordinates ?? this.startCoordinates,
+      endCoordinates: endCoordinates ?? this.endCoordinates,
       createdAt: createdAt ?? this.createdAt,
     );
   }

@@ -1209,6 +1209,13 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     .map((p) => {'lat': p.latitude, 'lng': p.longitude})
                     .toList();
 
+                final startCoord = points.isNotEmpty
+                    ? {'lat': points.first.latitude, 'lng': points.first.longitude}
+                    : {'lat': startPoint.latitude, 'lng': startPoint.longitude};
+                final endCoord = points.isNotEmpty
+                    ? {'lat': points.last.latitude, 'lng': points.last.longitude}
+                    : startCoord;
+
                 final trip = Trip(
                   id: '',
                   userId: authUser?.uid ?? '',
@@ -1220,6 +1227,8 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                   species: speciesList,
                   notes: descController.text.trim(),
                   trailPoints: trailMaps,
+                  startCoordinates: startCoord,
+                  endCoordinates: endCoord,
                 );
 
                 final repo = ref.read(tripsRepositoryProvider);
