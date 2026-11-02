@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../../core/gradient_background.dart';
 import '../auth/auth_providers.dart';
+import '../moderation/report_content_sheet.dart';
 import '../profile/profile_providers.dart';
 import 'spots_providers.dart';
 
@@ -70,38 +71,61 @@ class SpotDetailScreen extends ConsumerWidget {
         actions: [
           spotDetailAsync.when(
             data: (spot) {
-              if (spot == null || currentUser == null || spot.userId != currentUser.uid) {
+              if (spot == null || currentUser == null) {
                 return const SizedBox.shrink();
               }
+              final isAuthor = spot.userId == currentUser.uid;
               return PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'edit') {
                     context.push('/spots/$spotId/edit');
                   } else if (value == 'delete') {
                     _confirmDelete(context, ref, spot.name);
+                  } else if (value == 'report') {
+                    ReportContentSheet.show(
+                      context: context,
+                      contentType: 'spot',
+                      contentId: spot.id,
+                      contentTitle: spot.name,
+                      authorId: spot.userId,
+                      authorName: spot.authorName,
+                    );
                   }
                 },
                 itemBuilder: (BuildContext context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit_outlined),
-                        SizedBox(width: 8),
-                        Text('Edit'),
-                      ],
+                  if (isAuthor) ...[
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
                     ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('Delete', style: TextStyle(color: Colors.red)),
-                      ],
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
                     ),
-                  ),
+                  ] else ...[
+                    const PopupMenuItem(
+                      value: 'report',
+                      child: Row(
+                        children: [
+                          Icon(Icons.flag_outlined, color: Colors.redAccent),
+                          SizedBox(width: 8),
+                          Text('Report Spot', style: TextStyle(color: Colors.redAccent)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               );
             },

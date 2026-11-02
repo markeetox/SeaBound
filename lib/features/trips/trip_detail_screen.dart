@@ -8,6 +8,7 @@ import '../../core/app_theme.dart';
 import '../../core/gradient_background.dart';
 import '../../core/map_layer_config.dart';
 import '../auth/auth_providers.dart';
+import '../moderation/report_content_sheet.dart';
 import '../profile/badge_service.dart';
 import '../profile/profile_providers.dart';
 import '../spots/spot_model.dart';
@@ -141,6 +142,10 @@ class TripDetailScreen extends ConsumerWidget {
           tripDetailAsync.when(
             data: (trip) {
               if (trip == null) return const SizedBox.shrink();
+              final currentUid = ref.watch(authStateProvider).asData?.value?.uid;
+              final isOwner = currentUid != null && trip.userId == currentUid;
+              final isSharedWithMe = currentUid != null && !isOwner && trip.sharedWith.contains(currentUid);
+
               return PopupMenuButton<String>(
                 onSelected: (value) {
                   if (value == 'spot') {
@@ -151,50 +156,72 @@ class TripDetailScreen extends ConsumerWidget {
                     context.push('/trips/$tripId/edit');
                   } else if (value == 'delete') {
                     _confirmDelete(context, ref, trip.title);
+                  } else if (value == 'report') {
+                    ReportContentSheet.show(
+                      context: context,
+                      contentType: 'trip',
+                      contentId: trip.id,
+                      contentTitle: trip.title,
+                      authorId: trip.userId,
+                      authorName: 'Captain',
+                    );
                   }
                 },
                 itemBuilder: (BuildContext context) => [
-                  if (trip.trailPoints.isEmpty)
+                  if (isOwner) ...[
+                    if (trip.trailPoints.isEmpty)
+                      const PopupMenuItem(
+                        value: 'spot',
+                        child: Row(
+                          children: [
+                            Icon(Icons.public),
+                            SizedBox(width: 8),
+                            Text('Make it Public'),
+                          ],
+                        ),
+                      ),
                     const PopupMenuItem(
-                      value: 'spot',
+                      value: 'share',
                       child: Row(
                         children: [
-                          Icon(Icons.public),
+                          Icon(Icons.share_outlined),
                           SizedBox(width: 8),
-                          Text('Make it Public'),
+                          Text('Share with Friends'),
                         ],
                       ),
                     ),
-                  const PopupMenuItem(
-                    value: 'share',
-                    child: Row(
-                      children: [
-                        Icon(Icons.share_outlined),
-                        SizedBox(width: 8),
-                        Text('Share with Friends'),
-                      ],
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
                     ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit_outlined),
-                        SizedBox(width: 8),
-                        Text('Edit'),
-                      ],
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
                     ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('Delete', style: TextStyle(color: Colors.red)),
-                      ],
+                  ] else if (isSharedWithMe) ...[
+                    const PopupMenuItem(
+                      value: 'report',
+                      child: Row(
+                        children: [
+                          Icon(Icons.flag_outlined, color: Colors.redAccent),
+                          SizedBox(width: 8),
+                          Text('Report Trip', style: TextStyle(color: Colors.redAccent)),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               );
             },

@@ -1,50 +1,190 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    function isValidReportCategory(cat) {
+      return cat in [
+        'offensive_content',
+        'harassment',
+        'hate_speech',
+        'explicit',
+        'violence_threats',
+        'spam_misleading',
+        'illegal_activity',
+        'other'
+      ];
+    }
+
+    function isValidContentType(t) {
+      return t in ['spot', 'trip', 'user'];
+    }
+
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId);
 
       match /badges/{badgeId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null && request.auth.uid == userId;
+        allow read: if isAuthenticated();
+        allow create: if isOwner(userId);
       }
 
       match /friends/{friendId} {
-        allow read, write: if request.auth != null;
+        allow read, write: if isAuthenticated();
       }
 
       match /friend_requests/{requestId} {
-        allow read, write: if request.auth != null;
+        allow read, write: if isAuthenticated();
       }
 
       match /sent_requests/{requestId} {
-        allow read, write: if request.auth != null;
+        allow read, write: if isAuthenticated();
       }
 
       match /notifications/{notificationId} {
-        allow read, write: if request.auth != null;
+        allow read, write: if isAuthenticated();
       }
     }
 
     match /usernames/{username} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid
         && !exists(/databases/$(database)/documents/usernames/$(username));
-      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
     }
 
     match /trips/{tripId} {
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith));
-      allow update: if request.auth != null && (resource.data.userId == request.auth.uid || (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith));
-      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith));
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith));
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
     match /spots/{spotId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------
+    // Reports Collection (Phase 1 Rigorous Validation)
+    // ---------------------------------------------------------
+    match /reports/{reportId} {
+      // Regular users CANNOT read or search reports (protects reporter identity)
+      allow read: if isAdmin();
+
+      // Create-only: Strict validation & target verification
+      allow create: if isAuthenticated()
+        // 1. Validate payload types and string lengths before operations
+        && request.resource.data.contentType is string
+        && isValidContentType(request.resource.data.contentType)
+        && request.resource.data.contentId is string
+        && request.resource.data.contentId.size() > 0
+        && request.resource.data.contentId.size() <= 128
+
+        // 2. Maximum composite document ID length constraint (< 256 bytes)
+        && reportId.size() <= 256
+
+        // 3. Length-prefixed deterministic composite ID validation
+        && reportId == request.resource.data.contentType + '_' + string(request.resource.data.contentId.size()) + '_' + request.resource.data.contentId + '_' + request.auth.uid
+        && request.resource.data.id == reportId
+
+        // 4. Authenticated reporter verification
+        && request.resource.data.reporterId == request.auth.uid
+
+        // 5. User cannot report their own content
+        && request.resource.data.authorId != request.auth.uid
+
+        // 6. Valid category
+        && request.resource.data.category is string
+        && isValidReportCategory(request.resource.data.category)
+
+        // 7. Explanation string bounds (0 to 300 characters)
+        && request.resource.data.explanation is string
+        && request.resource.data.explanation.size() <= 300
+
+        // 8. Enforce create-only initial status (Client CANNOT set priority)
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+
+        // 9. Exact whitelist: Must have ALL mandatory fields, and ONLY allowed fields
+        && request.resource.data.keys().hasAll([
+          'id', 'contentType', 'contentId', 'authorId',
+          'reporterId', 'category', 'explanation', 'status', 'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'id', 'contentType', 'contentId', 'authorId',
+          'reporterId', 'category', 'explanation', 'status', 'createdAt'
+        ])
+
+        // 10. Target existence, owner verification, and reporting eligibility
+        && (
+          // Case A: Spot target must exist, authorId must match, and cannot be hidden/removed
+          (request.resource.data.contentType == 'spot'
+            && exists(/databases/$(database)/documents/spots/$(request.resource.data.contentId))
+            && get(/databases/$(database)/documents/spots/$(request.resource.data.contentId)).data.userId == request.resource.data.authorId
+            && (!('moderationStatus' in get(/databases/$(database)/documents/spots/$(request.resource.data.contentId)).data)
+                || get(/databases/$(database)/documents/spots/$(request.resource.data.contentId)).data.moderationStatus == 'active'))
+          ||
+          // Case B: Private Trip target must exist, authorId must match, cannot be hidden/removed,
+          // sharedWith must exist and be an array, and reporter must be in sharedWith
+          (request.resource.data.contentType == 'trip'
+            && exists(/databases/$(database)/documents/trips/$(request.resource.data.contentId))
+            && get(/databases/$(database)/documents/trips/$(request.resource.data.contentId)).data.userId == request.resource.data.authorId
+            && (!('moderationStatus' in get(/databases/$(database)/documents/trips/$(request.resource.data.contentId)).data)
+                || get(/databases/$(database)/documents/trips/$(request.resource.data.contentId)).data.moderationStatus == 'active')
+            && 'sharedWith' in get(/databases/$(database)/documents/trips/$(request.resource.data.contentId)).data
+            && get(/databases/$(database)/documents/trips/$(request.resource.data.contentId)).data.sharedWith is list
+            && request.auth.uid in get(/databases/$(database)/documents/trips/$(request.resource.data.contentId)).data.sharedWith)
+          ||
+          // Case C: User profile target must exist, contentId == authorId, and authorId != reporter
+          (request.resource.data.contentType == 'user'
+            && exists(/databases/$(database)/documents/users/$(request.resource.data.contentId))
+            && request.resource.data.contentId == request.resource.data.authorId)
+        );
+
+      // Hardened Administrator Resolution: Validated transitions, immutable evidence, and sealed resolutions
+      allow update: if isAdmin()
+        // 1. Only 'pending' or 'under_review' tickets may transition. (Resolved/dismissed tickets can NEVER be modified or reopened)
+        && resource.data.status in ['pending', 'under_review']
+
+        // 2. Original report evidence is strictly immutable across all transitions
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'id', 'contentType', 'contentId', 'authorId', 'reporterId', 'category', 'explanation', 'createdAt'
+        ])
+
+        // 3. Permitted Transition A: Moving to 'under_review' (Audit triage)
+        && (
+          (resource.data.status == 'pending'
+            && request.resource.data.status == 'under_review'
+            // Moving to under_review MUST only change 'status'. It CANNOT add or modify resolution fields.
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']))
+          ||
+          // 4. Permitted Transition B: Moving to final resolution ('resolved' or 'dismissed')
+          (request.resource.data.status in ['resolved', 'dismissed']
+            // Must affect only status and complete resolution metadata
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'status', 'resolvedAt', 'resolvedBy', 'resolutionNotes'
+            ])
+            && request.resource.data.resolvedBy == request.auth.uid
+            && request.resource.data.resolvedAt == request.time
+            && request.resource.data.resolutionNotes is string
+            && request.resource.data.resolutionNotes.size() <= 500)
+        );
+
+      // Reports are permanent records: Neither users nor administrators can delete them
+      allow delete: if false;
     }
   }
 }

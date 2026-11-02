@@ -8,6 +8,7 @@ import '../../core/gradient_background.dart';
 import '../auth/auth_providers.dart';
 import 'badge_pin.dart';
 import 'badge_service.dart';
+import '../moderation/report_content_sheet.dart';
 import 'catalog.dart';
 import 'friends_repository.dart';
 import 'profile_providers.dart';
@@ -73,6 +74,7 @@ class PublicProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentUserId = ref.watch(authStateProvider).asData?.value?.uid;
     final userDocAsync = ref.watch(publicProfileDocProvider(userId));
     final earnedBadgesAsync = ref.watch(publicProfileBadgesProvider(userId));
 
@@ -429,11 +431,32 @@ class PublicProfileScreen extends ConsumerWidget {
               error: (e, st) =>
                   Center(child: Text('Error loading profile: $e')),
             ),
-            const Positioned(
+            Positioned(
               top: 0,
               left: 0,
               right: 0,
-              child: FloatingTopBar(isRedScreen: true),
+              child: FloatingTopBar(
+                isRedScreen: true,
+                actions: [
+                  if (currentUserId != null && currentUserId != userId)
+                    FloatingTopBarButton(
+                      icon: Icons.flag_outlined,
+                      tooltip: 'Report Captain',
+                      isRedScreen: true,
+                      onPressed: () {
+                        final username = userDoc?['username'] as String? ?? 'Captain';
+                        ReportContentSheet.show(
+                          context: context,
+                          contentType: 'user',
+                          contentId: userId,
+                          contentTitle: username,
+                          authorId: userId,
+                          authorName: username,
+                        );
+                      },
+                    ),
+                ],
+              ),
             ),
           ],
         ),
