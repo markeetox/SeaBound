@@ -34,16 +34,21 @@ class ReportSubmissionResult {
   bool get isAlreadyReported => status == ReportSubmissionStatus.alreadyReportedLocally;
 }
 
+typedef ReportWriter = Future<void> Function(String reportId, Map<String, dynamic> data);
+
 class ModerationRepository {
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _firestore;
   final SharedPreferences? _prefs;
+  final ReportWriter? _reportWriter;
   static const String _reportedKeyPrefix = 'seabound_reported_item_';
 
   ModerationRepository({
     FirebaseFirestore? firestore,
     SharedPreferences? prefs,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _prefs = prefs;
+    ReportWriter? reportWriter,
+  })  : _firestore = firestore,
+        _prefs = prefs,
+        _reportWriter = reportWriter;
 
   bool hasReportedLocally(String reportId) {
     if (_prefs == null) return false;
@@ -57,8 +62,14 @@ class ModerationRepository {
     }
 
     try {
-      // 2. Direct create-only write
-      await _firestore.collection('reports').doc(report.id).set(report.toMap());
+      // 2. Direct create-only write (via custom report writer or standard firestore instance)
+      if (_reportWriter != null) {
+        await _reportWriter(report.id, report.toMap());
+      } else if (_firestore != null) {
+        await _firestore.collection('reports').doc(report.id).set(report.toMap());
+      } else {
+        await FirebaseFirestore.instance.collection('reports').doc(report.id).set(report.toMap());
+      }
 
       // 3. ONLY record receipt upon verified success
       if (_prefs != null) {
