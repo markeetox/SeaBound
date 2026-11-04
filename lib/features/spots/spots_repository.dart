@@ -13,6 +13,7 @@ class SpotsRepository {
 
   Stream<List<Spot>> getAllSpotsStream() {
     return _spotsRef
+        .where('moderationStatus', isEqualTo: 'active')
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
@@ -23,7 +24,9 @@ class SpotsRepository {
   }
 
   Future<List<Spot>> getAllSpotsOnce() async {
-    final snap = await _spotsRef.get();
+    final snap = await _spotsRef
+        .where('moderationStatus', isEqualTo: 'active')
+        .get();
     return snap.docs.map((doc) => Spot.fromMap(doc.data(), doc.id)).toList();
   }
 

@@ -15,6 +15,7 @@ class Trip {
   final List<Map<String, double>> trailPoints;
   final Map<String, double>? startCoordinates;
   final Map<String, double>? endCoordinates;
+  final String moderationStatus;
   final DateTime? createdAt;
 
   const Trip({
@@ -31,6 +32,7 @@ class Trip {
     this.trailPoints = const [],
     this.startCoordinates,
     this.endCoordinates,
+    this.moderationStatus = 'active',
     this.createdAt,
   });
 
@@ -150,6 +152,7 @@ class Trip {
           const [],
       startCoordinates: parseCoords(map['startCoordinates']),
       endCoordinates: parseCoords(map['endCoordinates']),
+      moderationStatus: map['moderationStatus'] as String? ?? 'active',
       createdAt: map['createdAt'] != null ? parseDateTime(map['createdAt']) : null,
     );
   }
@@ -168,6 +171,7 @@ class Trip {
       'trailPoints': trailPoints,
       if (startCoordinates != null) 'startCoordinates': startCoordinates,
       if (endCoordinates != null) 'endCoordinates': endCoordinates,
+      'moderationStatus': moderationStatus,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
@@ -186,6 +190,7 @@ class Trip {
     List<Map<String, double>>? trailPoints,
     Map<String, double>? startCoordinates,
     Map<String, double>? endCoordinates,
+    String? moderationStatus,
     DateTime? createdAt,
   }) {
     return Trip(
@@ -202,6 +207,7 @@ class Trip {
       trailPoints: trailPoints ?? this.trailPoints,
       startCoordinates: startCoordinates ?? this.startCoordinates,
       endCoordinates: endCoordinates ?? this.endCoordinates,
+      moderationStatus: moderationStatus ?? this.moderationStatus,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -219,7 +225,8 @@ class Trip {
         other.notes == notes &&
         _listEquals(other.sharedWith, sharedWith) &&
         _listEquals(other.likedBy, likedBy) &&
-        _listEquals(other.dislikedBy, dislikedBy);
+        _listEquals(other.dislikedBy, dislikedBy) &&
+        other.moderationStatus == moderationStatus;
   }
 
   @override
@@ -235,6 +242,7 @@ class Trip {
       Object.hashAll(sharedWith),
       Object.hashAll(likedBy),
       Object.hashAll(dislikedBy),
+      moderationStatus,
     );
   }
 
