@@ -618,6 +618,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       context.push('/profile/edit');
                     },
                   ),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final isAdminAsync = ref.watch(isAdminProvider);
+                      final isAdmin = isAdminAsync.asData?.value ?? false;
+                      if (!isAdmin) return const SizedBox.shrink();
+                      return FloatingTopBarButton(
+                        icon: Icons.shield_outlined,
+                        tooltip: 'Admin Moderation',
+                        isRedScreen: true,
+                        onPressed: () {
+                          context.push('/admin');
+                        },
+                      );
+                    },
+                  ),
                   FloatingTopBarButton(
                     icon: Icons.info_outline,
                     tooltip: 'About & Data Sources',

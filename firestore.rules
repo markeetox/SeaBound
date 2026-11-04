@@ -14,6 +14,10 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.token.admin == true;
     }
 
+    function getPreStatus(data) {
+      return ('moderationStatus' in data) ? data.moderationStatus : 'active';
+    }
+
     function isValidReportCategory(cat) {
       return cat in [
         'offensive_content',
@@ -29,6 +33,10 @@ service cloud.firestore {
 
     function isValidContentType(t) {
       return t in ['spot', 'trip', 'user'];
+    }
+
+    function isValidContentStatus(status) {
+      return status in ['active', 'hidden', 'removed'];
     }
 
     match /users/{userId} {
@@ -66,15 +74,123 @@ service cloud.firestore {
 
     match /trips/{tripId} {
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith));
-      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith));
-      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      // Read rule: owner, admin, or shared participant (if content is active)
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid
+        || isAdmin()
+        || (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith && getPreStatus(resource.data) == 'active')
+      );
+
+      // Update rules:
+      // Case 1: Owner update with explicit field allowlist
+      // Case 2: Shared participant toggling reactions ('likedBy', 'dislikedBy')
+      // Case 3: Admin content moderation transition coupled to audit log in /moderation_logs
+      allow update: if isAuthenticated() && (
+        (isOwner(resource.data.userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'title', 'date', 'locationName', 'species', 'notes', 'sharedWith'
+          ]))
+        ||
+        (resource.data.sharedWith != null && request.auth.uid in resource.data.sharedWith
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'dislikedBy'])
+          && getPreStatus(resource.data) == 'active')
+        ||
+        (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['moderationStatus', 'moderationLogId'])
+          && isValidContentStatus(request.resource.data.moderationStatus)
+          && (
+            (getPreStatus(resource.data) == 'active' && request.resource.data.moderationStatus in ['hidden', 'removed'])
+            || (getPreStatus(resource.data) == 'hidden' && request.resource.data.moderationStatus in ['active', 'removed'])
+            || (getPreStatus(resource.data) == 'removed' && request.resource.data.moderationStatus == 'active')
+          )
+          && request.resource.data.moderationLogId is string
+          && existsAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId))
+          && getAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId)).data.contentId == tripId
+          && getAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId)).data.contentType == 'trip'
+          && getAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId)).data.previousStatus == getPreStatus(resource.data)
+          && getAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId)).data.newStatus == request.resource.data.moderationStatus
+          && getAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId)).data.adminId == request.auth.uid)
+      );
+
+      // Physical deletion is strictly prohibited
+      allow delete: if false;
     }
 
     match /spots/{spotId} {
-      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+
+      // Read rule: owner, admin, or authenticated user if spot is active
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid
+        || isAdmin()
+        || getPreStatus(resource.data) == 'active'
+      );
+
+      // Update rules:
+      // Case 1: Owner update with explicit field allowlist
+      // Case 2: Admin content moderation transition coupled to audit log in /moderation_logs
+      allow update: if isAuthenticated() && (
+        (isOwner(resource.data.userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'name', 'description', 'latitude', 'longitude', 'species'
+          ]))
+        ||
+        (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['moderationStatus', 'moderationLogId'])
+          && isValidContentStatus(request.resource.data.moderationStatus)
+          && (
+            (getPreStatus(resource.data) == 'active' && request.resource.data.moderationStatus in ['hidden', 'removed'])
+            || (getPreStatus(resource.data) == 'hidden' && request.resource.data.moderationStatus in ['active', 'removed'])
+            || (getPreStatus(resource.data) == 'removed' && request.resource.data.moderationStatus == 'active')
+          )
+          && request.resource.data.moderationLogId is string
+          && existsAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId))
+          && getAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId)).data.contentId == spotId
+          && getAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId)).data.contentType == 'spot'
+          && getAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId)).data.previousStatus == getPreStatus(resource.data)
+          && getAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId)).data.newStatus == request.resource.data.moderationStatus
+          && getAfter(/databases/$(database)/documents/moderation_logs/$(request.resource.data.moderationLogId)).data.adminId == request.auth.uid)
+      );
+
+      // Physical deletion is strictly prohibited
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------
+    // Moderation Audit Logs Collection
+    // ---------------------------------------------------------
+    match /moderation_logs/{logId} {
+      // Admin-only read: Ordinary users cannot view moderation audit logs
+      allow read: if isAdmin();
+
+      // Create-only: Strict schema validation & atomic write validation
+      allow create: if isAdmin()
+        && request.resource.data.id == logId
+        && request.resource.data.adminId == request.auth.uid
+        && request.resource.data.contentType is string
+        && isValidContentType(request.resource.data.contentType)
+        && request.resource.data.contentId is string
+        && request.resource.data.contentId.size() > 0
+        && request.resource.data.previousStatus is string
+        && isValidContentStatus(request.resource.data.previousStatus)
+        && request.resource.data.newStatus is string
+        && isValidContentStatus(request.resource.data.newStatus)
+        && request.resource.data.previousStatus != request.resource.data.newStatus
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 500
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.keys().hasAll([
+          'id', 'adminId', 'contentType', 'contentId',
+          'previousStatus', 'newStatus', 'reason', 'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'id', 'adminId', 'contentType', 'contentId',
+          'previousStatus', 'newStatus', 'reason', 'createdAt'
+        ]);
+
+      // Moderation logs are permanent and strictly immutable
+      allow update, delete: if false;
     }
 
     // ---------------------------------------------------------

@@ -10,6 +10,9 @@ import '../features/home/home_screen.dart';
 import '../features/profile/about_screen.dart';
 import '../features/profile/edit_profile_screen.dart';
 import '../features/profile/profile_screen.dart';
+import '../features/moderation/admin_audit_history_screen.dart';
+import '../features/moderation/admin_dashboard_screen.dart';
+import '../features/moderation/admin_report_detail_screen.dart';
 import '../features/profile/public_profile_screen.dart';
 import '../features/spots/spot_detail_screen.dart';
 import '../features/spots/spot_form_screen.dart';
@@ -64,6 +67,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/about',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AboutScreen(),
+      ),
+      GoRoute(
+        path: '/admin',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AdminDashboardScreen(),
+        routes: [
+          GoRoute(
+            path: 'history',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) => const AdminAuditHistoryScreen(),
+          ),
+          GoRoute(
+            path: 'reports/:id',
+            parentNavigatorKey: _rootNavigatorKey,
+            builder: (context, state) {
+              final reportId = state.pathParameters['id']!;
+              return AdminReportDetailScreen(reportId: reportId);
+            },
+          ),
+        ],
       ),
       GoRoute(
         path: '/profile/edit',

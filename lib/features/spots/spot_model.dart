@@ -12,6 +12,7 @@ class Spot {
   final List<String> species;
   final bool isTrip;
   final List<Map<String, double>> trailPoints;
+  final String moderationStatus;
   final DateTime? createdAt;
 
   const Spot({
@@ -25,6 +26,7 @@ class Spot {
     required this.species,
     this.isTrip = false,
     this.trailPoints = const [],
+    this.moderationStatus = 'active',
     this.createdAt,
   });
 
@@ -72,6 +74,7 @@ class Spot {
           const [],
       isTrip: map['isTrip'] as bool? ?? false,
       trailPoints: parsedTrail,
+      moderationStatus: map['moderationStatus'] as String? ?? 'active',
       createdAt: map['createdAt'] != null ? parseDateTime(map['createdAt']) : null,
     );
   }
@@ -87,6 +90,7 @@ class Spot {
       'species': species,
       'isTrip': isTrip,
       'trailPoints': trailPoints,
+      'moderationStatus': moderationStatus,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
@@ -102,6 +106,7 @@ class Spot {
     List<String>? species,
     bool? isTrip,
     List<Map<String, double>>? trailPoints,
+    String? moderationStatus,
     DateTime? createdAt,
   }) {
     return Spot(
@@ -115,6 +120,7 @@ class Spot {
       species: species ?? this.species,
       isTrip: isTrip ?? this.isTrip,
       trailPoints: trailPoints ?? this.trailPoints,
+      moderationStatus: moderationStatus ?? this.moderationStatus,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -130,6 +136,7 @@ class Spot {
         other.description == description &&
         other.latitude == latitude &&
         other.longitude == longitude &&
+        other.moderationStatus == moderationStatus &&
         _listEquals(other.species, species);
   }
 
@@ -143,6 +150,7 @@ class Spot {
       description,
       latitude,
       longitude,
+      moderationStatus,
       Object.hashAll(species),
     );
   }

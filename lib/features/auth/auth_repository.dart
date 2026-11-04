@@ -13,7 +13,16 @@ class AuthRepository {
 
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
+  Stream<User?> get idTokenChanges => _firebaseAuth.idTokenChanges();
+
   User? get currentUser => _firebaseAuth.currentUser;
+
+  Future<bool> checkIsAdmin({bool forceRefresh = false}) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return false;
+    final tokenResult = await user.getIdTokenResult(forceRefresh);
+    return tokenResult.claims?['admin'] == true;
+  }
 
   Future<UserCredential> signInWithEmailAndPassword({
     required String email,

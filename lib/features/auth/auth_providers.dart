@@ -21,3 +21,15 @@ final userProfileProvider = StreamProvider<Map<String, dynamic>?>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   return authRepository.getUserProfileStream(user.uid);
 });
+
+final idTokenChangesProvider = StreamProvider<User?>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  return authRepository.idTokenChanges;
+});
+
+final isAdminProvider = FutureProvider<bool>((ref) async {
+  final user = ref.watch(idTokenChangesProvider).asData?.value;
+  if (user == null) return false;
+  final authRepository = ref.watch(authRepositoryProvider);
+  return await authRepository.checkIsAdmin();
+});
