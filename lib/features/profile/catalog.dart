@@ -134,6 +134,16 @@ class Catalog {
     ),
   ];
 
+  static const AchievementBadge adminBadge = AchievementBadge(
+    id: 'admin_moderator',
+    name: 'Moderator',
+    description: 'Community Moderator and Administrator of SeaBound.',
+    hint: 'This user is a moderator of the Seabound community.',
+    xp: 1000,
+    imageAsset: 'assets/badges/mod.png',
+    sortOrder: 0,
+  );
+
   static AchievementBadge? getBadgeById(String id) {
     try {
       return starterBadges.firstWhere((b) => b.id == id);
