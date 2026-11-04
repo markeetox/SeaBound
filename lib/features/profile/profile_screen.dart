@@ -106,6 +106,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     }
   }
 
+  void _showNonAdminModPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: OceanThemeExtension.defaultTokens.surface,
+          title: const Text('Community Moderator', style: TextStyle(color: Colors.white)),
+          content: const Text(
+            'This user is a moderator of the Seabound community.',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('OK', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showPinDetailDialog(BuildContext context, AchievementBadge badge, DateTime? earnedAt) {
     showDialog(
       context: context,
@@ -435,49 +457,72 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         ),
                       ),
                       const SizedBox(height: 16),
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 130,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: 0.80,
-                        ),
-                        itemCount: Catalog.starterBadges.length,
-                        itemBuilder: (context, index) {
-                          final badge = Catalog.starterBadges[index];
-                          final earnedAt = earnedMap[badge.id];
-                          final isEarned = earnedAt != null;
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final isAdminAsync = ref.watch(isAdminProvider);
+                          final isAdmin = isAdminAsync.asData?.value ?? false;
 
-                          return GestureDetector(
-                            onTap: () => _showPinDetailDialog(context, badge, earnedAt),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                BadgePin(
-                                  badge: badge,
-                                  isEarned: isEarned,
-                                  size: 84,
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  badge.name,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: isEarned
-                                        ? FontWeight.w800
-                                        : FontWeight.w600,
-                                    color: isEarned
-                                        ? Colors.white
-                                        : Colors.white60,
-                                  ),
-                                ),
-                              ],
+                          final badges = [
+                            if (isAdmin) Catalog.adminBadge,
+                            ...Catalog.starterBadges,
+                          ];
+
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 130,
+                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 16,
+                              childAspectRatio: 0.80,
                             ),
+                            itemCount: badges.length,
+                            itemBuilder: (context, index) {
+                              final badge = badges[index];
+                              final isModBadge = badge.id == Catalog.adminBadge.id;
+                              final earnedAt = isModBadge ? DateTime.now() : earnedMap[badge.id];
+                              final isEarned = isModBadge ? true : earnedAt != null;
+
+                              return GestureDetector(
+                                onTap: () {
+                                  if (isModBadge) {
+                                    if (isAdmin) {
+                                      context.push('/admin');
+                                    } else {
+                                      _showNonAdminModPopup(context);
+                                    }
+                                  } else {
+                                    _showPinDetailDialog(context, badge, earnedAt);
+                                  }
+                                },
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    BadgePin(
+                                      badge: badge,
+                                      isEarned: isEarned,
+                                      size: 84,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      badge.name,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: isEarned
+                                            ? FontWeight.w800
+                                            : FontWeight.w600,
+                                        color: isEarned
+                                            ? Colors.white
+                                            : Colors.white60,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           );
                         },
                       ),
