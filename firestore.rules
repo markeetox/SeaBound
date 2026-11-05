@@ -63,6 +63,17 @@ service cloud.firestore {
       match /notifications/{notificationId} {
         allow read, write: if isAuthenticated();
       }
+
+      match /postcards/{postcardId} {
+        allow read: if isAuthenticated();
+        allow create: if isOwner(userId)
+          && request.resource.data.postcardId == postcardId
+          && request.resource.data.title is string
+          && request.resource.data.earnedAt == request.time
+          && exists(/databases/$(database)/documents/postcards/$(postcardId))
+          && get(/databases/$(database)/documents/postcards/$(postcardId)).data.active == true;
+        allow update, delete: if false;
+      }
     }
 
     match /usernames/{username} {
@@ -301,6 +312,12 @@ service cloud.firestore {
 
       // Reports are permanent records: Neither users nor administrators can delete them
       allow delete: if false;
+    }
+
+    match /postcards/{postcardId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+        && (request.auth.token.admin == true || request.auth.token.manage_postcards == true);
     }
   }
 }

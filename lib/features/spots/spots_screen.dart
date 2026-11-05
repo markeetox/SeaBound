@@ -35,6 +35,10 @@ import '../map_layers/weather_time_provider.dart';
 import '../map_layers/wind_provider.dart';
 import '../map_layers/wind_service.dart';
 import '../profile/badge_service.dart';
+import '../postcards/postcard_detection_service.dart';
+import '../postcards/postcard_unlocked_dialog.dart';
+import '../postcards/postcards_flags.dart';
+import '../postcards/postcards_providers.dart';
 import 'spot_model.dart';
 import 'spots_providers.dart';
 
@@ -1628,13 +1632,39 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
 
     ref.listen<AsyncValue<Position>>(userPositionStreamProvider, (prev, next) {
       final pos = next.asData?.value;
-      if (pos != null && _isFollowUserLocation) {
-        _mapController.move(
-          LatLng(pos.latitude, pos.longitude),
-          _mapController.camera.zoom,
-        );
+      if (pos != null) {
+        if (_isFollowUserLocation) {
+          _mapController.move(
+            LatLng(pos.latitude, pos.longitude),
+            _mapController.camera.zoom,
+          );
+        }
+        if (kPostcardsEnabled) {
+          final authState = ref.read(authStateProvider);
+          final user = authState.asData?.value;
+          final activeCards = ref.read(activePostcardsStreamProvider).asData?.value;
+          final earnedCards = ref.read(userEarnedPostcardsStreamProvider).asData?.value;
+          if (user != null && activeCards != null && earnedCards != null) {
+            final earnedIds = earnedCards.map((e) => e.postcardId).toSet();
+            ref.read(postcardDetectionServiceProvider).evaluatePosition(
+                  position: pos,
+                  uid: user.uid,
+                  activePostcards: activeCards,
+                  earnedPostcardIds: earnedIds,
+                );
+          }
+        }
       }
     });
+
+    if (kPostcardsEnabled) {
+      ref.listen(newlyEarnedPostcardStreamProvider, (prev, next) {
+        final newCard = next.asData?.value;
+        if (newCard != null && mounted) {
+          PostcardUnlockedDialog.show(context, newCard);
+        }
+      });
+    }
 
     final tripRecorderState = ref.watch(tripRecorderProvider);
 
