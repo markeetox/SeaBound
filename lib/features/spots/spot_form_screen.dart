@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../core/app_theme.dart';
 import '../../core/gradient_background.dart';
 import '../auth/auth_providers.dart';
 import '../map/location_providers.dart';
@@ -111,6 +112,30 @@ class _SpotFormScreenState extends ConsumerState<SpotFormScreen> {
         _errorMessage = 'Please tap on the map or use your location to set a pin.';
       });
       return;
+    }
+
+    if (!widget.isEditing) {
+      final userLevel = ref.read(currentUserLevelProvider);
+      if (userLevel < 2) {
+        showDialog(
+          context: context,
+          builder: (dialogCtx) => AlertDialog(
+            backgroundColor: OceanThemeExtension.defaultTokens.surface,
+            title: const Text('Level 2 Required', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            content: const Text(
+              'Publishing public spots requires Level 2 or higher. Earn badges or complete trips to level up!',
+              style: TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogCtx).pop(),
+                child: const Text('OK', style: TextStyle(color: Colors.cyan)),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
     }
 
     setState(() {

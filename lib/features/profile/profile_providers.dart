@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_providers.dart';
+import 'catalog.dart';
 import 'friends_repository.dart';
 import 'profile_repository.dart';
 
@@ -76,6 +77,17 @@ final userEarnedBadgesProvider =
   }
   final repository = ref.watch(profileRepositoryProvider);
   return repository.getUserEarnedBadgesStream(user.uid);
+});
+
+final currentUserLevelProvider = Provider<int>((ref) {
+  final earnedBadgesAsync = ref.watch(userEarnedBadgesProvider);
+  final earnedMap = earnedBadgesAsync.asData?.value ?? {};
+  int totalXp = 0;
+  for (final badgeId in earnedMap.keys) {
+    final b = Catalog.getBadgeById(badgeId);
+    if (b != null) totalXp += b.xp;
+  }
+  return Catalog.getLevelFromXp(totalXp);
 });
 
 final publicProfileDocProvider =
