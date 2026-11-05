@@ -13,6 +13,8 @@ import '../features/profile/profile_screen.dart';
 import '../features/moderation/admin_audit_history_screen.dart';
 import '../features/moderation/admin_dashboard_screen.dart';
 import '../features/moderation/admin_report_detail_screen.dart';
+import '../features/postcards/admin_postcards_screen.dart';
+import '../features/postcards/postcards_flags.dart';
 import '../features/profile/public_profile_screen.dart';
 import '../features/spots/spot_detail_screen.dart';
 import '../features/spots/spot_form_screen.dart';
@@ -78,6 +80,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             parentNavigatorKey: _rootNavigatorKey,
             builder: (context, state) => const AdminAuditHistoryScreen(),
           ),
+          if (kPostcardsEnabled)
+            GoRoute(
+              path: 'postcards',
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (context, state) => const AdminPostcardsScreen(),
+            ),
           GoRoute(
             path: 'reports/:id',
             parentNavigatorKey: _rootNavigatorKey,

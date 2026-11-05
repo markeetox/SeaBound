@@ -7,6 +7,7 @@ import '../../core/floating_top_bar.dart';
 import '../../core/gradient_background.dart';
 import '../auth/auth_providers.dart';
 import 'admin_moderation_repository.dart';
+import '../postcards/postcards_flags.dart';
 import 'report_model.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
@@ -99,6 +100,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 onPressed: () => context.pop(),
               ),
               actions: [
+                if (kPostcardsEnabled)
+                  FloatingTopBarButton(
+                    icon: Icons.landscape,
+                    tooltip: 'Manage Postcards',
+                    onPressed: () => context.push('/admin/postcards'),
+                  ),
                 FloatingTopBarButton(
                   icon: Icons.history,
                   tooltip: 'Audit History',

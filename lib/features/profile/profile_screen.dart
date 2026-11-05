@@ -14,6 +14,8 @@ import '../trips/trips_providers.dart';
 import 'badge_pin.dart';
 import 'badge_service.dart';
 import 'catalog.dart';
+import '../postcards/postcards_flags.dart';
+import '../postcards/postcards_section.dart';
 import 'profile_providers.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -588,6 +590,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                             );
                           },
                         ),
+
+                      if (kPostcardsEnabled) ...[
+                        const Divider(height: 40, color: Colors.white30),
+                        const PostcardsSection(),
+                      ],
                     ],
                   ),
                 ),
