@@ -1076,7 +1076,28 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                   ),
                   onPressed: () {
                     Navigator.of(sheetContext).pop();
-                    context.push('/spots/add');
+                    final userLevel = ref.read(currentUserLevelProvider);
+                    if (userLevel < 2) {
+                      showDialog(
+                        context: context,
+                        builder: (dialogCtx) => AlertDialog(
+                          backgroundColor: OceanThemeExtension.defaultTokens.surface,
+                          title: const Text('Level 2 Required', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          content: const Text(
+                            'You must reach Level 2 before you can publish public fishing spots on SeaBound. Complete trips or earn badges to level up!',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(dialogCtx).pop(),
+                              child: const Text('Got it', style: TextStyle(color: Colors.cyan)),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
+                      context.push('/spots/add');
+                    }
                   },
                   icon: const Icon(Icons.pin_drop, size: 24),
                   label: const Text(
