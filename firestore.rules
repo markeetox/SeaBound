@@ -11,7 +11,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.admin == true;
+      return isAuthenticated() && ('admin' in request.auth.token) && request.auth.token.admin == true;
     }
 
     function getPreStatus(data) {
@@ -317,7 +317,7 @@ service cloud.firestore {
     match /postcards/{postcardId} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated()
-        && (request.auth.token.admin == true || request.auth.token.manage_postcards == true);
+        && (('admin' in request.auth.token && request.auth.token.admin == true) || ('manage_postcards' in request.auth.token && request.auth.token.manage_postcards == true));
     }
   }
 }
