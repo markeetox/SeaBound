@@ -42,5 +42,20 @@ void main() {
       notifier.clearAll();
       expect(container.read(activeMapLayersProvider).isEmpty, isTrue);
     });
+
+    test('resetToDefault resets active layers to defaultOn layers', () {
+      final container = ProviderContainer();
+      final notifier = container.read(activeMapLayersProvider.notifier);
+
+      notifier.setLayers({'waves', 'weather_radar'});
+      expect(container.read(activeMapLayersProvider), equals({'waves', 'weather_radar'}));
+
+      notifier.resetToDefault();
+      final defaultOnIds = availableLayers
+          .where((l) => l.defaultOn)
+          .map((l) => l.id)
+          .toSet();
+      expect(container.read(activeMapLayersProvider), equals(defaultOnIds));
+    });
   });
 }
