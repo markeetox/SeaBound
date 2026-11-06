@@ -153,10 +153,32 @@ class ActiveMapLayersNotifier extends Notifier<Set<String>> {
     _saveToPrefs();
   }
 
+  void resetToDefault() {
+    state = availableLayers
+        .where((layer) => layer.defaultOn)
+        .map((layer) => layer.id)
+        .toSet();
+    _saveToPrefs();
+  }
+
   bool isEnabled(String id) => state.contains(id);
 }
 
 final activeMapLayersProvider =
     NotifierProvider<ActiveMapLayersNotifier, Set<String>>(() {
   return ActiveMapLayersNotifier();
+});
+
+class MapInitialZoomNotifier extends Notifier<double?> {
+  @override
+  double? build() => null;
+
+  void setZoom(double? zoom) {
+    state = zoom;
+  }
+}
+
+final mapInitialZoomProvider =
+    NotifierProvider<MapInitialZoomNotifier, double?>(() {
+  return MapInitialZoomNotifier();
 });

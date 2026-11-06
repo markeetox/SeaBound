@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:seabound/core/app_bottom_nav.dart';
 import 'package:seabound/core/home_shell_screen.dart';
+import 'package:seabound/features/map_layers/map_layers_provider.dart';
 
 import '../helpers/pump_app.dart';
 
@@ -194,6 +195,79 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Trips Screen'), findsOneWidget);
+    });
+
+    testWidgets('navigating away from Spots resets active map filters to default',
+        (WidgetTester tester) async {
+      final router = GoRouter(
+        initialLocation: '/spots',
+        routes: [
+          StatefulShellRoute.indexedStack(
+            builder: (context, state, navigationShell) =>
+                HomeShellScreen(navigationShell: navigationShell),
+            branches: [
+              StatefulShellBranch(routes: [
+                GoRoute(path: '/trips', builder: (c, s) => const Scaffold(body: Text('Trips Screen'))),
+              ]),
+              StatefulShellBranch(routes: [
+                GoRoute(path: '/spots', builder: (c, s) => const Scaffold(body: Text('Spots Screen'))),
+              ]),
+              StatefulShellBranch(routes: [
+                GoRoute(path: '/home', builder: (c, s) => const Scaffold(body: Text('Home Screen'))),
+              ]),
+              StatefulShellBranch(routes: [
+                GoRoute(path: '/alerts', builder: (c, s) => const Scaffold(body: Text('Alerts Screen'))),
+              ]),
+              StatefulShellBranch(routes: [
+                GoRoute(path: '/profile', builder: (c, s) => const Scaffold(body: Text('Profile Screen'))),
+              ]),
+            ],
+          ),
+        ],
+      );
+
+      final defaultOnIds = availableLayers
+          .where((l) => l.defaultOn)
+          .map((l) => l.id)
+          .toSet();
+
+      Set<String>? currentActiveLayers;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp.router(
+            routerConfig: router,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Spots Screen'), findsOneWidget);
+
+      // Set non-default map layers while on Spots
+      final element = tester.element(find.byType(HomeShellScreen));
+      final container = ProviderScope.containerOf(element);
+      container.read(activeMapLayersProvider.notifier).setLayers({'waves', 'weather_radar'});
+      expect(container.read(activeMapLayersProvider), contains('waves'));
+
+      // Long press Home button on bottom bar to open fan and drag to Trips
+      final homeCenter = tester.getCenter(find.byType(Image));
+      final TestGesture gesture = await tester.startGesture(homeCenter);
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+
+      // Drag to Trips along arc (dx = -52.8, dy = -113.3)
+      await gesture.moveTo(Offset(homeCenter.dx - 52.8, homeCenter.dy - 113.3));
+      await tester.pumpAndSettle();
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Trips Screen'), findsOneWidget);
+
+      // Verify layers have reset to default
+      currentActiveLayers = container.read(activeMapLayersProvider);
+      expect(currentActiveLayers, equals(defaultOnIds));
     });
   });
 }

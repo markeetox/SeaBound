@@ -63,6 +63,16 @@ class _SpotsScreenState extends ConsumerState<SpotsScreen> {
   }
 
   @override
+  void dispose() {
+    // Only reset if activeMapLayersProvider is still mounted/accessible
+    try {
+      ref.read(activeMapLayersProvider.notifier).resetToDefault();
+      ref.read(selectedLupitaSpeciesIdProvider.notifier).selectSpecies(null);
+    } catch (_) {}
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final spotsAsync = ref.watch(allSpotsStreamProvider);
 
@@ -1004,10 +1014,26 @@ class _SpotsMapView extends ConsumerStatefulWidget {
 class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
   final MapController _mapController = MapController();
   LatLngBounds? _currentBounds;
-  double _currentZoom = 9.0;
+  late double _currentZoom;
+  late final double _initialZoom;
   bool _isLocating = false;
   bool _isFollowUserLocation = false;
   bool _isLegendExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final requestedZoom = ref.read(mapInitialZoomProvider);
+    _initialZoom = requestedZoom ?? 12.0;
+    _currentZoom = _initialZoom;
+    if (requestedZoom != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(mapInitialZoomProvider.notifier).setZoom(null);
+        }
+      });
+    }
+  }
 
   Timer? _wavesDebounceTimer;
   List<WavePointData>? _wavesData;
@@ -1605,6 +1631,18 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
         ? LatLng(widget.spots.first.latitude, widget.spots.first.longitude)
         : const LatLng(25.7617, -80.1918);
 
+    ref.listen<double?>(mapInitialZoomProvider, (prev, next) {
+      if (next != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          try {
+            _mapController.move(_mapController.camera.center, next);
+          } catch (_) {}
+          ref.read(mapInitialZoomProvider.notifier).setZoom(null);
+        });
+      }
+    });
+
     ref.listen<Set<String>>(activeMapLayersProvider, (prev, next) {
       if (_currentBounds != null) {
         if (next.contains(MapLayerConfig.wavesId)) {
@@ -1687,7 +1725,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
           mapController: _mapController,
           options: MapOptions(
             initialCenter: initialCenter,
-            initialZoom: 12.0,
+            initialZoom: _initialZoom,
             minZoom: 3.0,
             maxZoom: 20.0,
             onMapReady: () {
