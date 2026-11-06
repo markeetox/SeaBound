@@ -28,5 +28,19 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Set up Node.js for Firestore Rules Emulator Tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firestore Rules Test Dependencies
+        run: npm --prefix test/firestore_rules ci || npm --prefix test/firestore_rules install
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Run Firestore Rules Emulator Tests
+        run: firebase emulators:exec --only firestore --project seabound-test-project "npm --prefix test/firestore_rules test"
+
       - name: Build Web Release
         run: flutter build web --release

@@ -60,3 +60,13 @@ key.properties
 # Service Account Keys
 *service-account*.json
 *service_account*.json
+
+# Node & Emulators
+node_modules/
+**/node_modules/
+package-lock.json
+**/package-lock.json
+.firebase/
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
