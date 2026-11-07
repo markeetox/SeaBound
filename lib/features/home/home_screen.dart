@@ -171,7 +171,7 @@ class HomeScreen extends ConsumerWidget {
                       icon: Icons.phishing,
                       size: 82,
                       onTap: () {
-                        ref.read(mapInitialZoomProvider.notifier).setZoom(5.0);
+                        ref.read(mapInitialZoomProvider.notifier).setZoom(6.0);
                         ref.read(activeMapLayersProvider.notifier).setLayers({
                           MapLayerConfig.lupitaFishId,
                         });
@@ -189,7 +189,7 @@ class HomeScreen extends ConsumerWidget {
                       icon: Icons.tsunami,
                       size: 82,
                       onTap: () {
-                        ref.read(mapInitialZoomProvider.notifier).setZoom(5.0);
+                        ref.read(mapInitialZoomProvider.notifier).setZoom(6.0);
                         ref.read(activeMapLayersProvider.notifier).setLayers({
                           MapLayerConfig.wavesId,
                         });
@@ -207,7 +207,7 @@ class HomeScreen extends ConsumerWidget {
                       icon: Icons.water,
                       size: 82,
                       onTap: () {
-                        ref.read(mapInitialZoomProvider.notifier).setZoom(5.0);
+                        ref.read(mapInitialZoomProvider.notifier).setZoom(6.0);
                         ref.read(activeMapLayersProvider.notifier).setLayers({
                           MapLayerConfig.depthNumbersId,
                         });
@@ -361,7 +361,7 @@ class _TopWeatherAndAlertsBanner extends ConsumerWidget {
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
                 onTap: () {
-                  ref.read(mapInitialZoomProvider.notifier).setZoom(5.0);
+                  ref.read(mapInitialZoomProvider.notifier).setZoom(6.0);
                   ref.read(activeMapLayersProvider.notifier).setLayers({
                     MapLayerConfig.weatherRadarId,
                     MapLayerConfig.windObsId,
