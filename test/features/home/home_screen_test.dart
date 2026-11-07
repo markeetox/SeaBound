@@ -47,7 +47,7 @@ void main() {
     expect(find.text('SOS'), findsOneWidget);
   });
 
-  testWidgets('HomeScreen radial buttons for Waves and Depth activate map layers and set zoom 5', (WidgetTester tester) async {
+  testWidgets('HomeScreen radial buttons for Waves and Depth activate map layers and set zoom 6', (WidgetTester tester) async {
     Set<String>? activeLayers;
     double? initialZoom;
 
@@ -92,7 +92,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(activeLayers, contains(MapLayerConfig.wavesId));
-    expect(initialZoom, equals(5.0));
+    expect(initialZoom, equals(6.0));
     expect(find.text('Spots Screen'), findsOneWidget);
 
     // Navigate back to /home to test Depth
@@ -104,11 +104,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(activeLayers, contains(MapLayerConfig.depthNumbersId));
-    expect(initialZoom, equals(5.0));
+    expect(initialZoom, equals(6.0));
     expect(find.text('Spots Screen'), findsOneWidget);
   });
 
-  testWidgets('HomeScreen weather header activates weather map layers, sets zoom 5 and navigates to spots', (WidgetTester tester) async {
+  testWidgets('HomeScreen weather header activates weather map layers, sets zoom 6 and navigates to spots', (WidgetTester tester) async {
     Set<String>? activeLayers;
     double? initialZoom;
 
@@ -154,11 +154,11 @@ void main() {
 
     expect(activeLayers, contains(MapLayerConfig.weatherRadarId));
     expect(activeLayers, contains(MapLayerConfig.windObsId));
-    expect(initialZoom, equals(5.0));
+    expect(initialZoom, equals(6.0));
     expect(find.text('Spots Screen'), findsOneWidget);
   });
 
-  testWidgets('HomeScreen Fish locations activates Lupita layer, sets zoom 5 and navigates to spots', (WidgetTester tester) async {
+  testWidgets('HomeScreen Fish locations activates Lupita layer, sets zoom 6 and navigates to spots', (WidgetTester tester) async {
     Set<String>? activeLayers;
     double? initialZoom;
 
@@ -202,7 +202,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(activeLayers, contains(MapLayerConfig.lupitaFishId));
-    expect(initialZoom, equals(5.0));
+    expect(initialZoom, equals(6.0));
     expect(find.text('Spots Screen'), findsOneWidget);
   });
 }
