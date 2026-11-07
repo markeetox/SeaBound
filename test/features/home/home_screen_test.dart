@@ -47,7 +47,7 @@ void main() {
     expect(find.text('SOS'), findsOneWidget);
   });
 
-  testWidgets('HomeScreen radial buttons for Waves and Depth activate map layers and set zoom 6', (WidgetTester tester) async {
+  testWidgets('HomeScreen radial buttons for Waves and Depth activate map layers and set appropriate initial zooms', (WidgetTester tester) async {
     Set<String>? activeLayers;
     double? initialZoom;
 
@@ -104,7 +104,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(activeLayers, contains(MapLayerConfig.depthNumbersId));
-    expect(initialZoom, equals(6.0));
+    expect(initialZoom, equals(8.0));
     expect(find.text('Spots Screen'), findsOneWidget);
   });
 

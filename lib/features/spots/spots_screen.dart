@@ -1845,7 +1845,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 ],
               ),
 
-            // Depth Numbers (NOAA Soundings) WMS Layer with White Ocean Overlay Removed
+            // Depth Numbers (NOAA Soundings) WMS Layer
             if (showSoundings)
               TileLayer(
                 wmsOptions: WMSTileLayerOptions(
@@ -1857,22 +1857,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                 maxNativeZoom: 18,
                 maxZoom: 20,
                 tileProvider: NetworkTileProvider(),
-                tileDisplay: const TileDisplay.instantaneous(opacity: 0.85),
-                tileBuilder: (context, tileWidget, tile) {
-                  // Inverted luminance-to-alpha filter without constant alpha offset (a5 = 0):
-                  // 1. Transparent land pixels (A = 0) remain 100% transparent (A' = 0), eliminating the black land overlay.
-                  // 2. White/pale ocean depth area fills (R=G=B=255, A=255) become 100% transparent (A' = 0).
-                  // 3. Black/dark depth sounding numbers (R=G=B~0, A=255) remain 100% opaque and sharp (A' = 255).
-                  return ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(<double>[
-                      1, 0, 0, 0, 0,
-                      0, 1, 0, 0, 0,
-                      0, 0, 1, 0, 0,
-                      -0.45, -0.45, -0.45, 1.15, 0,
-                    ]),
-                    child: tileWidget,
-                  );
-                },
+                tileDisplay: const TileDisplay.instantaneous(opacity: 1.0),
                 errorTileCallback: (_, _, _) {},
               ),
 
