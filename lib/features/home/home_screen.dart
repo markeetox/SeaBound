@@ -198,7 +198,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  // Bottom Left: Depth (82px, map with only depth numbers filter active)
+                  // Bottom Left: Depth (82px, map with only depth numbers filter active at zoom 8.0)
                   Positioned(
                     left: 14,
                     top: 254,
@@ -207,7 +207,7 @@ class HomeScreen extends ConsumerWidget {
                       icon: Icons.water,
                       size: 82,
                       onTap: () {
-                        ref.read(mapInitialZoomProvider.notifier).setZoom(6.0);
+                        ref.read(mapInitialZoomProvider.notifier).setZoom(8.0);
                         ref.read(activeMapLayersProvider.notifier).setLayers({
                           MapLayerConfig.depthNumbersId,
                         });
