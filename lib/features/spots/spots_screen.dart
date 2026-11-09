@@ -1637,6 +1637,9 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
           if (!mounted) return;
           try {
             _mapController.move(_mapController.camera.center, next);
+            setState(() {
+              _currentZoom = next;
+            });
           } catch (_) {}
           ref.read(mapInitialZoomProvider.notifier).setZoom(null);
         });
@@ -2201,16 +2204,50 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
             if (showLupita && lupitaSpots.isNotEmpty)
               MarkerLayer(
                 markers: () {
-                  final Map<String, List<LupitaSpot>> clusters = {};
+                  // Dynamic zoom-dependent clustering:
+                  // Clusters spots whose projected screen distance is within 50px at _currentZoom.
+                  // When zooming in, spots with distance between them separate into individual markers.
+                  // Spots sharing the exact same coordinate remain grouped in a cluster badge.
+                  const crs = Epsg3857();
+                  const clusterPixelThreshold = 50.0;
+                  final List<List<LupitaSpot>> clustersList = [];
+                  final List<Offset> clusterPixelCenters = [];
+
                   for (final lSpot in lupitaSpots) {
-                    final latKey = (lSpot.latitude * 1000).round() / 1000;
-                    final lngKey = (lSpot.longitude * 1000).round() / 1000;
-                    final key = '$latKey,$lngKey';
-                    clusters.putIfAbsent(key, () => []).add(lSpot);
+                    final spotOffset = crs.latLngToOffset(
+                      LatLng(lSpot.latitude, lSpot.longitude),
+                      _currentZoom,
+                    );
+
+                    int bestClusterIndex = -1;
+                    double minDistance = double.infinity;
+
+                    for (int i = 0; i < clustersList.length; i++) {
+                      final centerOffset = clusterPixelCenters[i];
+                      final dist = (spotOffset - centerOffset).distance;
+                      if (dist <= clusterPixelThreshold && dist < minDistance) {
+                        minDistance = dist;
+                        bestClusterIndex = i;
+                      }
+                    }
+
+                    if (bestClusterIndex != -1) {
+                      clustersList[bestClusterIndex].add(lSpot);
+                      // Update cluster center offset to running centroid
+                      final count = clustersList[bestClusterIndex].length;
+                      final currentCenter = clusterPixelCenters[bestClusterIndex];
+                      clusterPixelCenters[bestClusterIndex] = Offset(
+                        currentCenter.dx + (spotOffset.dx - currentCenter.dx) / count,
+                        currentCenter.dy + (spotOffset.dy - currentCenter.dy) / count,
+                      );
+                    } else {
+                      clustersList.add([lSpot]);
+                      clusterPixelCenters.add(spotOffset);
+                    }
                   }
 
                   final List<Marker> markersList = [];
-                  for (final clusterSpots in clusters.values) {
+                  for (final clusterSpots in clustersList) {
                     if (clusterSpots.length == 1) {
                       final lSpot = clusterSpots.first;
                       final scorePct = (lSpot.score * 100).round();
