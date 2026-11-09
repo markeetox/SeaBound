@@ -46,6 +46,14 @@ class MockActiveMapLayersNotifier extends ActiveMapLayersNotifier {
   Set<String> build() => initialLayers;
 }
 
+class MockMapInitialZoomNotifier extends MapInitialZoomNotifier {
+  final double? initialZoom;
+  MockMapInitialZoomNotifier(this.initialZoom);
+
+  @override
+  double? build() => initialZoom;
+}
+
 void main() {
   testWidgets('SpotsScreen renders compact top map controls (Layers & Location) and icon-only Add Opinion FAB',
       (WidgetTester tester) async {
@@ -245,5 +253,225 @@ void main() {
     expect(find.text('Select Fish Species'), findsOneWidget);
     expect(find.text('All Species'), findsOneWidget);
     expect(find.text('Cobia'), findsOneWidget);
+  });
+
+  testWidgets('Lupita Fish Finder clusters spots at lower zoom and unclusters them when zooming in',
+      (WidgetTester tester) async {
+    // Two spots separated by ~700 meters near initial map center (25.7617, -80.1918)
+    const spotA = LupitaSpot(
+      id: 'spot-a',
+      speciesId: 'cobia',
+      title: 'Cobia Spot A',
+      score: 0.90,
+      confidence: 'High',
+      dataCoverage: 1.0,
+      latitude: 25.7617,
+      longitude: -80.1918,
+      reasons: [],
+    );
+
+    const spotB = LupitaSpot(
+      id: 'spot-b',
+      speciesId: 'cobia',
+      title: 'Cobia Spot B',
+      score: 0.70,
+      confidence: 'Medium',
+      dataCoverage: 1.0,
+      latitude: 25.7680,
+      longitude: -80.1918,
+      reasons: [],
+    );
+
+    final sampleLupitaData = LupitaData(
+      version: 1,
+      catalogGeneratedUtc: '2026-10-24T20:00:00Z',
+      predictionsGeneratedUtc: '2026-10-24T20:00:00Z',
+      lastRefreshedAt: DateTime.parse('2026-10-24T20:00:00Z'),
+      disclaimer: 'Test',
+      allSpots: [spotA, spotB],
+      species: [
+        const LupitaSpecies(
+          id: 'cobia',
+          name: 'Cobia',
+          sci: 'Rachycentron canadum',
+          colorHex: '#c084fc',
+          specs: [],
+          status: 'ok',
+          message: '',
+          spotCount: 2,
+          spots: [spotA, spotB],
+        ),
+      ],
+    );
+
+    // Test clustered at zoom 6.0 (pixel distance ~0.3px < 50px threshold)
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          allSpotsStreamProvider.overrideWith((ref) => Stream.value([])),
+          activeMapLayersProvider.overrideWith(
+            () => MockActiveMapLayersNotifier({MapLayerConfig.lupitaFishId}),
+          ),
+          lupitaDataProvider.overrideWith((ref) async => sampleLupitaData),
+          mapInitialZoomProvider.overrideWith(() => MockMapInitialZoomNotifier(6.0)),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: const SpotsScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify cluster badge '2' is present and individual scores ('90%', '70%') are not
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('90%'), findsNothing);
+    expect(find.text('70%'), findsNothing);
+  });
+
+  testWidgets('Lupita Fish Finder unclusters spots with distance in between when zoomed in',
+      (WidgetTester tester) async {
+    const spotA = LupitaSpot(
+      id: 'spot-a',
+      speciesId: 'cobia',
+      title: 'Cobia Spot A',
+      score: 0.90,
+      confidence: 'High',
+      dataCoverage: 1.0,
+      latitude: 25.7617,
+      longitude: -80.1918,
+      reasons: [],
+    );
+
+    const spotB = LupitaSpot(
+      id: 'spot-b',
+      speciesId: 'cobia',
+      title: 'Cobia Spot B',
+      score: 0.70,
+      confidence: 'Medium',
+      dataCoverage: 1.0,
+      latitude: 25.7680,
+      longitude: -80.1918,
+      reasons: [],
+    );
+
+    final sampleLupitaData = LupitaData(
+      version: 1,
+      catalogGeneratedUtc: '2026-10-24T20:00:00Z',
+      predictionsGeneratedUtc: '2026-10-24T20:00:00Z',
+      lastRefreshedAt: DateTime.parse('2026-10-24T20:00:00Z'),
+      disclaimer: 'Test',
+      allSpots: [spotA, spotB],
+      species: [
+        const LupitaSpecies(
+          id: 'cobia',
+          name: 'Cobia',
+          sci: 'Rachycentron canadum',
+          colorHex: '#c084fc',
+          specs: [],
+          status: 'ok',
+          message: '',
+          spotCount: 2,
+          spots: [spotA, spotB],
+        ),
+      ],
+    );
+
+    // Render directly at zoom 14.0 (pixel distance ~277px > 50px threshold)
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          allSpotsStreamProvider.overrideWith((ref) => Stream.value([])),
+          activeMapLayersProvider.overrideWith(
+            () => MockActiveMapLayersNotifier({MapLayerConfig.lupitaFishId}),
+          ),
+          lupitaDataProvider.overrideWith((ref) async => sampleLupitaData),
+          mapInitialZoomProvider.overrideWith(() => MockMapInitialZoomNotifier(14.0)),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: const SpotsScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify cluster badge '2' is gone and individual score badges ('90%', '70%') appear separated
+    expect(find.text('2'), findsNothing);
+    expect(find.text('90%'), findsOneWidget);
+    expect(find.text('70%'), findsOneWidget);
+  });
+
+  testWidgets('Lupita Fish Finder keeps spots with identical coordinates clustered even when zoomed in',
+      (WidgetTester tester) async {
+    const spotA = LupitaSpot(
+      id: 'spot-identical-1',
+      speciesId: 'cobia',
+      title: 'Cobia Spot 1',
+      score: 0.95,
+      confidence: 'High',
+      dataCoverage: 1.0,
+      latitude: 25.76,
+      longitude: -80.19,
+      reasons: [],
+    );
+
+    const spotB = LupitaSpot(
+      id: 'spot-identical-2',
+      speciesId: 'cobia',
+      title: 'Cobia Spot 2',
+      score: 0.80,
+      confidence: 'High',
+      dataCoverage: 1.0,
+      latitude: 25.76,
+      longitude: -80.19,
+      reasons: [],
+    );
+
+    final sampleLupitaData = LupitaData(
+      version: 1,
+      catalogGeneratedUtc: '2026-10-24T20:00:00Z',
+      predictionsGeneratedUtc: '2026-10-24T20:00:00Z',
+      lastRefreshedAt: DateTime.parse('2026-10-24T20:00:00Z'),
+      disclaimer: 'Test',
+      allSpots: [spotA, spotB],
+      species: [
+        const LupitaSpecies(
+          id: 'cobia',
+          name: 'Cobia',
+          sci: 'Rachycentron canadum',
+          colorHex: '#c084fc',
+          specs: [],
+          status: 'ok',
+          message: '',
+          spotCount: 2,
+          spots: [spotA, spotB],
+        ),
+      ],
+    );
+
+    // Zoomed in at 16.0
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          allSpotsStreamProvider.overrideWith((ref) => Stream.value([])),
+          activeMapLayersProvider.overrideWith(
+            () => MockActiveMapLayersNotifier({MapLayerConfig.lupitaFishId}),
+          ),
+          lupitaDataProvider.overrideWith((ref) async => sampleLupitaData),
+          mapInitialZoomProvider.overrideWith(() => MockMapInitialZoomNotifier(16.0)),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: const SpotsScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Identical coordinates should remain in a cluster badge showing '2'
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('95%'), findsNothing);
+    expect(find.text('80%'), findsNothing);
   });
 }
