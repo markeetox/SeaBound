@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 
 class LupitaSpec {
   final String label;
@@ -389,6 +391,17 @@ class LupitaData {
       allSpots: finalAllSpots,
       status: evaluatedStatus,
     );
+  }
+}
+
+class LupitaHeatmapConfig {
+  static final LatLngBounds bounds = LatLngBounds(
+    const LatLng(14.975, -138.025),
+    const LatLng(60.025, -49.975),
+  );
+
+  static String getHeatmapUrl(String speciesId) {
+    return 'https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/heat/$speciesId.png';
   }
 }
 
