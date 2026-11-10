@@ -122,6 +122,16 @@ void main() {
       expect(emptyStatus, equals(LupitaSyncStatus.empty));
     });
 
+    test('LupitaHeatmapConfig defines correct geographic bounding box and CDN URL', () {
+      expect(LupitaHeatmapConfig.bounds.southWest.latitude, equals(14.975));
+      expect(LupitaHeatmapConfig.bounds.southWest.longitude, equals(-138.025));
+      expect(LupitaHeatmapConfig.bounds.northEast.latitude, equals(60.025));
+      expect(LupitaHeatmapConfig.bounds.northEast.longitude, equals(-49.975));
+
+      final mahiUrl = LupitaHeatmapConfig.getHeatmapUrl('mahi-mahi');
+      expect(mahiUrl, equals('https://cdn.jsdelivr.net/gh/markeetox/lupita@data/api/v1/heat/mahi-mahi.png'));
+    });
+
     test('LupitaData handles structurally valid empty prediction runs (spots: []) correctly', () {
       final sampleJsonNoSpots = {
         'version': 1,

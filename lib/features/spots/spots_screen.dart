@@ -1621,6 +1621,7 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
     final showFishSpots = activeLayers.contains('fish_spots');
     final showWindObs = activeLayers.contains(MapLayerConfig.windObsId);
     final showLupita = activeLayers.contains(MapLayerConfig.lupitaFishId);
+    final selectedLupitaSpeciesId = showLupita ? ref.watch(selectedLupitaSpeciesIdProvider) : null;
     final lupitaSpots = showLupita ? ref.watch(selectedLupitaSpeciesSpotsProvider) : <LupitaSpot>[];
 
     final ndbcStationsAsync = ref.watch(ndbcStationsProvider);
@@ -2196,6 +2197,24 @@ class _SpotsMapViewState extends ConsumerState<_SpotsMapView> {
                     points: tripRecorderState.latLngPoints,
                     color: Colors.black,
                     strokeWidth: 4.0,
+                  ),
+                ],
+              ),
+
+            // Lupita Fish Habitat Heatmap Overlay Layer
+            // Only displayed when a specific fish species is selected.
+            // When all species are selected (null or empty), no heatmap is shown.
+            if (showLupita &&
+                selectedLupitaSpeciesId != null &&
+                selectedLupitaSpeciesId.isNotEmpty)
+              OverlayImageLayer(
+                overlayImages: [
+                  OverlayImage(
+                    bounds: LupitaHeatmapConfig.bounds,
+                    opacity: 0.70,
+                    imageProvider: NetworkImage(
+                      LupitaHeatmapConfig.getHeatmapUrl(selectedLupitaSpeciesId),
+                    ),
                   ),
                 ],
               ),
